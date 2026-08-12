@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "4.3.0";
+  const APP_VERSION = "4.4.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -1255,7 +1255,8 @@
     const destination = canonicalDestination("destination");
     if (!destination) return;
 
-    const ownerName = $("ownerName").value.trim() || "Me";
+    const ownerName = $("ownerName").value.trim();
+    if (!ownerName) return toast("Enter your name");
     state = {
       trip: {
         name: $("tripName").value.trim(),
@@ -1460,8 +1461,8 @@
       render();
       $("setupForm").reset();
       initDates();
-      $("ownerName").value = "Me";
-      setDestinationValue("destination", "Thailand");
+      $("ownerName").value = "";
+      setDestinationValue("destination", "");
       opts($("homeCurrency"), CURS, "OMR");
       opts($("tripCurrency"), CURS, "THB");
       toast("Trip deleted");
@@ -1610,16 +1611,35 @@
 
   updateInstallUI();
 
+  function setupDateDisplays() {
+    const display = (inputId, displayId) => {
+      const input = $(inputId);
+      const target = $(displayId);
+      if (!input || !target) return;
+      const refresh = () => {
+        target.textContent = input.value ? fmtDate(input.value) : "Select date";
+      };
+      input.addEventListener("change", refresh);
+      input.addEventListener("input", refresh);
+      refresh();
+    };
+    display("startDate", "startDateDisplay");
+    display("endDate", "endDateDisplay");
+  }
+
   function initDates() {
     const t = today();
     $("startDate").value = t;
     const d = new Date();
     d.setDate(d.getDate() + 6);
     $("endDate").value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
+    if ($("startDateDisplay")) $("startDateDisplay").textContent = fmtDate($("startDate").value);
+    if ($("endDateDisplay")) $("endDateDisplay").textContent = fmtDate($("endDate").value);
   }
 
-  initDestinationAutocomplete("destination", "destinationOptions", "Thailand");
-  initDestinationAutocomplete("sDestination", "sDestinationOptions", "Thailand");
+  initDestinationAutocomplete("destination", "destinationOptions", "");
+  initDestinationAutocomplete("sDestination", "sDestinationOptions", "");
   opts($("homeCurrency"), CURS, "OMR");
   opts($("tripCurrency"), CURS, "THB");
   opts($("sHomeCurrency"), CURS, "OMR");
@@ -1643,6 +1663,7 @@
     $("filterPayment").append(option);
   });
 
+  setupDateDisplays();
   initDates();
   render();
 
@@ -1685,7 +1706,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=4.3.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=4.4.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

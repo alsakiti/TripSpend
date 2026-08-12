@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v4.3",
+  "name": "TripSpend v4.4",
   "short_name": "TripSpend",
-  "description": "TripSpend v4.3 \u2014 offline-first group travel spending tracker.",
+  "description": "TripSpend v4.4 \u2014 offline-first group travel spending tracker.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

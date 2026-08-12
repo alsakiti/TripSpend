@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=4.3.0">
-  <link rel="icon" href="icons/icon-192.png?v=4.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=4.3.0">
-  <link rel="stylesheet" href="style.css?v=4.3.0">
+  <link rel="manifest" href="manifest.webmanifest?v=4.4.0">
+  <link rel="icon" href="icons/icon-192.png?v=4.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=4.4.0">
+  <link rel="stylesheet" href="style.css?v=4.4.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v4.3</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v4.4</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,29 +35,41 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=4.3.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v4.3</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=4.4.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v4.4</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
       </div>
       <form id="setupForm" class="card form setup-form">
-        <label>Trip name<input id="tripName" required maxlength="60" placeholder="Thailand Trip"></label>
+        <label>Trip name<input id="tripName" required maxlength="60" placeholder="Enter trip name"></label>
         <label>Destination
           <div class="country-combobox">
             <input id="destination" type="text" required autocomplete="off" spellcheck="false"
                    role="combobox" aria-autocomplete="list" aria-expanded="false"
-                   aria-controls="destinationOptions" placeholder="Start typing a country…">
+                   aria-controls="destinationOptions" placeholder="Search for a country…">
             <div id="destinationOptions" class="country-options hidden" role="listbox"></div>
           </div>
-          <small class="field-hint">Type any letter to instantly filter countries.</small>
+          <small class="field-hint">Start typing, then choose a country.</small>
         </label>
-        <div class="grid2">
-          <label>Start date<input id="startDate" type="date" required></label>
-          <label>End date<input id="endDate" type="date" required></label>
+        <div class="grid2 date-grid">
+          <label class="date-field-label"><span>Start date</span>
+            <div class="date-picker-card">
+              <span id="startDateDisplay" class="date-display">Select date</span>
+              <span class="date-calendar" aria-hidden="true">▣</span>
+              <input id="startDate" class="native-date-input" type="date" required aria-label="Start date">
+            </div>
+          </label>
+          <label class="date-field-label"><span>End date</span>
+            <div class="date-picker-card">
+              <span id="endDateDisplay" class="date-display">Select date</span>
+              <span class="date-calendar" aria-hidden="true">▣</span>
+              <input id="endDate" class="native-date-input" type="date" required aria-label="End date">
+            </div>
+          </label>
         </div>
-        <label>Total budget<input id="budget" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="1000"></label>
-        <label>Your name <small>(first traveler)</small><input id="ownerName" maxlength="50" placeholder="Me" value="Me"></label>
+        <label>Total budget<input id="budget" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="Enter budget"></label>
+        <label>Your name <small>(first traveler)</small><input id="ownerName" maxlength="50" required placeholder="Enter your name"></label>
         <p class="form-note">You can add more travelers after creating the trip.</p>
         <div class="grid2">
           <label>Home currency<select id="homeCurrency"></select></label>
@@ -333,7 +345,7 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=4.3.0"></script>
-<script src="fx.js?v=4.3.0"></script>
+<script src="app.js?v=4.4.0"></script>
+<script src="fx.js?v=4.4.0"></script>
 </body>
 </html>

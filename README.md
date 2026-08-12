@@ -109,3 +109,15 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - `version.json` added for future update detection
 - Service worker now checks navigation/version files from the network when available
 - New versions can surface an **Update now** banner
+
+
+## v4.4 update
+
+- Replaced visibly rendered iOS date inputs with clean custom date cards
+- Tapping either date card still opens the native iPhone date picker
+- Date text is vertically centered and consistent with the rest of the form
+- New Trip no longer preselects Thailand
+- Trip name uses a neutral “Enter trip name” hint rather than a realistic default
+- First traveler name starts blank and must be entered
+- Budget hint changed from 1000 to “Enter budget”
+- Visible version updated to v4.4

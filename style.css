@@ -640,3 +640,86 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* TripSpend v4.4 — custom iPhone date cards + blank setup defaults */
+.date-field-label > span{
+  display:block;
+}
+.date-picker-card{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  width:100%;
+  min-height:44px;
+  margin-top:5px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+  overflow:hidden;
+}
+.date-display{
+  min-width:0;
+  color:var(--text);
+  font-size:15px;
+  font-weight:750;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.date-calendar{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:13px;
+  transform:rotate(45deg);
+}
+.native-date-input{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  opacity:0!important;
+  cursor:pointer;
+  -webkit-appearance:auto!important;
+  appearance:auto!important;
+}
+.date-picker-card:focus-within{
+  border-color:#98a2b3;
+  box-shadow:0 0 0 4px rgba(152,162,179,.14);
+}
+
+@media(max-width:600px){
+  .setup-form .date-grid{
+    gap:8px!important;
+  }
+  .setup-form .date-field-label{
+    margin-bottom:9px;
+  }
+  .setup-form .date-picker-card{
+    min-height:40px;
+    height:40px;
+    padding:0 10px;
+    border-radius:11px;
+  }
+  .setup-form .date-display{
+    font-size:13px;
+  }
+  .setup-form .date-calendar{
+    font-size:11px;
+  }
+  /* The invisible native input handles the picker; never let iOS render it visibly. */
+  .setup-form .native-date-input{
+    height:100%!important;
+    min-height:0!important;
+    font-size:16px!important;
+  }
+}
