@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v6.3.1",
+  "name": "TripSpend v6.4",
   "short_name": "TripSpend",
-  "description": "A polished offline-first travel spending app with adaptive appearance, clean navigation, multi-country budgets and simple settlement.",
+  "description": "Reliable offline-first travel spending with IndexedDB storage, automatic restore points, fast rendering and multi-country budgeting.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

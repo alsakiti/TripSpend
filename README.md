@@ -466,3 +466,46 @@ This release focuses on making TripSpend feel more like a finished iPhone app wi
 - Auto / Light / Dark still work normally.
 - Appearance changes are now completely silent.
 - Selecting the already-active appearance no longer performs an unnecessary save.
+
+
+## v6.4 — Reliability & Performance
+
+### IndexedDB primary storage
+- TripSpend now uses **IndexedDB** as its primary trip database.
+- Existing v6.3.1/localStorage data is migrated automatically.
+- A full **Before v6.4 upgrade** restore point is created before migration.
+- After IndexedDB is confirmed, the old full-state localStorage copy is removed.
+- If IndexedDB is unavailable or fails, TripSpend automatically falls back to the existing Web Storage path instead of losing the save.
+
+### Automatic restore points
+Settings → **Data safety** now shows:
+- **Latest**
+- up to 3 recent day snapshots, including Yesterday when available
+- **Before v6.4 upgrade**
+- manual / pre-restore / pre-import / pre-delete safety snapshots
+
+Use **Restore** to return the trip to a snapshot.
+TripSpend creates another safety snapshot before a restore.
+
+### Save performance
+- Frequent saves are batched for ~140 ms instead of synchronously serializing the full trip to localStorage on every small edit.
+- Pending state is flushed when iOS backgrounds/closes the PWA.
+- The current state plus Latest/Today restore points are written asynchronously.
+- Only the latest 7 daily automatic backups are retained.
+
+### Render performance
+- Expense lists render only when Expenses is visible.
+- Analytics charts render only when Analytics is visible.
+- Planner DOM renders only when Plan is visible.
+- Settlement details render only when Analytics is visible.
+- Settings/People heavy content renders only on those pages.
+- Home no longer rebuilds hidden legacy analytics/traveler widgets.
+
+### Storage durability
+- TripSpend asks the browser for persistent storage when supported.
+- Settings shows the current storage backend and basic startup/render timing.
+
+### Service worker
+- Old TripSpend caches are removed on activation.
+- Navigation Preload is enabled when the browser supports it.
+- Offline app-shell behavior is preserved.

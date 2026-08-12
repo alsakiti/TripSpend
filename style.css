@@ -3319,3 +3319,207 @@ html[data-theme="dark"] .appearance-segment button.active{
     transition:none!important;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.4 — Reliability & performance
+   ========================================================= */
+
+.storage-boot{
+  position:fixed;
+  inset:0;
+  z-index:999;
+  display:grid;
+  place-items:center;
+  background:var(--bg,#f4f6fa);
+  transition:opacity .18s ease;
+}
+.storage-boot.leaving{
+  opacity:0;
+  pointer-events:none;
+}
+.storage-boot.hidden{
+  display:none!important;
+}
+.storage-boot-card{
+  display:grid;
+  justify-items:center;
+  gap:6px;
+  color:var(--text,#101828);
+}
+.storage-boot-logo{
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  margin-bottom:3px;
+  border-radius:16px;
+  background:var(--surface,#fff);
+  box-shadow:var(--shadow,0 2px 8px rgba(16,24,40,.06));
+  font-size:24px;
+}
+.storage-boot-card strong{
+  font-size:16px;
+  letter-spacing:-.025em;
+}
+.storage-boot-card span{
+  color:var(--muted,#667085);
+  font-size:10px;
+}
+
+.data-safety-card{
+  margin-top:12px;
+  padding:14px;
+}
+.data-safety-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.data-safety-head>div{
+  min-width:0;
+}
+.data-safety-head strong{
+  display:block;
+  font-size:13px;
+}
+.data-safety-head p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.4;
+}
+.storage-mode-badge{
+  flex:0 0 auto;
+  font-size:7.5px!important;
+}
+.storage-mode-badge.fallback{
+  background:var(--warnbg)!important;
+  color:var(--warn)!important;
+}
+
+.storage-status-row{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-top:11px;
+  padding:10px;
+  border-radius:12px;
+  background:var(--surface2);
+}
+.storage-status-dot{
+  flex:0 0 auto;
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  background:var(--ok);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 12%,transparent);
+}
+.storage-status-row strong,
+.storage-status-row small{
+  display:block;
+}
+.storage-status-row strong{
+  font-size:10px;
+}
+.storage-status-row small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8px;
+}
+
+.backup-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:13px;
+}
+.backup-head strong,
+.backup-head small{
+  display:block;
+}
+.backup-head strong{
+  font-size:11px;
+}
+.backup-head small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8px;
+}
+.backup-head .compact-btn{
+  min-height:34px!important;
+  width:auto!important;
+  padding:0 10px!important;
+  font-size:9px!important;
+}
+
+.backup-list{
+  display:grid;
+  gap:6px;
+  margin-top:8px;
+}
+.backup-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--surface);
+}
+.backup-item>div{
+  min-width:0;
+}
+.backup-item strong,
+.backup-item small{
+  display:block;
+}
+.backup-item strong{
+  font-size:10px;
+}
+.backup-item small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8px;
+}
+.backup-restore{
+  min-height:32px!important;
+  width:auto!important;
+  padding:0 9px!important;
+  font-size:8.5px!important;
+}
+.backup-empty{
+  padding:10px;
+  border:1px dashed var(--line);
+  border-radius:11px;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.4;
+  text-align:center;
+}
+
+/* The data-safety status should be readable without becoming another large widget. */
+html[data-theme="dark"] .storage-boot{
+  background:var(--bg);
+}
+html[data-theme="dark"] .backup-item{
+  background:var(--surface2);
+}
+
+@media(max-width:600px){
+  .data-safety-card{
+    padding:12px;
+  }
+  .backup-head{
+    align-items:flex-end;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .storage-boot{
+    transition:none!important;
+  }
+}

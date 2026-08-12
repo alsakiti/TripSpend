@@ -1,7 +1,25 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.3.1";
+  const APP_VERSION = "6.4.0";
+  const APP_BOOT_STARTED = performance.now();
+  const DB_NAME = "tripspend.db";
+  const DB_VERSION = 1;
+  const DB_STATE_STORE = "state";
+  const DB_BACKUP_STORE = "backups";
+  const DB_META_STORE = "meta";
+  const STORAGE_SAVE_DELAY = 140;
+  const MAX_DAILY_BACKUPS = 7;
+
+  let storageDB = null;
+  let storageMode = "starting";
+  let storagePersistent = false;
+  let storageSaveTimer = 0;
+  let pendingStorageSnapshot = null;
+  let lastStorageWriteAt = 0;
+  let appStartupMs = 0;
+  let lastRenderMs = 0;
+
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -73,8 +91,7 @@
     renderAppearanceControls();
   }
 
-  let state = load();
-  applyAppearance(state.preferences?.appearance || "system");
+  // State is initialized from the migration seed below, then hydrated from IndexedDB.
   let installPrompt = null;
   let suggestedCategory = "";
 
@@ -182,7 +199,25 @@
     };
   }
 
-  function load() {
+  function safeClone(value) {
+    try {
+      return structuredClone(value);
+    } catch {
+      return JSON.parse(JSON.stringify(value));
+    }
+  }
+
+  function meaningfulState(value) {
+    return !!(
+      value?.trip ||
+      value?.expenses?.length ||
+      value?.people?.length ||
+      value?.stops?.length ||
+      value?.plans?.length
+    );
+  }
+
+  function loadLegacyState() {
     try {
       const raw = JSON.parse(localStorage.getItem(KEY));
       return raw ? normalizeState(raw) : blank();
@@ -191,9 +226,437 @@
     }
   }
 
-  function save() {
-    localStorage.setItem(KEY, JSON.stringify(state));
+  function openStorageDB() {
+    return new Promise((resolve, reject) => {
+      if (!("indexedDB" in window)) {
+        reject(new Error("IndexedDB unavailable"));
+        return;
+      }
+
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onupgradeneeded = () => {
+        const db = request.result;
+
+        if (!db.objectStoreNames.contains(DB_STATE_STORE)) {
+          db.createObjectStore(DB_STATE_STORE, { keyPath: "key" });
+        }
+
+        if (!db.objectStoreNames.contains(DB_BACKUP_STORE)) {
+          const backups = db.createObjectStore(DB_BACKUP_STORE, { keyPath: "id" });
+          backups.createIndex("createdAt", "createdAt");
+        }
+
+        if (!db.objectStoreNames.contains(DB_META_STORE)) {
+          db.createObjectStore(DB_META_STORE, { keyPath: "key" });
+        }
+      };
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("IndexedDB failed"));
+      request.onblocked = () => reject(new Error("IndexedDB blocked"));
+    });
   }
+
+  function idbRequest(request) {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("Storage request failed"));
+    });
+  }
+
+  function txComplete(tx) {
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("Storage transaction failed"));
+      tx.onabort = () => reject(tx.error || new Error("Storage transaction aborted"));
+    });
+  }
+
+  async function idbReadState() {
+    if (!storageDB) return null;
+    const tx = storageDB.transaction(DB_STATE_STORE, "readonly");
+    const result = await idbRequest(tx.objectStore(DB_STATE_STORE).get("current"));
+    await txComplete(tx);
+    return result?.data ? normalizeState(result.data) : null;
+  }
+
+  async function idbReadMeta(key) {
+    if (!storageDB) return null;
+    const tx = storageDB.transaction(DB_META_STORE, "readonly");
+    const result = await idbRequest(tx.objectStore(DB_META_STORE).get(key));
+    await txComplete(tx);
+    return result?.value ?? null;
+  }
+
+  async function idbWriteMeta(key, value) {
+    if (!storageDB) return;
+    const tx = storageDB.transaction(DB_META_STORE, "readwrite");
+    tx.objectStore(DB_META_STORE).put({ key, value, updatedAt: Date.now() });
+    await txComplete(tx);
+  }
+
+  function backupRecord(id, kind, label, snapshot, createdAt = Date.now()) {
+    return {
+      id,
+      kind,
+      label,
+      createdAt,
+      appVersion: APP_VERSION,
+      data: safeClone(snapshot)
+    };
+  }
+
+  async function idbPutBackup(record) {
+    if (!storageDB) return;
+    const tx = storageDB.transaction(DB_BACKUP_STORE, "readwrite");
+    tx.objectStore(DB_BACKUP_STORE).put(record);
+    await txComplete(tx);
+  }
+
+  async function idbGetBackup(id) {
+    if (!storageDB) return null;
+    const tx = storageDB.transaction(DB_BACKUP_STORE, "readonly");
+    const result = await idbRequest(tx.objectStore(DB_BACKUP_STORE).get(id));
+    await txComplete(tx);
+    return result || null;
+  }
+
+  async function idbListBackups() {
+    if (!storageDB) return [];
+    const tx = storageDB.transaction(DB_BACKUP_STORE, "readonly");
+    const store = tx.objectStore(DB_BACKUP_STORE);
+    const rows = await idbRequest(store.getAll());
+    await txComplete(tx);
+    return Array.isArray(rows) ? rows.sort((a, b) => b.createdAt - a.createdAt) : [];
+  }
+
+  async function cleanupAutomaticBackups() {
+    if (!storageDB) return;
+    const rows = await idbListBackups();
+    const daily = rows
+      .filter(row => row.kind === "daily")
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    if (daily.length <= MAX_DAILY_BACKUPS) return;
+
+    const remove = daily.slice(MAX_DAILY_BACKUPS);
+    const tx = storageDB.transaction(DB_BACKUP_STORE, "readwrite");
+    const store = tx.objectStore(DB_BACKUP_STORE);
+    remove.forEach(row => store.delete(row.id));
+    await txComplete(tx);
+  }
+
+  function backupDateLabel(dateString) {
+    if (!dateString) return "Recent";
+    const current = today();
+    const yesterdayDate = dlocal(current);
+    yesterdayDate?.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate
+      ? `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, "0")}-${String(yesterdayDate.getDate()).padStart(2, "0")}`
+      : "";
+
+    if (dateString === current) return "Today";
+    if (dateString === yesterday) return "Yesterday";
+    return fmtDateWithYear(dateString);
+  }
+
+  async function createBackupSnapshot(label = "Manual snapshot", snapshot = state, kind = "manual") {
+    if (storageMode !== "indexeddb" || !storageDB || !meaningfulState(snapshot)) return null;
+
+    const id = `${kind}:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+    const record = backupRecord(id, kind, label, snapshot);
+    await idbPutBackup(record);
+    renderStoragePanel();
+    return record;
+  }
+
+  async function persistStateImmediately(snapshot = state, { maintainBackups = true } = {}) {
+    const cleanSnapshot = safeClone(snapshot);
+
+    if (storageMode !== "indexeddb" || !storageDB) {
+      localStorage.setItem(KEY, JSON.stringify(cleanSnapshot));
+      lastStorageWriteAt = Date.now();
+      renderStoragePanel();
+      return;
+    }
+
+    const now = Date.now();
+    const day = today();
+    const tx = storageDB.transaction([DB_STATE_STORE, DB_BACKUP_STORE], "readwrite");
+
+    tx.objectStore(DB_STATE_STORE).put({
+      key: "current",
+      data: cleanSnapshot,
+      updatedAt: now,
+      appVersion: APP_VERSION
+    });
+
+    if (maintainBackups && meaningfulState(cleanSnapshot)) {
+      const backups = tx.objectStore(DB_BACKUP_STORE);
+      backups.put(backupRecord("latest", "latest", "Latest", cleanSnapshot, now));
+      backups.put(backupRecord(`daily:${day}`, "daily", backupDateLabel(day), cleanSnapshot, now));
+    }
+
+    await txComplete(tx);
+    lastStorageWriteAt = now;
+    pendingStorageSnapshot = null;
+
+    // IndexedDB is primary after a successful write.
+    localStorage.removeItem(KEY);
+
+    if (maintainBackups) {
+      cleanupAutomaticBackups().catch(() => {});
+    }
+
+    renderStoragePanel();
+  }
+
+  async function flushPendingSave() {
+    clearTimeout(storageSaveTimer);
+    storageSaveTimer = 0;
+
+    const snapshot = pendingStorageSnapshot || safeClone(state);
+    pendingStorageSnapshot = null;
+
+    try {
+      await persistStateImmediately(snapshot);
+    } catch {
+      // Fail safe: if IndexedDB ever becomes unavailable, retain the current
+      // trip in Web Storage rather than dropping the save.
+      storageMode = "localStorage";
+      localStorage.setItem(KEY, JSON.stringify(snapshot));
+      lastStorageWriteAt = Date.now();
+      renderStoragePanel();
+    }
+  }
+
+  function save(options = {}) {
+    const immediate = !!options.immediate;
+    pendingStorageSnapshot = safeClone(state);
+
+    if (storageMode !== "indexeddb") {
+      localStorage.setItem(KEY, JSON.stringify(pendingStorageSnapshot));
+      lastStorageWriteAt = Date.now();
+      return;
+    }
+
+    clearTimeout(storageSaveTimer);
+    storageSaveTimer = window.setTimeout(flushPendingSave, immediate ? 0 : STORAGE_SAVE_DELAY);
+  }
+
+  async function requestPersistentStorage() {
+    try {
+      if (!navigator.storage?.persisted) return false;
+      if (await navigator.storage.persisted()) return true;
+      if (!navigator.storage.persist) return false;
+      return await navigator.storage.persist();
+    } catch {
+      return false;
+    }
+  }
+
+  async function initializePersistentStorage(legacyState) {
+    const boot = $("storageBoot");
+
+    try {
+      storageDB = await openStorageDB();
+
+      const stored = await idbReadState();
+
+      if (stored) {
+        state = stored;
+      } else {
+        state = normalizeState(legacyState || blank());
+
+        if (meaningfulState(state)) {
+          // First v6.4 migration: preserve the complete pre-upgrade state before
+          // IndexedDB becomes the primary store.
+          await idbPutBackup(
+            backupRecord(
+              "upgrade:v6.4",
+              "upgrade",
+              "Before v6.4 upgrade",
+              state
+            )
+          );
+        }
+
+        storageMode = "indexeddb";
+        await persistStateImmediately(state);
+      }
+
+      storageMode = "indexeddb";
+      storagePersistent = await requestPersistentStorage();
+
+      await idbWriteMeta("storageVersion", 1);
+      await idbWriteMeta("lastAppVersion", APP_VERSION);
+
+      // Once IndexedDB is confirmed, remove the old full-state copy.
+      localStorage.removeItem(KEY);
+    } catch {
+      storageMode = "localStorage";
+      storageDB = null;
+      state = normalizeState(legacyState || blank());
+      try {
+        localStorage.setItem(KEY, JSON.stringify(state));
+      } catch {}
+    }
+
+    applyAppearance(state.preferences?.appearance || "system");
+
+    if (boot) {
+      boot.classList.add("leaving");
+      window.setTimeout(() => boot.classList.add("hidden"), 180);
+    }
+
+    const renderStart = performance.now();
+    render();
+    lastRenderMs = performance.now() - renderStart;
+    appStartupMs = performance.now() - APP_BOOT_STARTED;
+    renderStoragePanel();
+  }
+
+  function storageAgeText(timestamp) {
+    if (!timestamp) return "Waiting for first save";
+    const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+    if (seconds < 8) return "Saved just now";
+    if (seconds < 60) return `Saved ${seconds}s ago`;
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) return `Saved ${minutes}m ago`;
+    return `Saved ${Math.round(minutes / 60)}h ago`;
+  }
+
+  async function renderStoragePanel() {
+    const badge = $("storageModeBadge");
+    const status = $("storageStatus");
+    const perf = $("storagePerfStatus");
+    const list = $("backupList");
+    if (!badge || !status || !perf || !list) return;
+
+    if (storageMode === "indexeddb") {
+      badge.textContent = "INDEXEDDB";
+      badge.classList.remove("fallback");
+      status.textContent = storagePersistent
+        ? "Protected local storage is active."
+        : "Fast local database is active.";
+    } else if (storageMode === "localStorage") {
+      badge.textContent = "SAFE FALLBACK";
+      badge.classList.add("fallback");
+      status.textContent = "Compatibility storage is active.";
+    } else {
+      badge.textContent = "STARTING";
+      status.textContent = "Preparing local storage…";
+    }
+
+    const perfBits = [];
+    if (appStartupMs > 0) perfBits.push(`startup ${Math.round(appStartupMs)} ms`);
+    if (lastRenderMs > 0) perfBits.push(`render ${Math.max(1, Math.round(lastRenderMs))} ms`);
+    perfBits.push(storageAgeText(lastStorageWriteAt));
+    perf.textContent = perfBits.join(" • ");
+
+    list.replaceChildren();
+
+    if (storageMode !== "indexeddb" || !storageDB) {
+      const empty = document.createElement("div");
+      empty.className = "backup-empty";
+      empty.textContent = "Automatic restore points require IndexedDB. Your trip still saves using the safe fallback.";
+      list.append(empty);
+      return;
+    }
+
+    try {
+      const rows = await idbListBackups();
+      const latest = rows.find(row => row.kind === "latest");
+      const daily = rows
+        .filter(row => row.kind === "daily" && !row.id.endsWith(`:${today()}`))
+        .slice(0, 3);
+      const protectedRows = rows
+        .filter(row => ["upgrade", "manual", "before-restore", "before-import", "before-delete"].includes(row.kind))
+        .slice(0, 3);
+
+      const visible = [
+        ...(latest ? [latest] : []),
+        ...daily,
+        ...protectedRows
+      ];
+
+      const unique = [];
+      const seen = new Set();
+      visible.forEach(row => {
+        if (seen.has(row.id)) return;
+        seen.add(row.id);
+        unique.push(row);
+      });
+
+      if (!unique.length) {
+        const empty = document.createElement("div");
+        empty.className = "backup-empty";
+        empty.textContent = "Your first restore point will be created automatically after saving.";
+        list.append(empty);
+        return;
+      }
+
+      unique.forEach(row => {
+        const item = document.createElement("div");
+        item.className = "backup-item";
+
+        const copy = document.createElement("div");
+        const strong = document.createElement("strong");
+        strong.textContent = row.kind === "daily"
+          ? backupDateLabel(row.id.replace("daily:", ""))
+          : row.label;
+        const small = document.createElement("small");
+        const d = new Date(row.createdAt);
+        small.textContent = `${d.toLocaleDateString([], { day: "numeric", month: "short" })} • ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+        copy.append(strong, small);
+
+        const restore = document.createElement("button");
+        restore.type = "button";
+        restore.className = "secondary compact-btn backup-restore";
+        restore.textContent = "Restore";
+        restore.onclick = () => restoreBackup(row.id);
+
+        item.append(copy, restore);
+        list.append(item);
+      });
+    } catch {
+      const empty = document.createElement("div");
+      empty.className = "backup-empty";
+      empty.textContent = "Restore points are temporarily unavailable.";
+      list.append(empty);
+    }
+  }
+
+  async function restoreBackup(id) {
+    if (storageMode !== "indexeddb" || !storageDB) return;
+    const backup = await idbGetBackup(id);
+    if (!backup?.data) return toast("Restore point unavailable");
+
+    if (!confirm(`Restore “${backup.label || "this snapshot"}”? Your current trip will be kept as a safety snapshot first.`)) {
+      return;
+    }
+
+    try {
+      if (meaningfulState(state)) {
+        await createBackupSnapshot("Before restore", state, "before-restore");
+      }
+
+      state = normalizeState(backup.data);
+      await persistStateImmediately(state);
+      applyAppearance(state.preferences?.appearance || "system");
+      render();
+      page("dashboard");
+      toast("Restore point restored");
+    } catch {
+      alert("TripSpend could not restore that snapshot.");
+    }
+  }
+
+  const legacySeedState = loadLegacyState();
+  let state = legacySeedState;
+  applyAppearance(state.preferences?.appearance || "system");
+
 
   function num(v, d = 0) {
     const n = Number(v);
@@ -1190,6 +1653,28 @@
     }
   }
 
+  function renderAnalyticsPage() {
+    if (!state.trip) return;
+
+    const t = state.trip;
+    const s = spent();
+    const count = state.expenses.length;
+
+    renderAnalyticsOverview();
+    $("avgDay").textContent = money(s / Math.max(1, elapsed() || 1), t.homeCurrency);
+    $("avgTransaction").textContent = money(count ? s / count : 0, t.homeCurrency);
+    $("largest").textContent = money(state.expenses.reduce((m, e) => Math.max(m, num(e.homeAmount)), 0), t.homeCurrency);
+
+    const drows = dailyRows();
+    const biggest = drows.length ? drows.slice().sort((a, b) => b.amount - a.amount)[0] : null;
+    $("biggestDay").textContent = biggest ? `${fmtDate(biggest.date)} • ${money(biggest.amount, t.homeCurrency)}` : "—";
+
+    renderBars($("categoryAnalytics"), aggregate("category"), r => `${icon(r.label)} ${r.label}`);
+    renderBars($("paymentAnalytics"), aggregate("paymentMethod"));
+    renderPeopleBars();
+    renderDaily($("dailyAnalytics"));
+  }
+
   function render() {
     const hasTrip = !!state.trip;
     $("setupView").classList.toggle("hidden", hasTrip);
@@ -1228,40 +1713,43 @@
     $("projectedTotal").textContent = forecast > 0 ? money(forecast, t.homeCurrency) : "—";
     $("daysLeft").textContent = String(daysLeft);
 
-    renderPeopleSnapshot();
-    renderInsights();
-    renderExpenseList($("recentList"), state.expenses.slice().sort(sortNew).slice(0, 5), false);
-    renderBars($("topCategories"), aggregate("category").slice(0, 4), r => `${icon(r.label)} ${r.label}`);
+    const activePage = document.querySelector(".page.active")?.id || "dashboard";
 
-    renderExpenseViews();
+    // v6.4 only renders heavier views when they are actually visible.
+    if (activePage === "expenses") renderExpenseViews();
+    if (activePage === "analytics") renderAnalyticsPage();
 
-    renderAnalyticsOverview();
+    if (activePage === "settings") {
+      fillSettings();
+      renderAppearanceControls();
+      renderRates();
+      renderStoragePanel();
+    }
 
-    const count = state.expenses.length;
-    $("avgDay").textContent = money(s / Math.max(1, elapsed() || 1), t.homeCurrency);
-    $("avgTransaction").textContent = money(count ? s / count : 0, t.homeCurrency);
-    $("largest").textContent = money(state.expenses.reduce((m, e) => Math.max(m, num(e.homeAmount)), 0), t.homeCurrency);
-    const drows = dailyRows();
-    const biggest = drows.length ? drows.slice().sort((a, b) => b.amount - a.amount)[0] : null;
-    $("biggestDay").textContent = biggest ? `${fmtDate(biggest.date)} • ${money(biggest.amount, t.homeCurrency)}` : "—";
-    renderBars($("categoryAnalytics"), aggregate("category"), r => `${icon(r.label)} ${r.label}`);
-    renderBars($("paymentAnalytics"), aggregate("paymentMethod"));
-    renderPeopleBars();
-    renderDaily($("dailyAnalytics"));
+    if (activePage === "people") renderPeoplePage();
 
-    fillSettings();
-    renderAppearanceControls();
-    renderRates();
-    renderPeoplePage();
-    window.dispatchEvent(new CustomEvent("tripspend:render"));
+    window.dispatchEvent(new CustomEvent("tripspend:render", { detail: { activePage } }));
   }
 
   function page(id) {
     document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === id));
     document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === id));
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    const started = performance.now();
+
     if (id === "people") renderPeoplePage();
     if (id === "expenses") renderExpenseViews();
+    if (id === "analytics") renderAnalyticsPage();
+    if (id === "settings") {
+      fillSettings();
+      renderAppearanceControls();
+      renderRates();
+      renderStoragePanel();
+    }
+
+    lastRenderMs = performance.now() - started;
+    window.dispatchEvent(new CustomEvent("tripspend:page", { detail: { id } }));
   }
 
 
@@ -1739,7 +2227,7 @@
     const name = (state.trip?.name || "tripspend").replace(/[^a-z0-9]+/gi, "-");
     download(
       `${name}-backup.json`,
-      JSON.stringify({ app: "TripSpend", version: 5, exportedAt: new Date().toISOString(), data: state }, null, 2),
+      JSON.stringify({ app: "TripSpend", version: 6, appVersion: APP_VERSION, exportedAt: new Date().toISOString(), data: state }, null, 2),
       "application/json"
     );
     toast("Backup exported");
@@ -1788,8 +2276,13 @@
       if (!data?.trip || !Array.isArray(data.expenses)) throw new Error("invalid");
       if (!confirm("Import this backup? It will replace the current trip in this browser.")) return;
 
+      if (meaningfulState(state) && storageMode === "indexeddb") {
+        await createBackupSnapshot("Before import", state, "before-import");
+      }
+
       state = normalizeState(data);
-      save();
+      await persistStateImmediately(state);
+      applyAppearance(state.preferences?.appearance || "system");
       render();
       page("dashboard");
       toast("Backup imported");
@@ -1799,6 +2292,19 @@
       $("importFile").value = "";
     }
   }
+
+  $("createSnapshotBtn")?.addEventListener("click", async () => {
+    if (!meaningfulState(state)) return toast("Nothing to snapshot yet");
+    if (storageMode !== "indexeddb") return toast("Restore points need IndexedDB");
+
+    try {
+      await flushPendingSave();
+      await createBackupSnapshot("Manual snapshot", state, "manual");
+      toast("Snapshot saved");
+    } catch {
+      toast("Could not save snapshot");
+    }
+  });
 
   $("exportBtn").onclick = exportBackup;
   $("csvBtn").onclick = exportCSV;
@@ -1813,18 +2319,28 @@
     }
   };
 
-  $("deleteTrip").onclick = () => {
+  $("deleteTrip").onclick = async () => {
     if (state.trip && confirm(`Delete “${state.trip.name}” and all expenses?`)) {
-      state = blank();
-      localStorage.removeItem(KEY);
-      render();
-      $("setupForm").reset();
-      initDates();
-      $("ownerName").value = "";
-      setDestinationValue("destination", "");
-      opts($("homeCurrency"), CURS, "OMR");
-      opts($("tripCurrency"), CURS, "THB");
-      toast("Trip deleted");
+      try {
+        if (storageMode === "indexeddb") {
+          await createBackupSnapshot("Before deleting trip", state, "before-delete");
+        }
+
+        state = blank();
+        await persistStateImmediately(state, { maintainBackups: false });
+        localStorage.removeItem(KEY);
+
+        render();
+        $("setupForm").reset();
+        initDates();
+        $("ownerName").value = "";
+        setDestinationValue("destination", "");
+        opts($("homeCurrency"), CURS, "OMR");
+        opts($("tripCurrency"), CURS, "THB");
+        toast("Trip deleted");
+      } catch {
+        alert("TripSpend could not delete the trip safely.");
+      }
     }
   };
 
@@ -2068,7 +2584,9 @@
     canonicalDestination,
     setDestinationValue,
     countryFlag,
-    countryLabel
+    countryLabel,
+    renderStoragePanel,
+    flushPendingSave
   };
   opts($("homeCurrency"), CURS, "OMR");
   opts($("tripCurrency"), CURS, "THB");
@@ -2095,7 +2613,20 @@
 
   setupDateDisplays();
   initDates();
-  render();
+  initializePersistentStorage(legacySeedState);
+
+  // Flush the most recent in-memory state when iOS backgrounds the PWA.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && storageMode === "indexeddb" && pendingStorageSnapshot) {
+      flushPendingSave();
+    }
+  });
+
+  window.addEventListener("pagehide", () => {
+    if (storageMode === "indexeddb" && pendingStorageSnapshot) {
+      flushPendingSave();
+    }
+  });
 
   async function checkAppVersion() {
     try {
@@ -2136,7 +2667,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.3.1", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.4.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

@@ -1,12 +1,12 @@
-const CACHE = "tripspend-v6.3.1";
+const CACHE = "tripspend-v6.4.0";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.3.1",
-  "./app.js?v=6.3.1",
-  "./fx.js?v=6.3.1",
-  "./v5.js?v=6.3.1",
-  "./manifest.webmanifest?v=6.3.1",
+  "./style.css?v=6.4.0",
+  "./app.js?v=6.4.0",
+  "./fx.js?v=6.4.0",
+  "./v5.js?v=6.4.0",
+  "./manifest.webmanifest?v=6.4.0",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -20,12 +20,20 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter(key => key.startsWith("tripspend-") && key !== CACHE)
+        .map(key => caches.delete(key))
+    );
+
+    if (self.registration.navigationPreload) {
+      await self.registration.navigationPreload.enable().catch(() => {});
+    }
+
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener("fetch", event => {
@@ -35,17 +43,24 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate" || url.pathname.endsWith("/version.json")) {
-    event.respondWith(
-      fetch(request, { cache: "no-store" })
-        .then(response => {
-          if (request.mode === "navigate" && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE).then(cache => cache.put("./index.html", copy));
-          }
-          return response;
-        })
-        .catch(() => request.mode === "navigate" ? caches.match("./index.html") : caches.match("./version.json"))
-    );
+    event.respondWith((async () => {
+      try {
+        const response = request.mode === "navigate"
+          ? ((await event.preloadResponse) || await fetch(request, { cache: "no-store" }))
+          : await fetch(request, { cache: "no-store" });
+
+        if (request.mode === "navigate" && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put("./index.html", copy));
+        }
+
+        return response;
+      } catch {
+        return request.mode === "navigate"
+          ? caches.match("./index.html")
+          : caches.match("./version.json");
+      }
+    })());
     return;
   }
 

@@ -1470,27 +1470,52 @@
     core.toast(`${clean} added`);
   }
 
-  function renderAll() {
+  function renderSettingsCountrySummary() {
+    const countrySummary = $("settingsCountrySummary");
+    if (!countrySummary) return;
+
+    const count = stops().length;
+    const names = stops().map(s => s.country).filter(Boolean);
+    countrySummary.textContent = count === 1
+      ? `1 country • ${names[0] || ""}`
+      : `${count} countries • ${names.slice(0, 3).join(" → ")}${count > 3 ? ` → +${count - 3} more` : ""}`;
+  }
+
+  function renderFeaturePage(id) {
+    if (!state().trip) return;
+
+    if (id === "plan") {
+      renderPlannerSummary();
+      renderStops();
+      renderPlanStopOptions();
+      renderPlannedCosts();
+    }
+
+    if (id === "analytics") {
+      renderSettlement();
+    }
+
+    if (id === "settings") {
+      renderSettingsCountrySummary();
+    }
+  }
+
+  function renderAll(event) {
     ensureV5Data();
     setHeaderRoute();
+
+    // Home-critical information stays fresh.
     renderCurrentCountry();
     renderCountryBudgets();
     renderV6NextDestination();
-    renderDashboardPlan();
-    renderPlannerSummary();
-    renderStops();
-    renderPlanStopOptions();
-    renderPlannedCosts();
-    renderSettlement();
 
-    const countrySummary = $("settingsCountrySummary");
-    if (countrySummary) {
-      const count = stops().length;
-      const names = stops().map(s => s.country).filter(Boolean);
-      countrySummary.textContent = count === 1
-        ? `1 country • ${names[0] || ""}`
-        : `${count} countries • ${names.slice(0, 3).join(" → ")}${count > 3 ? ` → +${count - 3} more` : ""}`;
-    }
+    // Heavy planner/settlement DOM is built only when that page is visible.
+    const activePage =
+      event?.detail?.activePage ||
+      document.querySelector(".page.active")?.id ||
+      "dashboard";
+
+    renderFeaturePage(activePage);
   }
 
   window.TripSpendV5 = {
@@ -1854,5 +1879,6 @@
   renderSetupTravelers();
 
   window.addEventListener("tripspend:render", renderAll);
+  window.addEventListener("tripspend:page", event => renderFeaturePage(event.detail?.id));
   renderAll();
 })();
