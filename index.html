@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=5.8.0">
-  <link rel="icon" href="icons/icon-192.png?v=5.8.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.8.0">
-  <link rel="stylesheet" href="style.css?v=5.8.0">
+  <link rel="manifest" href="manifest.webmanifest?v=5.9.0">
+  <link rel="icon" href="icons/icon-192.png?v=5.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.9.0">
+  <link rel="stylesheet" href="style.css?v=5.9.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.8</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.9</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=5.8.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v5.8</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=5.9.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v5.9</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -374,7 +374,7 @@
           </div>
 
           <div class="card settlement-card settlement-card-v58">
-            <p class="settlement-help">Calculated from <b>Paid by</b> and <b>Expense for</b> on each expense.</p>
+            <p class="settlement-help">Only expenses that create a debt are included. Personal expenses paid by the same traveler are excluded automatically.</p>
 
             <div id="settlementPeopleSummary" class="settlement-people-summary"></div>
 
@@ -383,6 +383,7 @@
             </div>
 
             <div id="settlementList" class="settlement-list"></div>
+            <div id="settlementPersonalInfo" class="settlement-personal-info hidden"></div>
             <div id="settlementWarning" class="settlement-warning hidden"></div>
           </div>
         </section>
@@ -633,13 +634,35 @@
       <div id="rateMemory" class="rate-memory hidden"></div>
       <div id="conversion" class="conversion">≈ 0 OMR</div>
 
+      <fieldset class="expense-type-fieldset">
+        <legend>Expense type</legend>
+        <div class="expense-type-toggle">
+          <button id="expenseTypePersonal" type="button" class="expense-type-btn active">
+            <strong>Personal</strong>
+            <small>For one traveler</small>
+          </button>
+          <button id="expenseTypeShared" type="button" class="expense-type-btn">
+            <strong>Shared</strong>
+            <small>Split with others</small>
+          </button>
+        </div>
+        <small id="expenseTypeHelp" class="expense-type-help">If someone pays for themselves, it will not create any debt.</small>
+      </fieldset>
+
       <div class="grid2">
         <label>Country<select id="expenseStop"></select></label>
         <label>Paid by<select id="expensePaidBy"></select></label>
       </div>
 
+      <div id="personalExpenseForWrap">
+        <label>For
+          <select id="personalExpenseFor"></select>
+          <small>Choose whose personal expense this is.</small>
+        </label>
+      </div>
+
       <select id="expensePerson" class="hidden" aria-hidden="true" tabindex="-1"></select>
-      <fieldset class="expense-for-fieldset">
+      <fieldset id="sharedExpenseForWrap" class="expense-for-fieldset hidden">
         <legend>Expense for</legend>
         <div class="expense-for-actions">
           <button id="expenseForEveryone" type="button" class="mini-btn">Everyone</button>
@@ -664,8 +687,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=5.8.0"></script>
-<script src="fx.js?v=5.8.0"></script>
-<script src="v5.js?v=5.8.0"></script>
+<script src="app.js?v=5.9.0"></script>
+<script src="fx.js?v=5.9.0"></script>
+<script src="v5.js?v=5.9.0"></script>
 </body>
 </html>

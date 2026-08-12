@@ -6,6 +6,7 @@
 
   const $ = id => document.getElementById(id);
   let preparedSource = null;
+  let currentExpenseType = "personal";
   let setupDraftStops = [];
   let setupDraftPeople = [];
   let editingSetupStopIndex = -1;
@@ -849,13 +850,19 @@
     const el = $("settlementList");
     const summaryEl = $("settlementPeopleSummary");
     const warningEl = $("settlementWarning");
+    const personalInfoEl = $("settlementPersonalInfo");
     if (!el || !summaryEl || !state().trip) return;
 
     el.replaceChildren();
     summaryEl.replaceChildren();
+
     if (warningEl) {
       warningEl.classList.add("hidden");
       warningEl.textContent = "";
+    }
+    if (personalInfoEl) {
+      personalInfoEl.classList.add("hidden");
+      personalInfoEl.textContent = "";
     }
 
     const paid = new Map();
@@ -871,15 +878,33 @@
     let trackedAmount = 0;
     let untrackedAmount = 0;
     let untrackedCount = 0;
+    let selfPersonalAmount = 0;
+    let selfPersonalCount = 0;
 
     state().expenses.forEach(expense => {
       const amount = Number(expense.homeAmount || 0);
       const payer = expense.paidByPersonId ? personById(expense.paidByPersonId) : null;
       const expenseShares = Array.isArray(expense.personShares) ? expense.personShares : [];
+      const type = expense.expenseType === "shared" || expense.expenseType === "personal"
+        ? expense.expenseType
+        : (expenseShares.length <= 1 ? "personal" : "shared");
 
       if (!payer || !expenseShares.length) {
         untrackedAmount += amount;
         untrackedCount += 1;
+        return;
+      }
+
+      // Personal expense paid by that same traveler: it is real spending,
+      // but nobody owes anybody, so keep it out of settlement entirely.
+      const isSelfPaidPersonal =
+        type === "personal" &&
+        expenseShares.length === 1 &&
+        expenseShares[0].personId === payer.id;
+
+      if (isSelfPaidPersonal) {
+        selfPersonalAmount += amount;
+        selfPersonalCount += 1;
         return;
       }
 
@@ -896,7 +921,6 @@
       net.set(person.id, (paid.get(person.id) || 0) - (shares.get(person.id) || 0));
     });
 
-    // Per-person explanation: Paid, Share, and resulting balance.
     const visiblePeople = state().people
       .filter(person => person.active !== false || Math.abs(net.get(person.id) || 0) > 0.000001)
       .sort((a, b) => {
@@ -915,6 +939,7 @@
 
       const identity = document.createElement("div");
       identity.className = "settlement-person-identity";
+
       const avatar = document.createElement("span");
       avatar.className = "settlement-avatar";
       avatar.textContent = (person.name || "?")
@@ -929,12 +954,13 @@
       const strong = document.createElement("strong");
       strong.textContent = person.name;
       const small = document.createElement("small");
-      small.textContent = `Paid ${core.money(paidAmount, state().trip.homeCurrency)} • Share ${core.money(shareAmount, state().trip.homeCurrency)}`;
+      small.textContent = `Group paid ${core.money(paidAmount, state().trip.homeCurrency)} • Group share ${core.money(shareAmount, state().trip.homeCurrency)}`;
       name.append(strong, small);
       identity.append(avatar, name);
 
       const result = document.createElement("div");
       result.className = "settlement-person-balance";
+
       const resultLabel = document.createElement("small");
       const resultAmount = document.createElement("strong");
 
@@ -948,7 +974,7 @@
         resultAmount.textContent = core.money(Math.abs(balance), state().trip.homeCurrency);
       } else {
         result.classList.add("settled");
-        resultLabel.textContent = "Balance";
+        resultLabel.textContent = "Group balance";
         resultAmount.textContent = "Settled";
       }
 
@@ -958,7 +984,7 @@
     });
 
     if (trackedAmount <= 0) {
-      el.innerHTML = '<div class="empty-state"><strong>No group settlement yet</strong><span>When adding an expense, choose both “Paid by” and who the “Expense for” applies to.</span></div>';
+      el.innerHTML = '<div class="empty-state"><strong>No group debts yet</strong><span>Personal expenses paid by the same person do not create debt. Shared expenses, or personal expenses paid for someone else, will appear here.</span></div>';
     } else {
       const eps = 0.000001;
       const creditors = [...net]
@@ -976,6 +1002,7 @@
 
       while (i < debtors.length && j < creditors.length) {
         const amount = Math.min(debtors[i].amount, creditors[j].amount);
+
         if (amount > eps) {
           settlements.push({
             from: debtors[i].id,
@@ -1020,8 +1047,15 @@
       }
     }
 
+    if (personalInfoEl && selfPersonalCount > 0) {
+      personalInfoEl.textContent =
+        `${selfPersonalCount} personal expense${selfPersonalCount === 1 ? "" : "s"} (${core.money(selfPersonalAmount, state().trip.homeCurrency)}) paid by the same traveler are correctly excluded from group debts.`;
+      personalInfoEl.classList.remove("hidden");
+    }
+
     if (warningEl && untrackedCount > 0) {
-      warningEl.textContent = `${untrackedCount} expense${untrackedCount === 1 ? "" : "s"} (${core.money(untrackedAmount, state().trip.homeCurrency)}) not included because “Paid by” or “Expense for” is missing. Edit those expenses to include them in settlement.`;
+      warningEl.textContent =
+        `${untrackedCount} expense${untrackedCount === 1 ? "" : "s"} (${core.money(untrackedAmount, state().trip.homeCurrency)}) are not included because the payer or beneficiary is missing.`;
       warningEl.classList.remove("hidden");
     }
   }
@@ -1049,7 +1083,7 @@
 
     const blank = document.createElement("option");
     blank.value = "";
-    blank.textContent = "Not tracked";
+    blank.textContent = "No payer (exclude settlement)";
     select.append(blank);
 
     const ids = new Set(people().map(p => p.id));
@@ -1071,6 +1105,65 @@
     });
 
     select.value = selectedId && personById(selectedId) ? selectedId : (people()[0]?.id || "");
+  }
+
+
+  function fillPersonalExpenseFor(selectedId = "") {
+    const select = $("personalExpenseFor");
+    if (!select) return;
+    select.replaceChildren();
+
+    const active = people();
+    const validIds = new Set(active.map(person => person.id));
+
+    if (selectedId && !validIds.has(selectedId)) {
+      const archived = personById(selectedId);
+      if (archived) {
+        const option = document.createElement("option");
+        option.value = archived.id;
+        option.textContent = `${archived.name} (archived)`;
+        select.append(option);
+      }
+    }
+
+    active.forEach(person => {
+      const option = document.createElement("option");
+      option.value = person.id;
+      option.textContent = person.name;
+      select.append(option);
+    });
+
+    const payer = $("expensePaidBy")?.value;
+    select.value = selectedId && personById(selectedId)
+      ? selectedId
+      : (payer && personById(payer) ? payer : (active[0]?.id || ""));
+  }
+
+  function setExpenseType(type, { preserveSelection = false } = {}) {
+    currentExpenseType = type === "shared" ? "shared" : "personal";
+
+    $("expenseTypePersonal")?.classList.toggle("active", currentExpenseType === "personal");
+    $("expenseTypeShared")?.classList.toggle("active", currentExpenseType === "shared");
+    $("personalExpenseForWrap")?.classList.toggle("hidden", currentExpenseType !== "personal");
+    $("sharedExpenseForWrap")?.classList.toggle("hidden", currentExpenseType !== "shared");
+
+    const help = $("expenseTypeHelp");
+    if (help) {
+      help.textContent = currentExpenseType === "personal"
+        ? "If the same traveler pays for themselves, it counts as spending but creates no debt."
+        : "Choose everyone who shared this expense. TripSpend divides the cost equally between them.";
+    }
+
+    if (!preserveSelection) {
+      if (currentExpenseType === "personal") {
+        fillPersonalExpenseFor($("expensePaidBy")?.value || "");
+      } else {
+        const checked = selectedExpenseForIds();
+        if (!checked.length) {
+          renderExpenseFor(people().map(person => person.id));
+        }
+      }
+    }
   }
 
   function renderExpenseFor(selectedIds = []) {
@@ -1109,7 +1202,19 @@
     const payer = source?.paidByPersonId || prefs.lastPaidByPersonId || "";
 
     fillPaidBy(payer);
-    renderExpenseFor(selected.length ? selected : (people()[0] ? [people()[0].id] : []));
+
+    const inferredType = source?.expenseType === "shared" || source?.expenseType === "personal"
+      ? source.expenseType
+      : (selected.length > 1 ? "shared" : "personal");
+
+    if (inferredType === "shared") {
+      renderExpenseFor(selected.length ? selected : people().map(person => person.id));
+      fillPersonalExpenseFor(selected[0] || payer);
+    } else {
+      fillPersonalExpenseFor(selected[0] || payer || people()[0]?.id || "");
+      renderExpenseFor([]);
+    }
+    setExpenseType(inferredType, { preserveSelection: true });
 
     const datedStop = stopForDate($("expenseDate")?.value);
     const preferredStop = !source && prefs.lastStopId && stopById(prefs.lastStopId)
@@ -1171,18 +1276,38 @@
   }
 
   function expenseData(homeAmount) {
-    const ids = selectedExpenseForIds();
     const amount = Number(homeAmount || 0);
-    const each = ids.length ? amount / ids.length : 0;
+
+    if (currentExpenseType === "personal") {
+      const beneficiaryId = $("personalExpenseFor")?.value || "";
+      if (!beneficiaryId) {
+        return { __error: "Choose who this personal expense is for" };
+      }
+
+      return {
+        expenseType: "personal",
+        paidByPersonId: $("expensePaidBy")?.value || "",
+        stopId: $("expenseStop")?.value || "",
+        planId: preparedSource?.planId || "",
+        personShares: [{ personId: beneficiaryId, amount }]
+      };
+    }
+
+    const ids = selectedExpenseForIds();
+    if (!ids.length) {
+      return { __error: "Select at least one traveler for this shared expense" };
+    }
+
+    const each = amount / ids.length;
 
     return {
+      expenseType: "shared",
       paidByPersonId: $("expensePaidBy")?.value || "",
       stopId: $("expenseStop")?.value || "",
       planId: preparedSource?.planId || "",
       personShares: ids.map(id => ({ personId: id, amount: each }))
     };
   }
-
 
   function showDashboardTravelerForm(show = true) {
     const form = $("dashboardTravelerForm");
@@ -1354,6 +1479,26 @@
 
   $("setupAddCountry")?.addEventListener("click", addSetupCountry);
 
+
+
+  // Personal vs Shared expense behavior.
+  $("expenseTypePersonal")?.addEventListener("click", () => setExpenseType("personal"));
+  $("expenseTypeShared")?.addEventListener("click", () => setExpenseType("shared"));
+
+  $("expensePaidBy")?.addEventListener("change", () => {
+    if (currentExpenseType === "personal") {
+      const currentFor = $("personalExpenseFor")?.value;
+      const oldPayer = $("personalExpenseFor")?.dataset.lastPayer || "";
+      const newPayer = $("expensePaidBy")?.value || "";
+
+      // If the personal beneficiary was following the payer, keep following it.
+      if (!currentFor || currentFor === oldPayer) {
+        fillPersonalExpenseFor(newPayer);
+      }
+      if ($("personalExpenseFor")) $("personalExpenseFor").dataset.lastPayer = newPayer;
+    }
+    updateQuickExpenseContext();
+  });
 
   // Quick traveler management from Home dashboard.
   $("dashboardAddTraveler")?.addEventListener("click", () => {

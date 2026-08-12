@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "5.8.0";
+  const APP_VERSION = "5.9.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -41,6 +41,9 @@
     e.paidByPersonId = e.paidByPersonId ? String(e.paidByPersonId) : "";
     e.stopId = e.stopId ? String(e.stopId) : "";
     e.planId = e.planId ? String(e.planId) : "";
+    e.expenseType = e.expenseType === "shared" || e.expenseType === "personal"
+      ? e.expenseType
+      : (e.personShares.length <= 1 ? "personal" : "shared");
     return e;
   }
 
@@ -1563,7 +1566,7 @@
     const headers = [
       "Date", "Category", "Note", "Payment Method",
       "Original Amount", "Original Currency", "Exchange Rate",
-      "Home Amount", "Home Currency", "Country", "Paid By", "Expense For", "Traveler Shares"
+      "Home Amount", "Home Currency", "Country", "Expense Type", "Paid By", "Expense For", "Traveler Shares"
     ];
 
     const rows = state.expenses.slice().sort(sortNew).map(e => {
@@ -1574,6 +1577,7 @@
         e.date, e.category, e.note, e.paymentMethod,
         e.amount, e.currency, e.rate, e.homeAmount, state.trip.homeCurrency,
         (state.stops || []).find(s => s.id === e.stopId)?.country || "",
+        e.expenseType === "shared" ? "Shared" : "Personal",
         e.paidByPersonId ? personName(e.paidByPersonId) : "",
         assigned, detail
       ];
@@ -1917,7 +1921,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=5.8.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.9.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

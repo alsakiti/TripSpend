@@ -278,3 +278,20 @@ The New Trip screen was redesigned after mobile usability feedback.
 - TripSpend then shows the exact payments needed to settle the group, for example:
   - **Ahmed owes Mohammed 12.500 OMR**
 - Expenses missing **Paid by** or **Expense for** are clearly flagged and excluded from the settlement until edited.
+
+
+## v5.9
+
+### Personal vs Shared expenses
+- Add Expense now starts with a clear **Personal / Shared** choice.
+- **Personal** = the expense belongs to one traveler.
+- If that traveler also paid it, the expense counts toward their spending but creates **no group debt**.
+- If another traveler paid that personal expense, TripSpend calculates that person-to-person debt.
+- **Shared** = select everyone who shared the cost; TripSpend splits it equally.
+
+### Settlement improvements
+- **Who owes whom** ignores self-paid personal expenses automatically.
+- It only calculates expenses that can actually create a debt.
+- Each person's settlement summary now says **Group paid / Group share**, making it clear this is not their total personal spending.
+- Analytics explains how much self-paid personal spending was intentionally excluded.
+- “Not tracked” was renamed to **No payer (exclude settlement)**.
