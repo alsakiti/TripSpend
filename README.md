@@ -81,3 +81,17 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - Every extra letter narrows the list immediately.
 - Supports mouse/touch selection and keyboard arrows + Enter.
 - The app validates that a country from the suggestion list was selected before saving.
+
+
+## v4.2 fixes
+
+- Compact iPhone setup layout
+- Start/end dates stay inside their card and align correctly
+- Date and currency pairs stay side-by-side on normal phone widths
+- Reduced setup logo/card/input sizing for better mobile proportions
+- Prevented iOS text auto-scaling from making controls oversized
+- Added Apple home-screen metadata
+- Install section now detects when TripSpend is already running as an installed app
+- Supported browsers use their native install prompt when available
+- iPhone/iPad shows clear Safari Add to Home Screen instructions instead of a non-working button
+- Service-worker cache bumped to v4.2 so the layout update replaces older cached files

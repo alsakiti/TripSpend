@@ -1504,25 +1504,109 @@
     if (e.key === "Escape" && !$("modal").classList.contains("hidden")) closeModal();
   };
 
+  function isStandaloneApp() {
+    return window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+  }
+
+  function isIOSDevice() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
+  function isIOSSafari() {
+    const ua = navigator.userAgent;
+    return isIOSDevice() &&
+      /Safari/i.test(ua) &&
+      !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  }
+
+  function updateInstallUI() {
+    const card = $("installCard");
+    const button = $("installBtn");
+    const help = $("installHelp");
+    if (!card || !button || !help) return;
+
+    if (isStandaloneApp()) {
+      card.classList.add("install-complete");
+      $("installTitle").textContent = "TripSpend is installed";
+      $("installText").textContent = "You are already using the home-screen app.";
+      button.textContent = "Installed ✓";
+      button.disabled = true;
+      help.classList.add("hidden");
+      return;
+    }
+
+    card.classList.remove("install-complete");
+    button.disabled = false;
+
+    if (installPrompt) {
+      $("installTitle").textContent = "Install TripSpend";
+      $("installText").textContent = "Add TripSpend as an app on this device.";
+      button.textContent = "Install TripSpend";
+      help.classList.add("hidden");
+      return;
+    }
+
+    if (isIOSDevice()) {
+      $("installTitle").textContent = "Add TripSpend to Home Screen";
+      $("installText").textContent = isIOSSafari()
+        ? "Safari installs TripSpend from the Share menu."
+        : "On iPhone, open TripSpend in Safari to add it to your Home Screen.";
+      button.textContent = isIOSSafari() ? "Show iPhone Steps" : "How to Install";
+      return;
+    }
+
+    $("installTitle").textContent = "Install TripSpend";
+    $("installText").textContent = "Install availability depends on your browser.";
+    button.textContent = "Show Install Steps";
+  }
+
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault();
     installPrompt = e;
-    $("installBtn").disabled = false;
+    updateInstallUI();
   });
 
+  window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    updateInstallUI();
+    toast("TripSpend installed");
+  });
+
+  window.matchMedia("(display-mode: standalone)").addEventListener?.("change", updateInstallUI);
+
   $("installBtn").onclick = async () => {
+    const help = $("installHelp");
+
+    if (isStandaloneApp()) {
+      updateInstallUI();
+      return;
+    }
+
     if (installPrompt) {
       installPrompt.prompt();
-      await installPrompt.userChoice;
-      installPrompt = null;
-    } else {
-      const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-      $("installHelp").textContent = ios
-        ? "On iPhone: open TripSpend in Safari → Share → Add to Home Screen."
-        : "Use your browser menu and choose Install app or Add to Home screen.";
-      $("installHelp").classList.remove("hidden");
+      const choice = await installPrompt.userChoice;
+      if (choice?.outcome === "accepted") {
+        installPrompt = null;
+      }
+      updateInstallUI();
+      return;
     }
+
+    if (isIOSDevice()) {
+      help.textContent = isIOSSafari()
+        ? "1. Tap the Share button (square with the upward arrow).\n2. Scroll and tap “Add to Home Screen”.\n3. Tap “Add”.\n\nAfter that, open TripSpend from its Home Screen icon."
+        : "1. Open this TripSpend page in Safari.\n2. Tap Safari’s Share button.\n3. Choose “Add to Home Screen”.\n4. Tap “Add”.";
+      help.classList.remove("hidden");
+      return;
+    }
+
+    help.textContent = "Open your browser menu and look for “Install app”, “Install TripSpend”, or “Add to Home screen”. If that option is not shown yet, refresh the page once and try again.";
+    help.classList.remove("hidden");
   };
+
+  updateInstallUI();
 
   function initDates() {
     const t = today();

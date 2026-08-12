@@ -164,3 +164,188 @@
   border-color:#98a2b3;
   box-shadow:0 0 0 4px rgba(152,162,179,.14);
 }
+
+
+/* TripSpend v4.2 — compact iPhone layout + reliable install UI */
+html{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+.form input,.form select,.filters input,.filters select{
+  min-width:0;
+  max-width:100%;
+}
+.form input[type="date"]{
+  display:block;
+  min-width:0;
+  max-width:100%;
+}
+.form input[type="date"]::-webkit-date-and-time-value{
+  text-align:left;
+}
+.install-card.install-complete{
+  border-color:#abefc6;
+  background:var(--okbg);
+}
+.install-card.install-complete #installTitle{
+  color:var(--ok);
+}
+.install-card.install-complete #installBtn{
+  opacity:.72;
+}
+.install-help{
+  white-space:pre-line;
+  line-height:1.55;
+  padding:10px 12px;
+  border-radius:12px;
+  background:var(--surface2);
+}
+.install-help strong{
+  color:var(--text);
+}
+
+@media(max-width:600px){
+  .app{
+    width:100%;
+    padding:max(10px,env(safe-area-inset-top)) 12px calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .topbar{
+    padding:4px 1px 12px;
+  }
+  .brand-icon{
+    width:44px;
+    height:44px;
+    border-radius:13px;
+  }
+  .topbar h1{
+    font-size:23px;
+  }
+  .topbar p{
+    font-size:12px;
+  }
+
+  #setupView{
+    max-width:520px;
+    margin:0 auto;
+  }
+  #setupView .hero{
+    padding:18px 16px;
+    margin:6px 0 10px;
+    border-radius:18px;
+  }
+  #setupView .hero-logo{
+    width:76px;
+    height:76px;
+    border-radius:20px;
+    margin-bottom:10px;
+  }
+  #setupView .hero .eyebrow{
+    margin-bottom:5px;
+  }
+  #setupView .hero h2{
+    font-size:25px;
+    line-height:1.08;
+  }
+  #setupView .hero p{
+    font-size:14px;
+    margin-top:5px;
+  }
+
+  .setup-form{
+    padding:15px;
+    border-radius:18px;
+  }
+  .setup-form label{
+    margin-bottom:12px;
+    font-size:12.5px;
+    min-width:0;
+  }
+  .setup-form input,
+  .setup-form select{
+    min-height:44px;
+    height:44px;
+    padding:0 12px;
+    border-radius:12px;
+    font-size:16px;
+    line-height:1.2;
+  }
+  .setup-form .country-combobox{
+    margin-top:6px;
+  }
+  .setup-form .field-hint{
+    margin-top:5px;
+    font-size:10.5px;
+  }
+  .setup-form .form-note{
+    margin:-2px 0 12px;
+    font-size:11.5px;
+  }
+
+  /* Keep compact paired fields side-by-side on normal phones. */
+  .setup-form .grid2{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+  }
+  .setup-form .grid2 > label{
+    min-width:0;
+  }
+  .setup-form input[type="date"]{
+    width:100%;
+    min-width:0;
+    font-size:15px;
+    padding-left:10px;
+    padding-right:8px;
+  }
+  .setup-form input[type="date"]::-webkit-date-and-time-value{
+    text-align:left;
+    min-width:0;
+  }
+  .setup-form .primary{
+    min-height:48px;
+    border-radius:13px;
+    font-size:16px;
+  }
+
+  .card,.summary{
+    border-radius:18px;
+  }
+  .page-title h2{
+    font-size:25px;
+  }
+  .summary{
+    padding:18px;
+  }
+  .remaining strong{
+    font-size:38px;
+  }
+  .metric{
+    min-height:100px;
+    padding:14px;
+  }
+  .metric strong{
+    font-size:16px;
+  }
+  .action-card{
+    padding:15px;
+  }
+  .nav{
+    min-height:66px;
+    padding:7px 9px;
+    border-radius:20px;
+  }
+  .nav-btn{
+    min-height:48px;
+  }
+  .nav-add{
+    width:50px;
+    height:50px;
+    border-radius:16px;
+  }
+}
+
+@media(max-width:360px){
+  .setup-form .grid2{
+    grid-template-columns:1fr;
+  }
+}

@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
   <link rel="manifest" href="manifest.webmanifest">
@@ -33,7 +36,7 @@
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
       </div>
-      <form id="setupForm" class="card form">
+      <form id="setupForm" class="card form setup-form">
         <label>Trip name<input id="tripName" required maxlength="60" placeholder="Thailand Trip"></label>
         <label>Destination
           <div class="country-combobox">
@@ -251,8 +254,11 @@
           <button id="settingsPeople" class="secondary">Manage Travelers</button>
         </div>
 
-        <div class="card action-card">
-          <div><strong>Install TripSpend</strong><p>Use it like an app from your home screen.</p></div>
+        <div id="installCard" class="card action-card install-card">
+          <div>
+            <strong id="installTitle">Install TripSpend</strong>
+            <p id="installText">Use it like an app from your home screen.</p>
+          </div>
           <button id="installBtn" class="secondary">Install App</button>
           <p id="installHelp" class="install-help hidden"></p>
         </div>
