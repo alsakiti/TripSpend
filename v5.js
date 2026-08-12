@@ -585,6 +585,35 @@
     };
   }
 
+
+  function showDashboardTravelerForm(show = true) {
+    const form = $("dashboardTravelerForm");
+    const input = $("dashboardTravelerName");
+    if (!form) return;
+
+    form.classList.toggle("hidden", !show);
+    if (show) {
+      input.value = "";
+      setTimeout(() => input.focus(), 60);
+    }
+  }
+
+  function addDashboardTraveler(name) {
+    const clean = String(name || "").trim().replace(/\s+/g, " ").slice(0, 50);
+    if (!clean) return core.toast("Enter a traveler name");
+
+    const duplicate = state().people.some(
+      p => p.active !== false && p.name.trim().toLowerCase() === clean.toLowerCase()
+    );
+    if (duplicate) return core.toast("That traveler is already in this trip");
+
+    state().people.push(core.makePerson(clean));
+    core.save();
+    core.render();
+    showDashboardTravelerForm(false);
+    core.toast(`${clean} added`);
+  }
+
   function renderAll() {
     ensureV5Data();
     setHeaderRoute();
@@ -639,6 +668,22 @@
   });
 
   $("setupAddCountry")?.addEventListener("click", addSetupCountry);
+
+
+  // Quick traveler management from Home dashboard.
+  $("dashboardAddTraveler")?.addEventListener("click", () => {
+    showDashboardTravelerForm(true);
+    $("dashboardTravelerForm")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  $("dashboardTravelerCancel")?.addEventListener("click", () => {
+    showDashboardTravelerForm(false);
+  });
+
+  $("dashboardTravelerForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    addDashboardTraveler($("dashboardTravelerName")?.value);
+  });
 
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));

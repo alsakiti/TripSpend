@@ -1012,3 +1012,88 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     margin-bottom:10px;
   }
 }
+
+
+/* TripSpend v5.3 — quick Add Traveler on Home dashboard */
+.section-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.dashboard-traveler-card{
+  padding:14px;
+}
+.dashboard-traveler-card .people-summary{
+  margin:0;
+}
+.dashboard-traveler-form{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+}
+.dashboard-traveler-form label{
+  display:block;
+  margin:0;
+}
+.dashboard-traveler-form label>span{
+  display:block;
+  margin-bottom:6px;
+  font-size:11px;
+  font-weight:850;
+}
+.dashboard-traveler-form input{
+  width:100%;
+  min-height:42px;
+  padding:0 11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--text);
+  font-size:15px;
+}
+.dashboard-traveler-actions{
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  gap:8px;
+  margin-top:9px;
+}
+.dashboard-traveler-actions .primary,
+.dashboard-traveler-actions .secondary{
+  width:100%;
+  min-height:42px;
+}
+.dashboard-traveler-hint{
+  margin:10px 0 0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.4;
+}
+.dashboard-travelers-section .small-primary{
+  min-height:34px;
+  padding:0 10px;
+  font-size:10px;
+  border-radius:10px;
+}
+
+@media(max-width:600px){
+  .dashboard-traveler-card{
+    padding:12px;
+  }
+  .dashboard-travelers-section .section-title{
+    align-items:center;
+  }
+  .dashboard-travelers-section .section-title h2{
+    flex:1;
+  }
+  .section-actions{
+    gap:5px;
+  }
+  .dashboard-travelers-section .small-primary{
+    min-height:32px;
+    padding:0 8px;
+    font-size:9.5px;
+  }
+  .dashboard-traveler-hint{
+    font-size:9.5px;
+  }
+}

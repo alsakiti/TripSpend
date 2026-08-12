@@ -169,3 +169,12 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - The route is shown inline before Create Trip and individual countries can be removed.
 - One-country setup remains just as simple; the extra-country UI stays collapsed until requested.
 - If a trip is created with multiple countries, the total trip budget remains the overall budget and can later be allocated by country in the planner.
+
+
+## v5.3
+
+- Home dashboard now has a prominent **+ Add traveler** button.
+- Travelers can be added without opening Settings.
+- The quick form validates blank and duplicate traveler names.
+- New travelers immediately appear in traveler totals, expense assignment, split-expense controls, and settlement calculations.
+- Existing **Manage** control remains for rename/archive/delete and detailed traveler management.

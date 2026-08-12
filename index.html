@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=5.2.0">
-  <link rel="icon" href="icons/icon-192.png?v=5.2.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.2.0">
-  <link rel="stylesheet" href="style.css?v=5.2.0">
+  <link rel="manifest" href="manifest.webmanifest?v=5.3.0">
+  <link rel="icon" href="icons/icon-192.png?v=5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.3.0">
+  <link rel="stylesheet" href="style.css?v=5.3.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.2</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.3</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=5.2.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v5.2</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=5.3.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v5.3</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -212,6 +212,33 @@
             </div>
 
             <p id="fxStatus" class="fx-status">Connect to the internet once to save a rate for offline use.</p>
+          </div>
+        </section>
+
+        <section class="section dashboard-travelers-section">
+          <div class="section-title">
+            <h2>Travelers</h2>
+            <div class="section-actions">
+              <button id="dashboardAddTraveler" class="small-primary" type="button">＋ Add traveler</button>
+              <button id="openPeople" class="link-btn" type="button">Manage</button>
+            </div>
+          </div>
+
+          <div class="card dashboard-traveler-card">
+            <div id="dashboardPeople" class="people-summary"></div>
+
+            <form id="dashboardTravelerForm" class="dashboard-traveler-form hidden" autocomplete="off">
+              <label>
+                <span>Traveler name</span>
+                <input id="dashboardTravelerName" type="text" maxlength="50" placeholder="Enter name">
+              </label>
+              <div class="dashboard-traveler-actions">
+                <button id="dashboardTravelerCancel" type="button" class="secondary">Cancel</button>
+                <button type="submit" class="primary">Add Traveler</button>
+              </div>
+            </form>
+
+            <p class="dashboard-traveler-hint">Add people here, then assign expenses to them or split costs between travelers.</p>
           </div>
         </section>
 
@@ -532,8 +559,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=5.2.0"></script>
-<script src="fx.js?v=5.2.0"></script>
-<script src="v5.js?v=5.2.0"></script>
+<script src="app.js?v=5.3.0"></script>
+<script src="fx.js?v=5.3.0"></script>
+<script src="v5.js?v=5.3.0"></script>
 </body>
 </html>
