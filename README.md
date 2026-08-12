@@ -904,3 +904,48 @@ Settings → Trips & history still contains Finish Trip, Trip Report, Start New 
 ### Compatibility
 - No data-model or IndexedDB migration.
 - Existing data remains compatible.
+
+
+## v6.6.8 — Smooth & Aesthetic Pass
+
+This release intentionally adds no major feature. It focuses on making TripSpend feel calmer, smoother and more like a native mobile app.
+
+### Motion
+- Faster, softer page transitions.
+- Bottom sheets use a more natural iOS-style entrance.
+- Modal backdrops fade in smoothly.
+- Expense quick actions reveal more naturally.
+- Button press feedback is more consistent.
+- Reduce Motion is respected across the full interface.
+
+### Visual polish
+- Softer card borders and shadows.
+- More consistent corner radii.
+- Cleaner typography spacing and hierarchy.
+- Quieter Settings and Plan surfaces.
+- Refined Home budget treatment.
+- More elegant Analytics hero and category bars.
+- Improved Trip Switcher treatment.
+- Toast messages are less visually intrusive.
+
+### Navigation
+- Re-tapping the current tab no longer rebuilds the page.
+- Re-tapping the current tab smoothly returns to the top.
+- Switching tabs changes immediately instead of waiting for a long scroll animation.
+- Open expense quick-actions close automatically when changing pages.
+
+### Performance
+- Long expense, country, planned-cost and trip-history views use containment hints.
+- Expense and Plan rows can use `content-visibility` to reduce off-screen rendering work.
+- Animation rules favor transform/opacity instead of broad layout-affecting transitions.
+- Backdrop blur gracefully falls back to solid surfaces when unsupported.
+
+### Mobile
+- Slightly tighter horizontal spacing.
+- Bottom navigation uses a lighter glass treatment.
+- Bottom sheets have more native proportions.
+- Dark Mode uses softer borders and shadows while preserving readability.
+
+### Compatibility
+- No data-model or IndexedDB migration.
+- Existing trips, receipts, settlements, Past Trips, backups and settings remain compatible.

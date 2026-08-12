@@ -6714,3 +6714,447 @@ html[data-theme="dark"] .home-trip-history-btn{
     max-width:220px;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.6.8 — Smooth & Aesthetic Pass
+   ========================================================= */
+
+:root{
+  --v668-ease:cubic-bezier(.22,.72,.18,1);
+  --v668-fast:120ms;
+  --v668-med:180ms;
+  --v668-slow:260ms;
+  --v668-card-radius:17px;
+  --v668-control-radius:12px;
+  --v668-shadow-soft:0 6px 20px rgba(16,24,40,.055);
+  --v668-shadow-float:0 14px 34px rgba(16,24,40,.13);
+}
+
+/* A quieter canvas */
+body{
+  background:
+    radial-gradient(circle at 100% -8%,rgba(22,119,255,.07),transparent 24rem),
+    linear-gradient(180deg,color-mix(in srgb,var(--bg) 97%,#fff 3%),var(--bg));
+}
+.app{
+  max-width:760px;
+}
+body.sheet-open{
+  overscroll-behavior:none;
+}
+
+/* Typography: confident, readable, not oversized */
+.topbar h1{
+  letter-spacing:-.045em!important;
+}
+.page-title h2,
+.modal-head h2,
+.section-title h2{
+  letter-spacing:-.035em!important;
+}
+.page-title{
+  margin-bottom:13px!important;
+}
+.page-title .eyebrow{
+  opacity:.78;
+}
+.section-title{
+  margin-bottom:10px!important;
+}
+
+/* Card system: one visual language */
+.card,
+.summary,
+.expense,
+.plan-v651 .stop-card,
+.plan-v651 .planned-item,
+.analytics-quick-row>div,
+.analytics-v651 .settlement-payment-row,
+.settings-manage-card,
+.trip-history-card{
+  border-radius:var(--v668-card-radius)!important;
+}
+.card,
+.expense,
+.plan-v651 .stop-card,
+.plan-v651 .planned-item,
+.analytics-quick-row>div,
+.analytics-v651 .settlement-payment-row,
+.settings-manage-card,
+.trip-history-card{
+  border-color:color-mix(in srgb,var(--line) 82%,transparent)!important;
+  box-shadow:none!important;
+}
+.v6-budget-card,
+.analytics-main-card,
+.plan-v651 .plan-hero{
+  box-shadow:var(--v668-shadow-soft)!important;
+}
+
+/* Controls: reduce "web form" feel */
+input,
+select,
+textarea,
+.form input,
+.form select,
+.filters input,
+.filters select{
+  border-radius:var(--v668-control-radius)!important;
+  transition:
+    border-color var(--v668-med) ease,
+    box-shadow var(--v668-med) ease,
+    background var(--v668-med) ease!important;
+}
+.form input:focus,
+.form select:focus,
+.filters input:focus,
+.filters select:focus{
+  border-color:color-mix(in srgb,var(--brand) 56%,var(--line))!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 12%,transparent)!important;
+}
+.primary,
+.secondary,
+.danger-btn,
+.small-primary,
+.icon-btn,
+.mini,
+.mini-btn{
+  border-radius:var(--v668-control-radius)!important;
+}
+
+/* Restrict animations to compositor-friendly properties */
+button,
+.nav-btn,
+.nav-add,
+.expense,
+.card,
+.trip-switcher-past-card,
+.home-trip-history-btn{
+  transition:
+    transform var(--v668-fast) var(--v668-ease),
+    opacity var(--v668-fast) ease,
+    background-color var(--v668-med) ease,
+    border-color var(--v668-med) ease,
+    box-shadow var(--v668-med) ease!important;
+}
+.progress>div,
+.bar-fill,
+.current-country-progress>div{
+  transition:width var(--v668-slow) var(--v668-ease)!important;
+}
+button:active:not(:disabled),
+.nav-btn:active,
+.home-trip-history-btn:active,
+.trip-switcher-past-card:active{
+  transform:scale(.975)!important;
+}
+
+/* Page transitions: quick enough to feel native */
+@keyframes v668-page-in{
+  from{opacity:.72;transform:translate3d(0,4px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+.page.active{
+  animation:v668-page-in 150ms var(--v668-ease) both!important;
+  transform:translateZ(0);
+}
+
+/* Bottom sheets: softer backdrop and iOS-like entrance */
+.modal{
+  background:rgba(12,18,28,.44)!important;
+  backdrop-filter:blur(8px) saturate(112%)!important;
+  -webkit-backdrop-filter:blur(8px) saturate(112%)!important;
+}
+.modal:not(.hidden){
+  animation:v668-backdrop-in 150ms ease both;
+}
+.modal:not(.hidden) .sheet{
+  animation:v668-sheet-in 260ms cubic-bezier(.2,.78,.18,1) both!important;
+}
+@keyframes v668-backdrop-in{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes v668-sheet-in{
+  from{opacity:.72;transform:translate3d(0,28px,0) scale(.992)}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+.sheet{
+  border:1px solid color-mix(in srgb,var(--line) 72%,transparent);
+  box-shadow:0 28px 70px rgba(15,23,42,.24)!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.handle{
+  width:38px!important;
+  height:4px!important;
+  background:color-mix(in srgb,var(--muted) 42%,transparent)!important;
+}
+
+/* Navigation: floating glass, but lighter GPU load than before */
+.nav{
+  background:color-mix(in srgb,var(--surface) 88%,transparent)!important;
+  border-color:color-mix(in srgb,var(--line) 74%,transparent)!important;
+  box-shadow:0 12px 30px rgba(16,24,40,.11)!important;
+  backdrop-filter:blur(18px) saturate(118%)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(118%)!important;
+  transform:translate3d(-50%,0,0)!important;
+}
+.nav-btn.active{
+  background:color-mix(in srgb,var(--surface2) 82%,transparent)!important;
+}
+.nav-add{
+  border-radius:17px!important;
+  box-shadow:0 8px 20px rgba(15,23,42,.16)!important;
+}
+
+/* Home: premium but calm */
+.v6-dashboard .v6-current-country{
+  box-shadow:none!important;
+  border-color:color-mix(in srgb,var(--line) 80%,transparent)!important;
+}
+.v6-budget-card{
+  overflow:hidden;
+}
+.v6-summary{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(255,255,255,.13),transparent 35%),
+    linear-gradient(145deg,#082b60 0%,#0d56b9 56%,#147be8 100%)!important;
+}
+.v6-summary .progress{
+  height:7px!important;
+}
+.v6-today-card,
+.v6-plan-row,
+.home-trip-history-btn,
+.v6-health-banner{
+  box-shadow:none!important;
+}
+.home-budget-details-toggle{
+  transition:opacity var(--v668-fast) ease!important;
+}
+.home-budget-details-toggle:active{
+  opacity:.72;
+  transform:none!important;
+}
+
+/* Expenses: cards glide rather than jump */
+.expense{
+  contain:layout style paint;
+  content-visibility:auto;
+  contain-intrinsic-size:68px;
+}
+.expense:hover{
+  border-color:color-mix(in srgb,var(--brand) 16%,var(--line))!important;
+}
+.expense.quick-actions-open{
+  transform:translate3d(0,0,0);
+}
+.expense-actions{
+  will-change:auto;
+}
+.expense-quick-btn{
+  transition:
+    transform var(--v668-fast) var(--v668-ease),
+    background-color var(--v668-med) ease!important;
+}
+.expense-receipt-badge{
+  border-radius:999px!important;
+}
+
+/* Swipe action reveal: smoother and visually integrated */
+@media(hover:none), (pointer:coarse){
+  .expense.quick-actions-open{
+    background:color-mix(in srgb,var(--surface) 94%,var(--brand) 6%)!important;
+  }
+  .expense.quick-actions-open .expense-actions{
+    animation:v668-actions-in 160ms var(--v668-ease)!important;
+  }
+}
+@keyframes v668-actions-in{
+  from{opacity:0;transform:translate3d(0,-4px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+
+/* Plan: reduce stacked-card heaviness */
+.plan-v651 .plan-hero{
+  overflow:hidden;
+}
+.plan-v651 .stop-card,
+.plan-v651 .planned-item{
+  content-visibility:auto;
+  contain-intrinsic-size:118px;
+}
+.plan-v651 .stop-metrics>div{
+  border:1px solid color-mix(in srgb,var(--line) 74%,transparent);
+}
+.plan-v651 .planned-status-pill{
+  letter-spacing:.01em;
+}
+
+/* Analytics: hierarchy over decoration */
+.analytics-main-card{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(255,255,255,.10),transparent 38%),
+    linear-gradient(145deg,#0f2039,#142f55)!important;
+}
+.analytics-quick-row>div{
+  padding-top:12px!important;
+  padding-bottom:12px!important;
+}
+.analytics-v651 .analytics-category-bars .bar-track{
+  height:8px!important;
+}
+.analytics-v651 .analytics-category-bars .bar-fill{
+  border-radius:999px!important;
+}
+.analytics-pace{
+  backdrop-filter:blur(4px);
+}
+
+/* Settings: less vertical fatigue */
+.settings-group-label{
+  letter-spacing:.1em!important;
+  opacity:.8;
+}
+.settings-manage-card,
+.settings-tool-card,
+.appearance-card,
+.data-safety-card,
+.app-update-card,
+.diagnostics-card{
+  border-color:color-mix(in srgb,var(--line) 80%,transparent)!important;
+}
+.settings-manage-card:hover,
+.settings-tool-card:hover{
+  border-color:color-mix(in srgb,var(--brand) 14%,var(--line))!important;
+}
+
+/* Trip switcher: calmer current card, more obvious tap rows */
+.trip-switcher-current-card{
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb,var(--brand-soft) 72%,var(--surface)),
+      var(--surface))!important;
+}
+.trip-switcher-past-card{
+  min-height:62px;
+}
+.trip-switcher-past-list{
+  scrollbar-width:none;
+}
+.trip-switcher-past-list::-webkit-scrollbar{
+  display:none;
+}
+
+/* Empty states feel intentional */
+.empty,
+.empty-state,
+.backup-empty,
+.trip-switcher-empty{
+  background:color-mix(in srgb,var(--surface2) 48%,transparent);
+  border-color:color-mix(in srgb,var(--line) 82%,transparent)!important;
+}
+
+/* Toast: less intrusive */
+.toast{
+  bottom:calc(96px + env(safe-area-inset-bottom))!important;
+  padding:10px 14px!important;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(16,24,40,.93)!important;
+  box-shadow:0 12px 28px rgba(15,23,42,.18)!important;
+  backdrop-filter:blur(10px);
+  animation:v668-toast-in 150ms var(--v668-ease) both;
+}
+@keyframes v668-toast-in{
+  from{opacity:0;transform:translate3d(-50%,6px,0) scale(.98)}
+  to{opacity:1;transform:translate3d(-50%,0,0) scale(1)}
+}
+
+/* Dark mode: softer contrast, still readable */
+html[data-theme="dark"] body{
+  background:
+    radial-gradient(circle at 100% -5%,rgba(38,117,255,.09),transparent 25rem),
+    linear-gradient(180deg,#0b111a,var(--bg))!important;
+}
+html[data-theme="dark"] .nav{
+  background:rgba(18,26,38,.88)!important;
+  border-color:rgba(88,106,130,.28)!important;
+}
+html[data-theme="dark"] .sheet{
+  border-color:rgba(88,106,130,.28)!important;
+  box-shadow:0 28px 70px rgba(0,0,0,.42)!important;
+}
+html[data-theme="dark"] .expense.quick-actions-open{
+  background:color-mix(in srgb,var(--surface) 91%,#1677ff 9%)!important;
+}
+html[data-theme="dark"] .analytics-main-card{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(79,137,220,.14),transparent 38%),
+    linear-gradient(145deg,#111c2d,#152845)!important;
+}
+
+/* Performance hints for long views */
+#allList,
+#stopList,
+#planList,
+#tripHistoryList{
+  contain:layout style;
+}
+
+/* Mobile proportions */
+@media(max-width:600px){
+  .app{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+  .topbar{
+    padding-top:6px!important;
+    padding-bottom:11px!important;
+  }
+  .page-title h2{
+    font-size:23px!important;
+  }
+  .section{
+    margin-top:16px!important;
+  }
+  .v6-summary{
+    border-radius:18px!important;
+  }
+  .expense{
+    border-radius:15px!important;
+  }
+  .sheet{
+    padding-left:16px!important;
+    padding-right:16px!important;
+    border-radius:25px 25px 18px 18px!important;
+  }
+  .nav{
+    width:min(calc(100% - 16px),740px)!important;
+    bottom:max(7px,env(safe-area-inset-bottom))!important;
+    border-radius:21px!important;
+  }
+}
+
+/* Accessibility / performance: honor Reduce Motion fully */
+@media(prefers-reduced-motion:reduce){
+  *,
+  *::before,
+  *::after{
+    scroll-behavior:auto!important;
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+  }
+}
+
+/* Devices where blur is expensive can still render a clean solid surface. */
+@supports not (backdrop-filter:blur(1px)){
+  .nav{
+    background:var(--surface)!important;
+  }
+  .modal{
+    background:rgba(12,18,28,.56)!important;
+  }
+}

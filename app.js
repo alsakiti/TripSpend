@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.7";
+  const APP_VERSION = "6.6.8";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -700,6 +700,7 @@
 
   function closeTripSwitcher() {
     $("tripSwitcherModal")?.classList.add("hidden");
+    document.body.classList.remove("sheet-open");
     document.body.style.overflow = "";
   }
 
@@ -863,6 +864,7 @@
     if (!state.trip) return;
     renderTripSwitcher();
     $("tripSwitcherModal")?.classList.remove("hidden");
+    document.body.classList.add("sheet-open");
     document.body.style.overflow = "hidden";
   }
 
@@ -3382,10 +3384,25 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   }
 
   function page(id) {
+    const currentPage = document.querySelector(".page.active")?.id || "";
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Re-tapping the current tab should feel instant and avoid rebuilding the page.
+    if (currentPage === id) {
+      window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
+      return;
+    }
+
+    document.querySelectorAll(".expense.quick-actions-open").forEach(row => {
+      row.classList.remove("quick-actions-open");
+    });
+
     document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === id));
     const navPage = id === "trips" || id === "people" ? "settings" : id;
     document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === navPage));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Native-feeling page switches: content changes immediately, then the document settles at top.
+    window.scrollTo({ top: 0, behavior: "auto" });
 
     const started = performance.now();
 
@@ -3536,6 +3553,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     }
 
     $("expenseDetailModal").classList.remove("hidden");
+    document.body.classList.add("sheet-open");
     document.body.style.overflow = "hidden";
   }
 
@@ -3543,7 +3561,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     $("expenseDetailModal")?.classList.add("hidden");
     clearExpenseDetailReceiptURL();
     activeExpenseDetailId = "";
-    if ($("receiptViewerModal")?.classList.contains("hidden")) document.body.style.overflow = "";
+    if ($("receiptViewerModal")?.classList.contains("hidden")) {
+      document.body.classList.remove("sheet-open");
+      document.body.style.overflow = "";
+    }
   }
 
   function applyReceiptViewerScale() {
@@ -3569,6 +3590,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       applyReceiptViewerScale();
 
       $("receiptViewerModal").classList.remove("hidden");
+      document.body.classList.add("sheet-open");
       document.body.style.overflow = "hidden";
     } catch {
       toast("Could not open receipt");
@@ -3580,6 +3602,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     clearReceiptViewerURL();
     receiptViewerScale = 1;
     if ($("expenseDetailModal")?.classList.contains("hidden") && $("modal")?.classList.contains("hidden")) {
+      document.body.classList.remove("sheet-open");
       document.body.style.overflow = "";
     }
   }
@@ -3676,12 +3699,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       });
 
     $("modal").classList.remove("hidden");
+    document.body.classList.add("sheet-open");
     document.body.style.overflow = "hidden";
     setTimeout(() => $("expenseAmount").focus(), 60);
   }
 
   function closeModal() {
     $("modal").classList.add("hidden");
+    document.body.classList.remove("sheet-open");
     document.body.style.overflow = "";
     $("expenseForm").reset();
     $("editId").value = "";
@@ -4974,7 +4999,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.7", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.8", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

@@ -1,21 +1,23 @@
-TripSpend v6.6.7 update
+TripSpend v6.6.8 update
 
-1. Extract TripSpend-v6.6.7-update.zip.
+1. Extract TripSpend-v6.6.8-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.6.7.
+7. Confirm the badge says v6.6.8.
 
-Main improvements:
-- Cleaner expandable Home Budget Details
-- Swipe / ••• expense quick actions on touch devices
-- Faster expense-row rendering
-- Better Past Trip cards with Saved / Over
-- Clear Planned / Added to expenses states
-- Compact Analytics budget-pace indicator
-- Filters reset only when switching trips
-- Larger receipt preview
+Focus of this release:
+- Smoother page transitions
+- More natural bottom sheets
+- Cleaner card hierarchy and spacing
+- Softer shadows and borders
+- More polished Home / Plan / Analytics / Settings
+- Better expense swipe-action animation
+- Lighter glass bottom navigation
+- Less redundant work when re-tapping the current tab
+- Off-screen rendering performance hints
+- Better Reduce Motion support
 
 No data migration.

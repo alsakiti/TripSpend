@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v6.6.7",
+  "name": "TripSpend v6.6.8",
   "short_name": "TripSpend",
-  "description": "Polished offline-first travel spending with cleaner daily-use screens, faster expense interaction and clearer trip history.",
+  "description": "A smooth, aesthetic, offline-first travel spending app with refined motion, cleaner hierarchy and fast local performance.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
