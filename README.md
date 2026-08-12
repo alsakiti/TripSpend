@@ -419,3 +419,42 @@ Only three quick statistics stay visible:
 Payment methods, traveler share, highest-spend day, and daily spending are now under one **More insights** control so Analytics stays compact on iPhone.
 
 No expense or analytics data was removed.
+
+
+## v6.3 — Visual polish
+
+This release focuses on making TripSpend feel more like a finished iPhone app without adding dashboard clutter.
+
+### Appearance
+- Added **Auto / Light / Dark** under Settings → Appearance.
+- Auto follows the device appearance and responds when iOS changes theme.
+- The browser/PWA theme color also adapts.
+- Dark mode uses purpose-built TripSpend surfaces rather than simple color inversion.
+
+### Navigation
+- Rebuilt the bottom navigation with consistent lightweight SVG icons.
+- Added a dedicated **Plan** tab.
+- The frequent **Add Expense** action is now a floating blue button above the navigation.
+- Active tabs use a subtle blue filled indicator.
+
+### Visual hierarchy
+- Cleaner system typography and stronger important numbers.
+- Softer cards, fewer heavy shadows, and subtler borders.
+- Tabular numerals improve alignment for money values.
+- Current-trip flags appear together with the active country emphasized.
+
+### Motion
+- Gentle page/sheet transitions.
+- Progress bars animate smoothly.
+- Save Expense briefly changes to **✓ Saved** before closing.
+- All decorative motion is disabled automatically when Reduce Motion is enabled.
+
+### Empty states
+- Expenses and Analytics now use clearer intentional empty states instead of plain blank messages.
+- The empty Expenses page includes **Add first expense**.
+
+### Status colors
+- Budget progress stays neutral normally.
+- Amber appears near the limit.
+- Red appears only when over budget.
+- Online/offline state uses a small status dot.

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.2.0";
+  const APP_VERSION = "6.3.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -24,7 +24,49 @@
   const KEYWORDS = {Coffee:["coffee","cafe","café","latte","espresso","starbucks"],Food:["dinner","lunch","breakfast","restaurant","meal","burger","pizza","sushi","food","brunch"],Transport:["taxi","uber","grab","careem","metro","bus","train","fuel","gas","parking","toll"],Hotel:["hotel","resort","room","booking","airbnb","hostel"],Shopping:["shopping","mall","clothes","shirt","shoes","souvenir","gift"],Activities:["ticket","tour","museum","spa","massage","activity","excursion","park"],Flights:["flight","airline","airport","baggage","luggage"],Groceries:["grocery","groceries","supermarket","market","water","snacks"]};
   const $ = id => document.getElementById(id);
 
+  const APPEARANCE_VALUES = new Set(["system", "light", "dark"]);
+
+  function normalizedAppearance(value) {
+    return APPEARANCE_VALUES.has(value) ? value : "system";
+  }
+
+  function resolvedAppearance(value = "system") {
+    const pref = normalizedAppearance(value);
+    if (pref === "light" || pref === "dark") return pref;
+    return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
+  }
+
+  function applyAppearance(value = "system") {
+    const pref = normalizedAppearance(value);
+    const resolved = resolvedAppearance(pref);
+    document.documentElement.dataset.appearance = pref;
+    document.documentElement.dataset.theme = resolved;
+
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", resolved === "dark" ? "#0b1018" : "#f4f6fa");
+  }
+
+  function renderAppearanceControls() {
+    const pref = normalizedAppearance(state?.preferences?.appearance || "system");
+    document.querySelectorAll("[data-appearance]").forEach(button => {
+      const active = button.dataset.appearance === pref;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function setAppearancePreference(value) {
+    const pref = normalizedAppearance(value);
+    state.preferences = state.preferences || {};
+    state.preferences.appearance = pref;
+    save();
+    applyAppearance(pref);
+    renderAppearanceControls();
+    toast(pref === "system" ? "Appearance follows your device" : `${pref[0].toUpperCase() + pref.slice(1)} mode enabled`);
+  }
+
   let state = load();
+  applyAppearance(state.preferences?.appearance || "system");
   let installPrompt = null;
   let suggestedCategory = "";
 
@@ -126,7 +168,8 @@
           ? clean.preferences.recentCategories.filter(x => CATS.includes(x)).slice(0, 5)
           : [],
         lastStopId: clean.preferences?.lastStopId ? String(clean.preferences.lastStopId) : "",
-        lastPaidByPersonId: clean.preferences?.lastPaidByPersonId ? String(clean.preferences.lastPaidByPersonId) : ""
+        lastPaidByPersonId: clean.preferences?.lastPaidByPersonId ? String(clean.preferences.lastPaidByPersonId) : "",
+        appearance: normalizedAppearance(clean.preferences?.appearance || "system")
       }
     };
   }
@@ -653,8 +696,8 @@
     el.replaceChildren();
     if (!rows.length) {
       const empty = document.createElement("div");
-      empty.className = "empty";
-      empty.textContent = "Not enough data yet.";
+      empty.className = "empty empty-premium compact";
+      empty.innerHTML = "<strong>Nothing to chart yet</strong><span>Add a few expenses and this breakdown will build automatically.</span>";
       el.append(empty);
       return;
     }
@@ -690,8 +733,8 @@
 
     if (!rows.length) {
       const empty = document.createElement("div");
-      empty.className = "empty";
-      empty.textContent = "Daily spending will appear here.";
+      empty.className = "empty empty-premium compact";
+      empty.innerHTML = "<strong>No daily trend yet</strong><span>Daily spending appears after you start recording expenses.</span>";
       el.append(empty);
       return;
     }
@@ -776,8 +819,22 @@
 
     if (!expenses.length) {
       const empty = document.createElement("div");
-      empty.className = "empty";
-      empty.textContent = "No expenses yet.";
+      empty.className = "empty empty-premium";
+      empty.innerHTML = `
+        <span class="empty-premium-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-2.2-1.4-1.9 1.4-1.9-1.4-1.9 1.4-1.9-1.4L6 20.5z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
+        <strong>No expenses yet</strong>
+        <span>Your spending will appear here as soon as you add the first expense.</span>
+      `;
+
+      if (actions) {
+        const add = document.createElement("button");
+        add.type = "button";
+        add.className = "secondary empty-action";
+        add.textContent = "＋ Add first expense";
+        add.onclick = () => openModal();
+        empty.append(add);
+      }
+
       el.append(empty);
       return;
     }
@@ -1130,6 +1187,7 @@
     $("setupView").classList.toggle("hidden", hasTrip);
     $("mainView").classList.toggle("hidden", !hasTrip);
     $("nav").classList.toggle("hidden", !hasTrip);
+    $("navAdd")?.classList.toggle("hidden", !hasTrip);
     $("settingsShortcut").classList.toggle("hidden", !hasTrip);
 
     if (!hasTrip) {
@@ -1148,8 +1206,13 @@
     renderHealth();
     $("remainingValue").textContent = money(remaining, t.homeCurrency).replace(` ${t.homeCurrency}`, "");
     $("remainingCode").textContent = t.homeCurrency;
-    $("usedPct").textContent = `${Math.round(pct)}% used`;
+    const rawBudgetPct = t.budget > 0 ? (s / t.budget * 100) : 0;
+    $("usedPct").textContent = `${Math.round(rawBudgetPct)}% used`;
+    $("usedPct").classList.toggle("budget-watch", rawBudgetPct >= 80 && rawBudgetPct <= 100);
+    $("usedPct").classList.toggle("budget-over", rawBudgetPct > 100);
     $("progressBar").style.width = `${pct}%`;
+    $("progressBar").classList.toggle("budget-watch", rawBudgetPct >= 80 && rawBudgetPct <= 100);
+    $("progressBar").classList.toggle("budget-over", rawBudgetPct > 100);
     $("budgetValue").textContent = money(t.budget, t.homeCurrency);
     $("spentValue").textContent = money(s, t.homeCurrency);
     $("safeToday").textContent = money(daysLeft > 0 ? Math.max(0, remaining) / daysLeft : 0, t.homeCurrency);
@@ -1179,6 +1242,7 @@
     renderDaily($("dailyAnalytics"));
 
     fillSettings();
+    renderAppearanceControls();
     renderRates();
     renderPeoplePage();
     window.dispatchEvent(new CustomEvent("tripspend:render"));
@@ -1497,7 +1561,8 @@
         lastCategory: "Food",
         recentCategories: [],
         lastStopId: "",
-        lastPaidByPersonId: ""
+        lastPaidByPersonId: "",
+        appearance: "system"
       }
     };
 
@@ -1612,9 +1677,27 @@
     ].filter(category => CATS.includes(category)).slice(0, 5);
 
     save();
-    closeModal();
-    render();
-    toast(index >= 0 ? "Expense updated" : "Expense saved");
+
+    const saveButton = e.submitter || $("expenseForm")?.querySelector('button[type="submit"]');
+    const originalLabel = saveButton?.textContent || "Save Expense";
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.classList.add("save-success");
+      saveButton.innerHTML = `<span class="save-check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19.5 6.8"/></svg></span> Saved`;
+    }
+
+    const message = index >= 0 ? "Expense updated" : "Expense saved";
+    window.setTimeout(() => {
+      closeModal();
+      render();
+      toast(message);
+
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.classList.remove("save-success");
+        saveButton.textContent = originalLabel;
+      }
+    }, 260);
   };
 
   $("addPersonForm").onsubmit = e => {
@@ -1769,6 +1852,17 @@
 
   document.querySelectorAll(".nav-btn").forEach(button => {
     button.onclick = () => page(button.dataset.page);
+  });
+
+  document.querySelectorAll("[data-appearance]").forEach(button => {
+    button.onclick = () => setAppearancePreference(button.dataset.appearance);
+  });
+
+  const colorSchemeMedia = window.matchMedia?.("(prefers-color-scheme: dark)");
+  colorSchemeMedia?.addEventListener?.("change", () => {
+    if (normalizedAppearance(state.preferences?.appearance || "system") === "system") {
+      applyAppearance("system");
+    }
   });
 
   document.onkeydown = e => {
@@ -2034,7 +2128,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.2.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.3.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

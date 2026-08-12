@@ -538,7 +538,25 @@
         ? `${core.money(Math.max(0, b.remaining), state().trip.homeCurrency)} left`
         : "No country budget";
     }
-    if (bar) bar.style.width = `${b.pct}%`;
+    if (bar) {
+      bar.style.width = `${b.pct}%`;
+      const rawCountryPct = b.budget > 0 ? (b.spent / b.budget * 100) : 0;
+      bar.classList.toggle("budget-watch", rawCountryPct >= 80 && rawCountryPct <= 100);
+      bar.classList.toggle("budget-over", rawCountryPct > 100);
+    }
+
+    const rail = $("tripFlagRail");
+    if (rail) {
+      rail.replaceChildren();
+      stops().forEach(tripStop => {
+        const flag = document.createElement("span");
+        flag.className = "trip-flag";
+        flag.classList.toggle("active", tripStop.id === stop.id);
+        flag.textContent = core.countryFlag(tripStop.country);
+        flag.title = tripStop.country;
+        rail.append(flag);
+      });
+    }
   }
 
   function renderCountryBudgets() {
