@@ -1,12 +1,12 @@
-const CACHE = "tripspend-v6.3.0";
+const CACHE = "tripspend-v6.3.1";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.3.0",
-  "./app.js?v=6.3.0",
-  "./fx.js?v=6.3.0",
-  "./v5.js?v=6.3.0",
-  "./manifest.webmanifest?v=6.3.0",
+  "./style.css?v=6.3.1",
+  "./app.js?v=6.3.1",
+  "./fx.js?v=6.3.1",
+  "./v5.js?v=6.3.1",
+  "./manifest.webmanifest?v=6.3.1",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",

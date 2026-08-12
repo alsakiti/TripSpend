@@ -458,3 +458,11 @@ This release focuses on making TripSpend feel more like a finished iPhone app wi
 - Amber appears near the limit.
 - Red appears only when over budget.
 - Online/offline state uses a small status dot.
+
+
+## v6.3.1
+
+- Removed the black Appearance confirmation toast.
+- Auto / Light / Dark still work normally.
+- Appearance changes are now completely silent.
+- Selecting the already-active appearance no longer performs an unnecessary save.

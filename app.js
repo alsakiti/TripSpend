@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.3.0";
+  const APP_VERSION = "6.3.1";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -58,11 +58,19 @@
   function setAppearancePreference(value) {
     const pref = normalizedAppearance(value);
     state.preferences = state.preferences || {};
+
+    // Appearance changes are intentionally silent. This prevents theme
+    // confirmations from interrupting normal app use on iPhone.
+    if (state.preferences.appearance === pref) {
+      applyAppearance(pref);
+      renderAppearanceControls();
+      return;
+    }
+
     state.preferences.appearance = pref;
     save();
     applyAppearance(pref);
     renderAppearanceControls();
-    toast(pref === "system" ? "Appearance follows your device" : `${pref[0].toUpperCase() + pref.slice(1)} mode enabled`);
   }
 
   let state = load();
@@ -2128,7 +2136,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.3.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.3.1", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

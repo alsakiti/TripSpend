@@ -1,21 +1,13 @@
-TripSpend v6.3 update
+TripSpend v6.3.1 update
 
-1. Extract TripSpend-v6.3-update.zip.
+1. Extract TripSpend-v6.3.1-update.zip.
 2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
-3. Replace the existing files and commit.
-4. Wait about 1–2 minutes for GitHub Pages.
+3. Replace existing files and commit.
+4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the visible badge says v6.3.
+7. Confirm the badge says v6.3.1.
 
-Main visual changes:
-- Settings → Appearance: Auto / Light / Dark
-- New SVG bottom navigation with Home, Expenses, Plan, Analytics, Settings
-- Floating Add Expense button
-- Cleaner typography and cards
-- Trip country flag rail
-- Subtle animations and ✓ Saved feedback
-- Better empty states
-- Amber/red budget warnings only when meaningful
-
-No trip, expense, traveler, plan, rate, or settlement data is removed.
+Fix:
+The black “Appearance follows your device” / Light mode / Dark mode popup has been removed completely.
+Appearance still works normally and now changes silently.
