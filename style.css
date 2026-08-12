@@ -1394,3 +1394,35 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     background:transparent;
   }
 }
+
+
+/* TripSpend v5.6 — edit added countries/travelers */
+.setup-item-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  flex:0 0 auto;
+}
+.setup-item-actions .mini-btn{
+  min-height:32px;
+  padding:0 9px;
+  border-radius:9px;
+  font-size:10px;
+}
+.setup-country-list .setup-route-item{
+  grid-template-columns:28px minmax(0,1fr) auto;
+}
+.setup-people-list .setup-traveler-item{
+  grid-template-columns:32px minmax(0,1fr) auto;
+}
+@media(max-width:600px){
+  .setup-item-actions{
+    gap:4px;
+  }
+  .setup-item-actions .mini-btn{
+    min-height:30px;
+    padding:0 7px;
+    font-size:9px;
+  }
+}

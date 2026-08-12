@@ -8,6 +8,8 @@
   let preparedSource = null;
   let setupDraftStops = [];
   let setupDraftPeople = [];
+  let editingSetupStopIndex = -1;
+  let editingSetupPersonIndex = -1;
 
   const CURRENCY_BY_COUNTRY = {
     Oman:"OMR", Thailand:"THB", Indonesia:"IDR", Singapore:"SGD", Malaysia:"MYR",
@@ -78,16 +80,28 @@
       small.textContent = `${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)} • ${stop.currency}`;
       body.append(strong, small);
 
+      const actions = document.createElement("div");
+      actions.className = "setup-item-actions";
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "mini-btn";
+      edit.textContent = "Edit";
+      edit.onclick = () => editSetupCountry(index);
+
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "mini-btn delete";
       remove.textContent = "Remove";
       remove.onclick = () => {
+        if (editingSetupStopIndex === index) cancelSetupCountryEdit();
         setupDraftStops.splice(index, 1);
+        if (editingSetupStopIndex > index) editingSetupStopIndex -= 1;
         renderSetupRoute();
       };
 
-      row.append(number, body, remove);
+      actions.append(edit, remove);
+      row.append(number, body, actions);
       list.append(row);
     });
 
@@ -114,6 +128,45 @@
     }
   }
 
+
+  function setCountryPanelMode(editing = false) {
+    if ($("setupCountryPanelTitle")) {
+      $("setupCountryPanelTitle").textContent = editing ? "Edit country" : "Add another country";
+    }
+    if ($("setupAddCountry")) {
+      $("setupAddCountry").textContent = editing ? "Save Changes" : "Add Country";
+    }
+  }
+
+  function editSetupCountry(index) {
+    const stop = setupDraftStops[index];
+    if (!stop) return;
+
+    editingSetupStopIndex = index;
+    setCountryPanelMode(true);
+    $("setupMultiCountryPanel")?.classList.remove("hidden");
+
+    core.setDestinationValue("setupExtraCountry", stop.country);
+    $("setupExtraStart").value = stop.startDate;
+    $("setupExtraEnd").value = stop.endDate;
+    $("setupExtraCurrency").value = stop.currency;
+
+    $("setupExtraStart").dispatchEvent(new Event("input", { bubbles: true }));
+    $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
+
+    setTimeout(() => {
+      $("setupMultiCountryPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      $("setupExtraCountry")?.focus();
+    }, 60);
+  }
+
+  function cancelSetupCountryEdit() {
+    editingSetupStopIndex = -1;
+    setCountryPanelMode(false);
+    core.setDestinationValue("setupExtraCountry", "");
+    $("setupMultiCountryPanel")?.classList.add("hidden");
+  }
+
   function setSetupExtraDefaults() {
     const lastEnd = setupDraftStops.at(-1)?.endDate || $("endDate")?.value || $("startDate")?.value || core.today();
     const start = daysAfter(lastEnd, 1);
@@ -130,27 +183,53 @@
 
     const startDate = $("setupExtraStart").value;
     const endDate = $("setupExtraEnd").value;
-    if (!core.validDates(startDate, endDate)) return core.toast("Country end date must be after its start date");
-
-    if (setupDraftStops.some(s => s.country === country && s.startDate === startDate)) {
-      return core.toast("That country is already added");
+    if (!core.validDates(startDate, endDate)) {
+      return core.toast("Country end date must be after its start date");
     }
 
-    setupDraftStops.push({
-      id: core.uid("stop"),
+    const duplicate = setupDraftStops.some((s, i) =>
+      i !== editingSetupStopIndex &&
+      s.country.toLowerCase() === country.toLowerCase() &&
+      s.startDate === startDate
+    );
+    if (duplicate) return core.toast("That country is already added for those dates");
+
+    const data = {
+      id: editingSetupStopIndex >= 0
+        ? setupDraftStops[editingSetupStopIndex].id
+        : core.uid("stop"),
       country,
       startDate,
       endDate,
       currency: $("setupExtraCurrency").value || setupRouteCurrency(country),
-      budget: 0,
-      createdAt: Date.now()
-    });
+      budget: editingSetupStopIndex >= 0
+        ? Number(setupDraftStops[editingSetupStopIndex].budget || 0)
+        : 0,
+      createdAt: editingSetupStopIndex >= 0
+        ? setupDraftStops[editingSetupStopIndex].createdAt
+        : Date.now()
+    };
+
+    const wasEditing = editingSetupStopIndex >= 0;
+    if (wasEditing) {
+      setupDraftStops[editingSetupStopIndex] = data;
+    } else {
+      setupDraftStops.push(data);
+    }
 
     setupDraftStops.sort((a,b) => a.startDate.localeCompare(b.startDate));
+    editingSetupStopIndex = -1;
+    setCountryPanelMode(false);
     core.setDestinationValue("setupExtraCountry", "");
     renderSetupRoute();
-    setSetupExtraDefaults();
-    core.toast(`${country} added`);
+
+    if (wasEditing) {
+      $("setupMultiCountryPanel")?.classList.add("hidden");
+      core.toast(`${country} updated`);
+    } else {
+      setSetupExtraDefaults();
+      core.toast(`${country} added`);
+    }
   }
 
   function setupStops() {
@@ -159,6 +238,8 @@
 
   function clearSetupStops() {
     setupDraftStops = [];
+    editingSetupStopIndex = -1;
+    setCountryPanelMode(false);
     renderSetupRoute();
     core.setDestinationValue("setupExtraCountry", "");
     $("setupMultiCountryPanel")?.classList.add("hidden");
@@ -194,16 +275,28 @@
       small.textContent = `Traveler ${index + 2}`;
       body.append(strong, small);
 
+      const actions = document.createElement("div");
+      actions.className = "setup-item-actions";
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "mini-btn";
+      edit.textContent = "Edit";
+      edit.onclick = () => editSetupTraveler(index);
+
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "mini-btn delete";
       remove.textContent = "Remove";
       remove.onclick = () => {
+        if (editingSetupPersonIndex === index) cancelSetupTravelerEdit();
         setupDraftPeople.splice(index, 1);
+        if (editingSetupPersonIndex > index) editingSetupPersonIndex -= 1;
         renderSetupTravelers();
       };
 
-      row.append(avatar, body, remove);
+      actions.append(edit, remove);
+      row.append(avatar, body, actions);
       list.append(row);
     });
 
@@ -213,6 +306,39 @@
         ? "＋ Add another"
         : "＋ Add traveler";
     }
+  }
+
+
+  function setTravelerPanelMode(editing = false) {
+    if ($("setupTravelerPanelTitle")) {
+      $("setupTravelerPanelTitle").textContent = editing ? "Edit traveler" : "Add traveler";
+    }
+    if ($("setupAddTraveler")) {
+      $("setupAddTraveler").textContent = editing ? "Save Changes" : "Add Traveler";
+    }
+  }
+
+  function editSetupTraveler(index) {
+    const person = setupDraftPeople[index];
+    if (!person) return;
+
+    editingSetupPersonIndex = index;
+    setTravelerPanelMode(true);
+    $("setupTravelersPanel")?.classList.remove("hidden");
+    $("setupTravelerName").value = person.name;
+
+    setTimeout(() => {
+      $("setupTravelersPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      $("setupTravelerName")?.focus();
+      $("setupTravelerName")?.select();
+    }, 60);
+  }
+
+  function cancelSetupTravelerEdit() {
+    editingSetupPersonIndex = -1;
+    setTravelerPanelMode(false);
+    if ($("setupTravelerName")) $("setupTravelerName").value = "";
+    $("setupTravelersPanel")?.classList.add("hidden");
   }
 
   function addSetupTraveler() {
@@ -227,15 +353,31 @@
       return core.toast("That is already the first traveler");
     }
 
-    if (setupDraftPeople.some(person => person.name.toLowerCase() === name.toLowerCase())) {
-      return core.toast("That traveler is already added");
+    const duplicate = setupDraftPeople.some((person, i) =>
+      i !== editingSetupPersonIndex &&
+      person.name.toLowerCase() === name.toLowerCase()
+    );
+    if (duplicate) return core.toast("That traveler is already added");
+
+    const wasEditing = editingSetupPersonIndex >= 0;
+    if (wasEditing) {
+      setupDraftPeople[editingSetupPersonIndex] = { name };
+    } else {
+      setupDraftPeople.push({ name });
     }
 
-    setupDraftPeople.push({ name });
+    editingSetupPersonIndex = -1;
+    setTravelerPanelMode(false);
     input.value = "";
     renderSetupTravelers();
-    core.toast(`${name} added`);
-    setTimeout(() => input.focus(), 50);
+
+    if (wasEditing) {
+      $("setupTravelersPanel")?.classList.add("hidden");
+      core.toast(`${name} updated`);
+    } else {
+      core.toast(`${name} added`);
+      setTimeout(() => input.focus(), 50);
+    }
   }
 
   function setupPeople() {
@@ -244,6 +386,8 @@
 
   function clearSetupPeople() {
     setupDraftPeople = [];
+    editingSetupPersonIndex = -1;
+    setTravelerPanelMode(false);
     renderSetupTravelers();
     const input = $("setupTravelerName");
     if (input) input.value = "";
@@ -755,9 +899,15 @@
   $("setupToggleTravelers")?.addEventListener("click", () => {
     const panel = $("setupTravelersPanel");
     if (!panel) return;
-    panel.classList.toggle("hidden");
-    if (!panel.classList.contains("hidden")) {
+
+    if (panel.classList.contains("hidden")) {
+      editingSetupPersonIndex = -1;
+      setTravelerPanelMode(false);
+      if ($("setupTravelerName")) $("setupTravelerName").value = "";
+      panel.classList.remove("hidden");
       setTimeout(() => $("setupTravelerName")?.focus(), 60);
+    } else {
+      cancelSetupTravelerEdit();
     }
   });
 
@@ -772,8 +922,47 @@
   // Optional additional countries during initial trip setup.
   core.opts($("setupExtraCurrency"), core.CURS, "USD");
 
-  $("startDate")?.addEventListener("change", renderSetupRoute);
-  $("endDate")?.addEventListener("change", renderSetupRoute);
+  $("startDate")?.addEventListener("change", () => {
+    const start = $("startDate").value;
+    const end = $("endDate").value;
+    if (start) $("endDate").min = start;
+    if (start && (!end || end < start)) {
+      $("endDate").value = daysAfter(start, 2);
+      $("endDate").dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    renderSetupRoute();
+  });
+
+  $("endDate")?.addEventListener("change", () => {
+    const start = $("startDate").value;
+    const end = $("endDate").value;
+    if (start && end && end < start) {
+      $("endDate").value = start;
+      $("endDate").dispatchEvent(new Event("input", { bubbles: true }));
+      core.toast("End date adjusted to match the start date");
+    }
+    renderSetupRoute();
+  });
+
+  $("setupExtraStart")?.addEventListener("change", () => {
+    const start = $("setupExtraStart").value;
+    const end = $("setupExtraEnd").value;
+    if (start) $("setupExtraEnd").min = start;
+    if (start && (!end || end < start)) {
+      $("setupExtraEnd").value = daysAfter(start, 2);
+      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  });
+
+  $("setupExtraEnd")?.addEventListener("change", () => {
+    const start = $("setupExtraStart").value;
+    const end = $("setupExtraEnd").value;
+    if (start && end && end < start) {
+      $("setupExtraEnd").value = start;
+      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
+      core.toast("End date adjusted to match the start date");
+    }
+  });
   core.initDestinationAutocomplete("setupExtraCountry", "setupExtraCountryOptions", "");
 
   bindDateDisplay("setupExtraStart", "setupExtraStartDisplay", true);
@@ -785,10 +974,16 @@
   $("setupToggleCountries")?.addEventListener("click", () => {
     const panel = $("setupMultiCountryPanel");
     if (!panel) return;
-    panel.classList.toggle("hidden");
-    if (!panel.classList.contains("hidden")) {
+
+    if (panel.classList.contains("hidden")) {
+      editingSetupStopIndex = -1;
+      setCountryPanelMode(false);
+      core.setDestinationValue("setupExtraCountry", "");
       setSetupExtraDefaults();
+      panel.classList.remove("hidden");
       setTimeout(() => $("setupExtraCountry")?.focus(), 80);
+    } else {
+      cancelSetupCountryEdit();
     }
   });
 
@@ -821,15 +1016,8 @@
   });
 
 
-  $("setupCancelCountry")?.addEventListener("click", () => {
-    $("setupMultiCountryPanel")?.classList.add("hidden");
-    core.setDestinationValue("setupExtraCountry", "");
-  });
-
-  $("setupCancelTraveler")?.addEventListener("click", () => {
-    $("setupTravelersPanel")?.classList.add("hidden");
-    if ($("setupTravelerName")) $("setupTravelerName").value = "";
-  });
+  $("setupCancelCountry")?.addEventListener("click", cancelSetupCountryEdit);
+  $("setupCancelTraveler")?.addEventListener("click", cancelSetupTravelerEdit);
 
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));

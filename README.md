@@ -207,3 +207,15 @@ The New Trip screen was redesigned after mobile usability feedback.
 - Travelers are grouped into one simple Travelers section.
 - **+ Add traveler** stays compact until tapped.
 - Only **Home currency** remains as a trip-level currency; local currencies live with each country.
+
+
+## v5.6
+
+- Added **Edit** beside every additional country during New Trip setup.
+- Edit reopens the country form with its country, From/To dates, and local currency already filled.
+- Added **Edit** beside every additional traveler during New Trip setup.
+- Edit reopens the traveler form with the current name.
+- Existing **Remove** controls remain.
+- Country 1 remains directly editable in its visible fields.
+- The first traveler remains directly editable in the **Your name** field.
+- Prevents invalid country dates: moving From after To automatically adjusts To.

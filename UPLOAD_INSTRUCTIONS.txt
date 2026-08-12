@@ -1,21 +1,15 @@
-TripSpend v5.5 update
+TripSpend v5.6 update
 
-1. Extract TripSpend-v5.5-update.zip.
+1. Extract TripSpend-v5.6-update.zip.
 2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
 3. Replace existing files and commit.
-4. Wait 1–2 minutes for GitHub Pages.
-5. Completely close the Home Screen app.
-6. Reopen TripSpend while online.
-7. Confirm the visible badge says v5.5.
+4. Wait 1–2 minutes.
+5. Completely close TripSpend and reopen it while online.
+6. Confirm the version badge says v5.6.
 
-The New Trip flow is now:
-Trip name
-→ Countries (Country 1 + its dates/currency)
-→ + Add another country (optional)
-→ Total trip budget
-→ Travelers
-→ + Add traveler (optional)
-→ Home currency
-→ Create Trip
-
-There is no separate "route" concept anymore. Overall trip dates are calculated automatically from the country dates.
+New:
+- Added countries now have Edit + Remove.
+- Added travelers now have Edit + Remove.
+- Country 1 is edited directly in its visible fields.
+- The first traveler is edited directly in the Your name field.
+- Invalid From/To date combinations are corrected automatically.
