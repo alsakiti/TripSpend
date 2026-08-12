@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v6.5",
+  "name": "TripSpend v6.5.1",
   "short_name": "TripSpend",
-  "description": "Offline-first multi-trip travel spending with trip history, settlement payments, powerful expense search and automatic backups.",
+  "description": "Offline-first multi-trip spending with cleaner planning, analytics, settlements, filters and backups.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -582,3 +582,27 @@ Search also matches:
 ### Data safety
 - v6.4 IndexedDB storage and automatic restore points remain unchanged.
 - Trip History is stored inside the same protected database and portable JSON backup.
+
+
+## v6.5.1 — Plan & Analytics Makeover
+
+### Plan
+- New compact trip-progress hero.
+- Country flags form a visual route with the current country highlighted.
+- Spent / Upcoming / Committed totals are compact.
+- Add Country form is hidden until **+ Add country** is tapped.
+- Add Planned Cost form is hidden until **+ Add cost** is tapped.
+- Country cards are smaller and focus on Spent / Planned / Budget left.
+- All existing country, budget, remove, planned-cost and date functionality remains.
+
+### Analytics
+- Total Spent is the primary focus.
+- Remaining and Top Category sit directly below the budget progress.
+- Personal / Shared / Expense Count are compact.
+- Avg/day, Avg expense and Largest use a single clean row.
+- Category spending no longer sits inside a heavy chart card.
+- Who Owes Whom stays visible with Mark Paid and Settlement History.
+- Payment, Traveler and Daily breakdowns remain behind More Insights.
+- Dark Mode remains supported.
+
+This release does not change trip data, multi-trip history, settlement records, filters, IndexedDB, restore points, or backup behavior.

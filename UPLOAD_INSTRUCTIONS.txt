@@ -1,25 +1,15 @@
-TripSpend v6.5 update
+TripSpend v6.5.1 update
 
-1. Extract TripSpend-v6.5-update.zip.
-2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
-3. Replace existing files and commit.
+1. Extract TripSpend-v6.5.1-update.zip.
+2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
+3. Replace the old files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the visible badge says v6.5.
+7. Confirm the badge says v6.5.1.
 
-IMPORTANT:
-Your existing v6.4 trip stays as your CURRENT TRIP.
-It is not automatically archived or deleted.
+This update redesigns:
+- Plan
+- Analytics
 
-New features:
-- Settings → Trips & history
-- Finish Trip + final summary
-- Start New Trip without deleting the old one
-- Reopen Past Trips
-- Analytics → Who owes whom → Mark Paid
-- Settlement history + Undo
-- Expenses → Search + Filters
-  Category / Personal-Shared / Country / Traveler / Payment / Date range
-
-All v6.4 IndexedDB backups and performance improvements remain.
+All v6.5 functionality remains unchanged.

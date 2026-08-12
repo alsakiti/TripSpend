@@ -763,10 +763,11 @@
       const metrics = document.createElement("div");
       metrics.className = "stop-metrics";
       const budget = Number(s.budget || 0);
+      const remaining = budget > 0 ? budget - spent : null;
       metrics.innerHTML = `
         <div><small>Spent</small><strong>${core.money(spent, state().trip.homeCurrency)}</strong></div>
-        <div><small>Upcoming</small><strong>${core.money(planned, state().trip.homeCurrency)}</strong></div>
-        <div><small>Budget</small><strong>${budget > 0 ? core.money(budget, state().trip.homeCurrency) : "—"}</strong></div>
+        <div><small>Planned</small><strong>${core.money(planned, state().trip.homeCurrency)}</strong></div>
+        <div><small>${budget > 0 ? "Left" : "Budget"}</small><strong class="${remaining !== null && remaining < 0 ? "country-over-budget" : ""}">${budget > 0 ? core.money(Math.abs(remaining), state().trip.homeCurrency) + (remaining < 0 ? " over" : "") : "Set"}</strong></div>
       `;
 
       const actions = document.createElement("div");
@@ -775,7 +776,7 @@
       const budgetBtn = document.createElement("button");
       budgetBtn.className = "mini-btn";
       budgetBtn.type = "button";
-      budgetBtn.textContent = budget > 0 ? "Edit budget" : "Set budget";
+      budgetBtn.textContent = budget > 0 ? "Edit" : "Set budget";
       budgetBtn.onclick = () => setCountryBudget(s.id);
       actions.append(budgetBtn);
 
@@ -1572,10 +1573,75 @@
       : `${count} countries • ${names.slice(0, 3).join(" → ")}${count > 3 ? ` → +${count - 3} more` : ""}`;
   }
 
+  function planTripProgress() {
+    if (!state().trip?.startDate || !state().trip?.endDate) return 0;
+
+    const start = new Date(`${state().trip.startDate}T12:00:00`);
+    const end = new Date(`${state().trip.endDate}T12:00:00`);
+    const now = new Date(`${core.today()}T12:00:00`);
+
+    const total = Math.max(1, end - start);
+    return Math.max(0, Math.min(100, (now - start) / total * 100));
+  }
+
+  function renderPlanHero() {
+    if (!state().trip) return;
+
+    const pct = planTripProgress();
+
+    if ($("planTripName")) $("planTripName").textContent = state().trip.name;
+    if ($("planTripDates")) {
+      $("planTripDates").textContent =
+        `${core.fmtDateWithYear(state().trip.startDate)} – ${core.fmtDateWithYear(state().trip.endDate)}`;
+    }
+
+    if ($("planProgressPct")) $("planProgressPct").textContent = `${Math.round(pct)}%`;
+    if ($("planProgressBar")) $("planProgressBar").style.width = `${pct}%`;
+
+    const route = $("planFlagRoute");
+    if (!route) return;
+
+    route.replaceChildren();
+    const ordered = stops().slice().sort((a,b) =>
+      (a.startDate || "").localeCompare(b.startDate || "")
+    );
+    const active = stopForDate(core.today());
+
+    ordered.forEach((stop, index) => {
+      const item = document.createElement("div");
+      item.className = "plan-flag-stop";
+      item.classList.toggle("active", active?.id === stop.id);
+
+      const flag = document.createElement("span");
+      flag.className = "plan-flag";
+      flag.textContent = core.countryFlag(stop.country);
+
+      const country = document.createElement("small");
+      country.textContent = stop.country;
+
+      item.append(flag, country);
+      route.append(item);
+
+      if (index < ordered.length - 1) {
+        const line = document.createElement("span");
+        line.className = "plan-route-line";
+        route.append(line);
+      }
+    });
+  }
+
+  function setPlanEditor(id, open) {
+    const el = $(id);
+    if (!el) return;
+    el.classList.toggle("hidden", !open);
+    if (open) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+  }
+
   function renderFeaturePage(id) {
     if (!state().trip) return;
 
     if (id === "plan") {
+      renderPlanHero();
       renderPlannerSummary();
       renderStops();
       renderPlanStopOptions();
@@ -1853,6 +1919,19 @@
   });
   $("planDone")?.addEventListener("click", () => core.page("dashboard"));
 
+  $("planAddCountry")?.addEventListener("click", () => {
+    setPlanEditor("addStopForm", true);
+    $("newStopCountry")?.focus();
+  });
+  $("planCancelCountry")?.addEventListener("click", () => setPlanEditor("addStopForm", false));
+
+  $("planAddCost")?.addEventListener("click", () => {
+    renderPlanStopOptions();
+    setPlanEditor("addPlanForm", true);
+    $("planTitle")?.focus();
+  });
+  $("planCancelCost")?.addEventListener("click", () => setPlanEditor("addPlanForm", false));
+
   // New country form
   core.opts($("newStopCurrency"), core.CURS, state().trip?.tripCurrency || "USD");
   core.initDestinationAutocomplete("newStopCountry", "newStopCountryOptions", "");
@@ -1896,6 +1975,7 @@
     $("newStopEnd").dispatchEvent(new Event("input", { bubbles: true }));
     core.opts($("newStopCurrency"), core.CURS, state().trip.tripCurrency);
 
+    setPlanEditor("addStopForm", false);
     core.save();
     core.render();
     core.toast("Country added");
@@ -1929,6 +2009,7 @@
     core.opts($("planCategory"), core.CATS, "Hotel");
     renderPlanStopOptions();
 
+    setPlanEditor("addPlanForm", false);
     core.save();
     core.render();
     core.toast("Planned cost added");

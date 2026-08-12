@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.5.0">
-  <link rel="icon" href="icons/icon-192.png?v=6.5.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.5.0">
-  <link rel="stylesheet" href="style.css?v=6.5.0">
+  <link rel="manifest" href="manifest.webmanifest?v=6.5.1">
+  <link rel="icon" href="icons/icon-192.png?v=6.5.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.5.1">
+  <link rel="stylesheet" href="style.css?v=6.5.1">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,7 +32,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.5</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.5.1</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -43,8 +43,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.5.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.5</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.5.1" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.5.1</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -347,19 +347,11 @@
             </div>
 
             <div class="expense-date-filter-grid">
-              <label class="date-field-label"><span>From</span>
-                <div class="date-picker-card filter-date-card">
-                  <span id="filterDateFromDisplay" class="date-display">Any date</span>
-                  <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
-                  <input id="filterDateFrom" class="native-date-input" type="date" aria-label="Filter expenses from date">
-                </div>
+              <label>From
+                <input id="filterDateFrom" class="filter-date-input" type="date">
               </label>
-              <label class="date-field-label"><span>To</span>
-                <div class="date-picker-card filter-date-card">
-                  <span id="filterDateToDisplay" class="date-display">Any date</span>
-                  <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
-                  <input id="filterDateTo" class="native-date-input" type="date" aria-label="Filter expenses to date">
-                </div>
+              <label>To
+                <input id="filterDateTo" class="filter-date-input" type="date">
               </label>
             </div>
 
@@ -372,17 +364,17 @@
         <div id="allList" class="list"></div>
       </section>
 
-      <section id="analytics" class="page analytics-v62">
+      <section id="analytics" class="page analytics-v651">
         <div class="page-title analytics-page-title">
           <div>
-            <div class="eyebrow">INSIGHTS</div>
-            <h2>Analytics</h2>
-            <p>See where your trip money is going.</p>
+            <div class="eyebrow">ANALYTICS</div>
+            <h2>Trip spending</h2>
+            <p>Simple answers first. Details only when you want them.</p>
           </div>
         </div>
 
-        <div class="analytics-hero">
-          <div class="analytics-hero-top">
+        <div class="analytics-main-card">
+          <div class="analytics-main-top">
             <div>
               <small>TOTAL SPENT</small>
               <div class="analytics-total">
@@ -397,7 +389,7 @@
             <div id="analyticsBudgetBar"></div>
           </div>
 
-          <div class="analytics-hero-meta">
+          <div class="analytics-main-meta">
             <div>
               <small>Remaining</small>
               <strong id="analyticsRemaining">0 OMR</strong>
@@ -408,70 +400,57 @@
             </div>
           </div>
 
-          <div class="analytics-type-split">
+          <div class="analytics-split">
             <div>
-              <span>👤</span>
-              <div>
-                <small>Personal</small>
-                <strong id="analyticsPersonalSpend">0 OMR</strong>
-              </div>
+              <small>Personal</small>
+              <strong id="analyticsPersonalSpend">0 OMR</strong>
             </div>
             <div>
-              <span>👥</span>
-              <div>
-                <small>Shared</small>
-                <strong id="analyticsSharedSpend">0 OMR</strong>
-              </div>
+              <small>Shared</small>
+              <strong id="analyticsSharedSpend">0 OMR</strong>
             </div>
             <div>
-              <span>🧾</span>
-              <div>
-                <small>Expenses</small>
-                <strong id="analyticsExpenseCount">0</strong>
-              </div>
+              <small>Expenses</small>
+              <strong id="analyticsExpenseCount">0</strong>
             </div>
           </div>
         </div>
 
-        <div class="analytics-highlights">
-          <div class="analytics-highlight">
-            <small>Average / day</small>
+        <div class="analytics-quick-row">
+          <div>
+            <small>Avg / day</small>
             <strong id="avgDay">0 OMR</strong>
           </div>
-          <div class="analytics-highlight">
-            <small>Average expense</small>
+          <div>
+            <small>Avg expense</small>
             <strong id="avgTransaction">0 OMR</strong>
           </div>
-          <div class="analytics-highlight">
-            <small>Largest expense</small>
+          <div>
+            <small>Largest</small>
             <strong id="largest">0 OMR</strong>
           </div>
         </div>
 
-        <section class="section analytics-spending-section">
+        <section class="section analytics-category-section">
           <div class="section-title analytics-section-title">
             <div>
               <h2>Where your money went</h2>
               <small id="analyticsCategoryHint">Spending by category</small>
             </div>
           </div>
-          <div class="card chart analytics-primary-chart">
-            <div id="categoryAnalytics" class="bars analytics-category-bars"></div>
-          </div>
+          <div id="categoryAnalytics" class="bars analytics-category-bars"></div>
         </section>
 
         <section class="section analytics-settlement-section">
           <div class="section-title analytics-section-title">
             <div>
               <h2>Who owes whom</h2>
-              <small>Only real group debts</small>
+              <small>Only outstanding group debts</small>
             </div>
             <span class="smart-badge">SETTLE UP</span>
           </div>
 
-          <div class="card settlement-card settlement-card-v61">
-            <p class="settlement-help">Personal expenses paid by the same traveler are excluded automatically.</p>
-
+          <div class="settlement-clean-card">
             <div id="settlementList" class="settlement-list settlement-list-primary"></div>
 
             <button id="settlementHistoryToggle" type="button" class="secondary settlement-history-toggle hidden">
@@ -498,7 +477,7 @@
           </div>
         </section>
 
-        <button id="analyticsMoreToggle" type="button" class="card analytics-more-toggle">
+        <button id="analyticsMoreToggle" type="button" class="analytics-more-row">
           <span>
             <small>MORE INSIGHTS</small>
             <strong>Payment, travelers & daily spending</strong>
@@ -507,40 +486,31 @@
         </button>
 
         <div id="analyticsMoreDetails" class="analytics-more-details hidden">
-          <div class="analytics-busiest-card">
-            <span>📅</span>
-            <div>
-              <small>Highest spend day</small>
-              <strong id="biggestDay">—</strong>
-            </div>
+          <div class="analytics-busiest-row">
+            <small>Highest spend day</small>
+            <strong id="biggestDay">—</strong>
           </div>
 
-          <div class="card chart analytics-secondary-chart">
-            <div class="analytics-chart-head">
-              <div>
-                <h3>Payment methods</h3>
-                <small>How you paid</small>
-              </div>
+          <div class="analytics-secondary-block">
+            <div class="analytics-block-title">
+              <h3>Payment methods</h3>
+              <small>How you paid</small>
             </div>
             <div id="paymentAnalytics" class="bars"></div>
           </div>
 
-          <div class="card chart analytics-secondary-chart">
-            <div class="analytics-chart-head">
-              <div>
-                <h3>Traveler share</h3>
-                <small>Who the spending was for</small>
-              </div>
+          <div class="analytics-secondary-block">
+            <div class="analytics-block-title">
+              <h3>Traveler share</h3>
+              <small>Who the spending was for</small>
             </div>
             <div id="peopleAnalytics" class="bars"></div>
           </div>
 
-          <div class="card chart analytics-secondary-chart">
-            <div class="analytics-chart-head">
-              <div>
-                <h3>Daily spending</h3>
-                <small>Your latest spending days</small>
-              </div>
+          <div class="analytics-secondary-block">
+            <div class="analytics-block-title">
+              <h3>Daily spending</h3>
+              <small>Your recent spending days</small>
             </div>
             <div id="dailyAnalytics" class="bars"></div>
           </div>
@@ -586,30 +556,63 @@
       </section>
 
 
-      <section id="plan" class="page">
-        <div class="page-title">
-          <div><div class="eyebrow">TRIP PLAN</div><h2>Countries & costs</h2></div>
-          <button id="planDone" class="small-primary">Done</button>
+      <section id="plan" class="page plan-v651">
+        <div class="page-title plan-page-title">
+          <div>
+            <div class="eyebrow">TRIP PLAN</div>
+            <h2>Countries & costs</h2>
+            <p>See the journey, budgets and upcoming costs in one place.</p>
+          </div>
+          <button id="planDone" class="small-primary" type="button">Done</button>
         </div>
 
-        <div class="card planner-summary">
-          <div>
-            <small>Actual spent</small>
-            <strong id="plannerSpent">0</strong>
+        <div class="plan-hero card">
+          <div class="plan-hero-top">
+            <div>
+              <small>TRIP PROGRESS</small>
+              <strong id="planTripName">Your trip</strong>
+              <span id="planTripDates">—</span>
+            </div>
+            <span id="planProgressPct" class="plan-progress-pill">0%</span>
           </div>
-          <div>
-            <small>Upcoming planned</small>
-            <strong id="plannerUpcoming">0</strong>
+
+          <div class="plan-progress-track">
+            <div id="planProgressBar"></div>
           </div>
-          <div>
-            <small>Committed total</small>
-            <strong id="plannerCommitted">0</strong>
+
+          <div id="planFlagRoute" class="plan-flag-route"></div>
+
+          <div class="plan-overview-row">
+            <div>
+              <small>Spent</small>
+              <strong id="plannerSpent">0</strong>
+            </div>
+            <div>
+              <small>Upcoming</small>
+              <strong id="plannerUpcoming">0</strong>
+            </div>
+            <div>
+              <small>Committed</small>
+              <strong id="plannerCommitted">0</strong>
+            </div>
           </div>
         </div>
 
-        <section class="section">
-          <div class="section-title"><h2>Countries</h2><span class="smart-badge">MULTI-COUNTRY</span></div>
-          <form id="addStopForm" class="card form planner-form">
+        <section class="section plan-country-section">
+          <div class="section-title plan-section-title">
+            <div>
+              <h2>Countries</h2>
+              <small>Budget and dates at a glance.</small>
+            </div>
+            <button id="planAddCountry" class="link-btn" type="button">＋ Add country</button>
+          </div>
+
+          <form id="addStopForm" class="card form planner-form plan-inline-editor hidden">
+            <div class="plan-editor-head">
+              <strong>Add another country</strong>
+              <button id="planCancelCountry" class="link-btn" type="button">Cancel</button>
+            </div>
+
             <label>Country
               <div class="country-combobox">
                 <input id="newStopCountry" type="text" required autocomplete="off" spellcheck="false"
@@ -618,6 +621,7 @@
                 <div id="newStopCountryOptions" class="country-options hidden" role="listbox"></div>
               </div>
             </label>
+
             <div class="grid2 date-grid planner-date-grid">
               <label class="date-field-label"><span>From</span>
                 <div class="date-picker-card">
@@ -634,19 +638,39 @@
                 </div>
               </label>
             </div>
+
             <div class="grid2">
               <label>Local currency<select id="newStopCurrency"></select></label>
-              <label>Budget <small>(home currency)</small><input id="newStopBudget" type="number" min="0" step="0.001" inputmode="decimal" placeholder="Optional"></label>
+              <label>Budget <small>(home currency)</small>
+                <input id="newStopBudget" type="number" min="0" step="0.001" inputmode="decimal" placeholder="Optional">
+              </label>
             </div>
-            <button class="secondary" type="submit">＋ Add Country</button>
+
+            <button class="primary" type="submit">Add Country</button>
           </form>
-          <div id="stopList" class="stop-list"></div>
+
+          <div id="stopList" class="stop-list plan-stop-list"></div>
         </section>
 
-        <section class="section">
-          <div class="section-title"><h2>Planned costs</h2><span class="smart-badge">UPCOMING</span></div>
-          <form id="addPlanForm" class="card form planner-form">
-            <label>What are you planning?<input id="planTitle" maxlength="80" required placeholder="Hotel, tour, airport transfer…"></label>
+        <section class="section plan-cost-section">
+          <div class="section-title plan-section-title">
+            <div>
+              <h2>Upcoming costs</h2>
+              <small>Hotels, activities, transport and other expected costs.</small>
+            </div>
+            <button id="planAddCost" class="small-primary" type="button">＋ Add cost</button>
+          </div>
+
+          <form id="addPlanForm" class="card form planner-form plan-inline-editor hidden">
+            <div class="plan-editor-head">
+              <strong>Add planned cost</strong>
+              <button id="planCancelCost" class="link-btn" type="button">Cancel</button>
+            </div>
+
+            <label>What are you planning?
+              <input id="planTitle" maxlength="80" required placeholder="Hotel, tour, airport transfer…">
+            </label>
+
             <div class="grid2">
               <label>Estimated cost <small id="planCurrencyHint">(home currency)</small>
                 <input id="planAmount" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="0.000">
@@ -659,18 +683,23 @@
                 </div>
               </label>
             </div>
+
             <div class="grid2">
               <label>Country<select id="planStop"></select></label>
               <label>Category<select id="planCategory"></select></label>
             </div>
-            <label>Note <small>(optional)</small><input id="planNote" maxlength="120" placeholder="Booking reference, details…"></label>
-            <button class="secondary" type="submit">＋ Add Planned Cost</button>
+
+            <label>Note <small>(optional)</small>
+              <input id="planNote" maxlength="120" placeholder="Booking reference, details…">
+            </label>
+
+            <button class="primary" type="submit">Add Planned Cost</button>
           </form>
-          <div id="planList" class="planned-list"></div>
+
+          <div id="planList" class="planned-list plan-planned-list"></div>
         </section>
-
-
       </section>
+
 
       <section id="trips" class="page trips-page">
         <div class="page-title">
@@ -1049,8 +1078,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.5.0"></script>
-<script src="fx.js?v=6.5.0"></script>
-<script src="v5.js?v=6.5.0"></script>
+<script src="app.js?v=6.5.1"></script>
+<script src="fx.js?v=6.5.1"></script>
+<script src="v5.js?v=6.5.1"></script>
 </body>
 </html>
