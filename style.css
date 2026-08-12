@@ -1679,3 +1679,133 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     gap:7px!important;
   }
 }
+
+
+/* TripSpend v5.8 — cleaner Home + clear group settlement */
+.home-removed-section{
+  display:none!important;
+}
+
+.analytics-settlement-section{
+  margin-top:14px;
+  margin-bottom:16px;
+}
+.settlement-card-v58{
+  padding:14px;
+}
+.settlement-people-summary{
+  display:grid;
+  gap:7px;
+}
+.settlement-person-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface2);
+}
+.settlement-person-identity{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+.settlement-avatar{
+  flex:0 0 auto;
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#eaf2ff;
+  color:#175cd3;
+  font-size:9px;
+  font-weight:900;
+}
+.settlement-person-identity strong,
+.settlement-person-identity small,
+.settlement-person-balance small,
+.settlement-person-balance strong{
+  display:block;
+}
+.settlement-person-identity strong{
+  font-size:11px;
+}
+.settlement-person-identity small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.3;
+}
+.settlement-person-balance{
+  flex:0 0 auto;
+  text-align:right;
+}
+.settlement-person-balance small{
+  color:var(--muted);
+  font-size:8.5px;
+}
+.settlement-person-balance strong{
+  margin-top:2px;
+  font-size:10.5px;
+}
+.settlement-person-balance.receives strong{
+  color:var(--ok);
+}
+.settlement-person-balance.owes strong{
+  color:var(--danger);
+}
+.settlement-person-balance.settled strong{
+  color:var(--muted);
+}
+.settlement-divider{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:13px 0 5px;
+  color:var(--muted);
+  font-size:9px;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.settlement-divider:before,
+.settlement-divider:after{
+  content:"";
+  height:1px;
+  flex:1;
+  background:var(--line);
+}
+.settlement-payment-row{
+  padding:11px 2px;
+}
+.settlement-payment-row span{
+  color:var(--muted);
+}
+.settlement-payment-amount{
+  color:#175cd3;
+}
+.settlement-warning{
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:10px;
+  background:#fff4e5;
+  color:#b54708;
+  font-size:9px;
+  line-height:1.4;
+}
+
+@media(max-width:600px){
+  .settlement-card-v58{
+    padding:11px;
+  }
+  .settlement-person-row{
+    padding:9px;
+  }
+  .settlement-person-identity small{
+    font-size:8.5px;
+  }
+}

@@ -259,3 +259,22 @@ The New Trip screen was redesigned after mobile usability feedback.
 - Country budgets are directly below Add Expense.
 - Duplicate traveler summary, Home smart-insights list and Home top-category bars are hidden to reduce clutter.
 - Analytics remains the place for detailed categories, forecasts and spending analysis.
+
+
+## v5.8
+
+### Cleaner Home
+- Removed the **Travelers** section from Home.
+- Removed **Recent expenses** from Home.
+- Traveler management remains available in **Settings → Manage Travelers**.
+- Expense history remains available in the **Expenses** tab.
+
+### Who owes whom
+- Group settlement moved from Trip Planner to **Analytics → Who owes whom**.
+- Each traveler now shows:
+  - amount they **Paid**
+  - their actual **Share**
+  - how much they **Owe** or **Should receive**
+- TripSpend then shows the exact payments needed to settle the group, for example:
+  - **Ahmed owes Mohammed 12.500 OMR**
+- Expenses missing **Paid by** or **Expense for** are clearly flagged and excluded from the settlement until edited.

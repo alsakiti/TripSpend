@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=5.7.0">
-  <link rel="icon" href="icons/icon-192.png?v=5.7.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.7.0">
-  <link rel="stylesheet" href="style.css?v=5.7.0">
+  <link rel="manifest" href="manifest.webmanifest?v=5.8.0">
+  <link rel="icon" href="icons/icon-192.png?v=5.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.8.0">
+  <link rel="stylesheet" href="style.css?v=5.8.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.7</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.8</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=5.7.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v5.7</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=5.8.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v5.8</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -301,7 +301,7 @@
           </div>
         </section>
 
-        <section class="section dashboard-travelers-section">
+        <section class="section dashboard-travelers-section home-removed-section">
           <div class="section-title">
             <h2>Travelers</h2>
             <div class="section-actions">
@@ -333,7 +333,7 @@
           <div id="smartInsights" class="insight-list"></div>
         </section>
 
-        <section class="section">
+        <section class="section home-removed-section">
           <div class="section-title"><h2>Recent expenses</h2><button id="seeAll" class="link-btn">See all</button></div>
           <div id="recentList" class="list"></div>
         </section>
@@ -367,6 +367,25 @@
           <div class="card metric"><small>Largest expense</small><strong id="largest">0 OMR</strong></div>
           <div class="card metric"><small>Busiest spend day</small><strong id="biggestDay">—</strong></div>
         </div>
+        <section class="section analytics-settlement-section">
+          <div class="section-title">
+            <h2>Who owes whom</h2>
+            <span class="smart-badge">SETTLE UP</span>
+          </div>
+
+          <div class="card settlement-card settlement-card-v58">
+            <p class="settlement-help">Calculated from <b>Paid by</b> and <b>Expense for</b> on each expense.</p>
+
+            <div id="settlementPeopleSummary" class="settlement-people-summary"></div>
+
+            <div class="settlement-divider">
+              <span>Payments to settle the group</span>
+            </div>
+
+            <div id="settlementList" class="settlement-list"></div>
+            <div id="settlementWarning" class="settlement-warning hidden"></div>
+          </div>
+        </section>
         <div class="card chart"><h3>By category</h3><div id="categoryAnalytics" class="bars"></div></div>
         <div class="card chart"><h3>By payment method</h3><div id="paymentAnalytics" class="bars"></div></div>
         <div class="card chart"><h3>By traveler</h3><div id="peopleAnalytics" class="bars"></div></div>
@@ -495,13 +514,7 @@
           <div id="planList" class="planned-list"></div>
         </section>
 
-        <section class="section">
-          <div class="section-title"><h2>Settle up</h2><span class="smart-badge">GROUP</span></div>
-          <div class="card settlement-card">
-            <p class="settlement-help">TripSpend compares who paid with who benefited from each expense.</p>
-            <div id="settlementList" class="settlement-list"></div>
-          </div>
-        </section>
+
       </section>
 
       <section id="settings" class="page">
@@ -651,8 +664,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=5.7.0"></script>
-<script src="fx.js?v=5.7.0"></script>
-<script src="v5.js?v=5.7.0"></script>
+<script src="app.js?v=5.8.0"></script>
+<script src="fx.js?v=5.8.0"></script>
+<script src="v5.js?v=5.8.0"></script>
 </body>
 </html>

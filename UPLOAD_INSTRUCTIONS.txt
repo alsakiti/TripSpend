@@ -1,17 +1,21 @@
-TripSpend v5.7 update
+TripSpend v5.8 update
 
-1. Extract TripSpend-v5.7-update.zip.
-2. Upload EVERYTHING inside it to the ROOT of your existing TripSpend GitHub repository.
-3. Replace existing files and commit.
-4. Wait about 1–2 minutes for GitHub Pages.
-5. Completely close the TripSpend Home Screen app.
-6. Reopen it while connected to the internet.
-7. Confirm the visible version badge says v5.7.
+1. Extract TripSpend-v5.8-update.zip.
+2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
+3. Replace the old files and commit.
+4. Wait 1–2 minutes for GitHub Pages.
+5. Completely close TripSpend and reopen it while online.
+6. Confirm the visible version badge says v5.8.
 
-What to test:
-- Create a multi-country trip and optionally enter a budget for each country.
-- Home should show the current country and country-budget cards.
-- Tap a country-budget card to change its budget.
-- Add an expense: TripSpend should select the current country/local currency automatically.
-- Save expenses using different categories/payment methods, then Add Expense again.
-  The previous payment method and recent category shortcuts should be remembered.
+Home:
+- Travelers removed.
+- Recent expenses removed.
+
+To see who owes whom:
+Analytics → Who owes whom
+
+For settlement to work correctly, each group expense should have:
+- Paid by = the person who actually paid
+- Expense for = the traveler(s) who shared that expense
+
+TripSpend will then show each person's Paid, Share, Owes/Should receive, plus the exact final payments.

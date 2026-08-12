@@ -847,58 +847,183 @@
 
   function renderSettlement() {
     const el = $("settlementList");
-    if (!el || !state().trip) return;
+    const summaryEl = $("settlementPeopleSummary");
+    const warningEl = $("settlementWarning");
+    if (!el || !summaryEl || !state().trip) return;
+
     el.replaceChildren();
+    summaryEl.replaceChildren();
+    if (warningEl) {
+      warningEl.classList.add("hidden");
+      warningEl.textContent = "";
+    }
 
+    const paid = new Map();
+    const shares = new Map();
     const net = new Map();
-    state().people.forEach(p => net.set(p.id, 0));
 
-    let tracked = 0;
-    state().expenses.forEach(e => {
-      if (!e.paidByPersonId || !(e.personShares || []).length) return;
-      const payer = personById(e.paidByPersonId);
-      if (!payer) return;
+    state().people.forEach(person => {
+      paid.set(person.id, 0);
+      shares.set(person.id, 0);
+      net.set(person.id, 0);
+    });
 
-      tracked += Number(e.homeAmount || 0);
-      net.set(payer.id, (net.get(payer.id) || 0) + Number(e.homeAmount || 0));
-      (e.personShares || []).forEach(share => {
-        net.set(share.personId, (net.get(share.personId) || 0) - Number(share.amount || 0));
+    let trackedAmount = 0;
+    let untrackedAmount = 0;
+    let untrackedCount = 0;
+
+    state().expenses.forEach(expense => {
+      const amount = Number(expense.homeAmount || 0);
+      const payer = expense.paidByPersonId ? personById(expense.paidByPersonId) : null;
+      const expenseShares = Array.isArray(expense.personShares) ? expense.personShares : [];
+
+      if (!payer || !expenseShares.length) {
+        untrackedAmount += amount;
+        untrackedCount += 1;
+        return;
+      }
+
+      trackedAmount += amount;
+      paid.set(payer.id, (paid.get(payer.id) || 0) + amount);
+
+      expenseShares.forEach(share => {
+        if (!personById(share.personId)) return;
+        shares.set(share.personId, (shares.get(share.personId) || 0) + Number(share.amount || 0));
       });
     });
 
-    if (tracked <= 0) {
-      el.innerHTML = '<div class="empty-state"><strong>No settlements yet</strong><span>Set “Paid by” and “Expense for” on expenses to calculate who owes whom.</span></div>';
-      return;
-    }
-
-    const eps = 0.000001;
-    const creditors = [...net].filter(([,v]) => v > eps).map(([id,v]) => ({id, amount:v})).sort((a,b)=>b.amount-a.amount);
-    const debtors = [...net].filter(([,v]) => v < -eps).map(([id,v]) => ({id, amount:-v})).sort((a,b)=>b.amount-a.amount);
-    const settlements = [];
-
-    let i = 0, j = 0;
-    while (i < debtors.length && j < creditors.length) {
-      const amount = Math.min(debtors[i].amount, creditors[j].amount);
-      if (amount > eps) settlements.push({ from: debtors[i].id, to: creditors[j].id, amount });
-      debtors[i].amount -= amount;
-      creditors[j].amount -= amount;
-      if (debtors[i].amount <= eps) i++;
-      if (creditors[j].amount <= eps) j++;
-    }
-
-    if (!settlements.length) {
-      el.innerHTML = '<div class="settled-message">✓ Everyone is settled up.</div>';
-      return;
-    }
-
-    settlements.forEach(s => {
-      const row = document.createElement("div");
-      row.className = "settlement-row";
-      const from = personById(s.from)?.name || "Traveler";
-      const to = personById(s.to)?.name || "Traveler";
-      row.innerHTML = `<div><strong>${from}</strong><span> pays </span><strong>${to}</strong></div><strong>${core.money(s.amount, state().trip.homeCurrency)}</strong>`;
-      el.append(row);
+    state().people.forEach(person => {
+      net.set(person.id, (paid.get(person.id) || 0) - (shares.get(person.id) || 0));
     });
+
+    // Per-person explanation: Paid, Share, and resulting balance.
+    const visiblePeople = state().people
+      .filter(person => person.active !== false || Math.abs(net.get(person.id) || 0) > 0.000001)
+      .sort((a, b) => {
+        const av = Math.abs(net.get(a.id) || 0);
+        const bv = Math.abs(net.get(b.id) || 0);
+        return bv - av || a.name.localeCompare(b.name);
+      });
+
+    visiblePeople.forEach(person => {
+      const paidAmount = paid.get(person.id) || 0;
+      const shareAmount = shares.get(person.id) || 0;
+      const balance = net.get(person.id) || 0;
+
+      const row = document.createElement("div");
+      row.className = "settlement-person-row";
+
+      const identity = document.createElement("div");
+      identity.className = "settlement-person-identity";
+      const avatar = document.createElement("span");
+      avatar.className = "settlement-avatar";
+      avatar.textContent = (person.name || "?")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join("")
+        .toUpperCase();
+
+      const name = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = person.name;
+      const small = document.createElement("small");
+      small.textContent = `Paid ${core.money(paidAmount, state().trip.homeCurrency)} • Share ${core.money(shareAmount, state().trip.homeCurrency)}`;
+      name.append(strong, small);
+      identity.append(avatar, name);
+
+      const result = document.createElement("div");
+      result.className = "settlement-person-balance";
+      const resultLabel = document.createElement("small");
+      const resultAmount = document.createElement("strong");
+
+      if (balance > 0.000001) {
+        result.classList.add("receives");
+        resultLabel.textContent = "Should receive";
+        resultAmount.textContent = core.money(balance, state().trip.homeCurrency);
+      } else if (balance < -0.000001) {
+        result.classList.add("owes");
+        resultLabel.textContent = "Owes";
+        resultAmount.textContent = core.money(Math.abs(balance), state().trip.homeCurrency);
+      } else {
+        result.classList.add("settled");
+        resultLabel.textContent = "Balance";
+        resultAmount.textContent = "Settled";
+      }
+
+      result.append(resultLabel, resultAmount);
+      row.append(identity, result);
+      summaryEl.append(row);
+    });
+
+    if (trackedAmount <= 0) {
+      el.innerHTML = '<div class="empty-state"><strong>No group settlement yet</strong><span>When adding an expense, choose both “Paid by” and who the “Expense for” applies to.</span></div>';
+    } else {
+      const eps = 0.000001;
+      const creditors = [...net]
+        .filter(([,value]) => value > eps)
+        .map(([id,value]) => ({ id, amount: value }))
+        .sort((a,b) => b.amount - a.amount);
+
+      const debtors = [...net]
+        .filter(([,value]) => value < -eps)
+        .map(([id,value]) => ({ id, amount: -value }))
+        .sort((a,b) => b.amount - a.amount);
+
+      const settlements = [];
+      let i = 0, j = 0;
+
+      while (i < debtors.length && j < creditors.length) {
+        const amount = Math.min(debtors[i].amount, creditors[j].amount);
+        if (amount > eps) {
+          settlements.push({
+            from: debtors[i].id,
+            to: creditors[j].id,
+            amount
+          });
+        }
+
+        debtors[i].amount -= amount;
+        creditors[j].amount -= amount;
+
+        if (debtors[i].amount <= eps) i += 1;
+        if (creditors[j].amount <= eps) j += 1;
+      }
+
+      if (!settlements.length) {
+        el.innerHTML = '<div class="settled-message">✓ Everyone is settled up.</div>';
+      } else {
+        settlements.forEach(settlement => {
+          const row = document.createElement("div");
+          row.className = "settlement-row settlement-payment-row";
+
+          const from = personById(settlement.from)?.name || "Traveler";
+          const to = personById(settlement.to)?.name || "Traveler";
+
+          const text = document.createElement("div");
+          const strongFrom = document.createElement("strong");
+          strongFrom.textContent = from;
+          const middle = document.createElement("span");
+          middle.textContent = " owes ";
+          const strongTo = document.createElement("strong");
+          strongTo.textContent = to;
+          text.append(strongFrom, middle, strongTo);
+
+          const amount = document.createElement("strong");
+          amount.className = "settlement-payment-amount";
+          amount.textContent = core.money(settlement.amount, state().trip.homeCurrency);
+
+          row.append(text, amount);
+          el.append(row);
+        });
+      }
+    }
+
+    if (warningEl && untrackedCount > 0) {
+      warningEl.textContent = `${untrackedCount} expense${untrackedCount === 1 ? "" : "s"} (${core.money(untrackedAmount, state().trip.homeCurrency)}) not included because “Paid by” or “Expense for” is missing. Edit those expenses to include them in settlement.`;
+      warningEl.classList.remove("hidden");
+    }
   }
 
   function fillExpenseStop(selectedId = "") {
