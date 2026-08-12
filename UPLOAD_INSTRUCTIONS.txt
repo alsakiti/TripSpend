@@ -1,20 +1,11 @@
-TripSpend v6.6 update
+TripSpend v6.6.1 update
 
-1. Extract TripSpend-v6.6-update.zip.
+1. Extract TripSpend-v6.6.1-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
-5. Completely close TripSpend.
-6. Reopen it while online.
-7. Confirm the badge says v6.6.
+5. Fully close TripSpend and reopen it.
+6. Confirm the badge says v6.6.1.
 
-New:
-- Receipt photos on expenses
-- Planned costs reserved before Safe Today is calculated
-- Improved Repeat Expense
-- Shareable Trip Report image
-- Print / Save as PDF report
-- Faster Analytics calculations
-- Expense history renders 100 at a time for very large trips
-
-Your existing IndexedDB data migrates automatically to the new receipt-capable database.
+Change in this version:
+- Add receipt is now directly visible inside the main Add Expense window.

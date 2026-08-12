@@ -684,3 +684,15 @@ Past-trip cards also include **Report**.
 - IndexedDB schema moves from v1 to v2.
 - A dedicated receipt store is created automatically.
 - Existing expenses, trips, history and backups are unchanged.
+
+
+## v6.6.1 — Receipt button moved into main Add Expense screen
+
+### What changed
+- **Add receipt** is now visible directly in the main **Add Expense** window.
+- Users no longer need to open **More options** to attach a receipt.
+- Receipt preview, replace/add flow, and remove button still work the same.
+- All receipt storage remains local in IndexedDB.
+
+### Why
+This makes receipt attachment easier to discover and reduces friction when saving expenses during a trip.
