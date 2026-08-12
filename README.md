@@ -696,3 +696,13 @@ Past-trip cards also include **Report**.
 
 ### Why
 This makes receipt attachment easier to discover and reduces friction when saving expenses during a trip.
+
+
+## v6.6.2 — Budget card readability fix
+
+### What changed
+- Darker, higher-contrast blue budget card background
+- Brighter label text and stronger values
+- Larger small text for Budget, Spent, Reserved for plans, and Available after plans
+- Stronger divider and better progress bar contrast
+- Improved readability on iPhone screens

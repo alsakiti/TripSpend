@@ -1,11 +1,11 @@
-TripSpend v6.6.1 update
+TripSpend v6.6.2 update
 
-1. Extract TripSpend-v6.6.1-update.zip.
-2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
+1. Extract TripSpend-v6.6.2-update.zip.
+2. Upload everything inside to the root of your GitHub repository.
 3. Replace existing files and commit.
-4. Wait about 1–2 minutes.
+4. Wait 1–2 minutes for GitHub Pages to update.
 5. Fully close TripSpend and reopen it.
-6. Confirm the badge says v6.6.1.
+6. Confirm the version badge shows v6.6.2.
 
-Change in this version:
-- Add receipt is now directly visible inside the main Add Expense window.
+Main fix in this version:
+- The Trip Budget card text is now easier to read.
