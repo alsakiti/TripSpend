@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="TripSpend travel spending tracker">
+  <title>TripSpend</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><div class="eyebrow">TRIPSPEND</div><h1 id="headerTitle">TripSpend</h1><p id="headerSub">Travel spending, made simple.</p></div>
+    <button id="settingsShortcut" class="icon-btn hidden" aria-label="Trip settings">⚙️</button>
+  </header>
+
+  <main>
+    <section id="setupView">
+      <div class="hero card"><div class="hero-icon">✈️</div><div class="eyebrow">NEW TRIP</div><h2>Set up your trip</h2><p>Your data stays in this browser.</p></div>
+      <form id="setupForm" class="card form">
+        <label>Trip name<input id="tripName" required maxlength="60" placeholder="Thailand Trip"></label>
+        <label>Destination<input id="destination" required maxlength="60" placeholder="Thailand"></label>
+        <div class="grid2"><label>Start date<input id="startDate" type="date" required></label><label>End date<input id="endDate" type="date" required></label></div>
+        <label>Total budget<input id="budget" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="1000"></label>
+        <div class="grid2"><label>Home currency<select id="homeCurrency"></select></label><label>Trip currency<select id="tripCurrency"></select></label></div>
+        <button class="primary" type="submit">Create Trip</button>
+      </form>
+    </section>
+
+    <section id="mainView" class="hidden">
+      <section id="dashboard" class="page active">
+        <div class="summary">
+          <div class="summary-head"><div><div class="eyebrow light">REMAINING</div><div class="remaining"><strong id="remainingValue">0</strong><span id="remainingCode">OMR</span></div></div><span id="usedPct" class="pill">0% used</span></div>
+          <div class="progress"><div id="progressBar"></div></div>
+          <div class="summary-grid"><div><span>Budget</span><strong id="budgetValue">0 OMR</strong></div><div><span>Spent</span><strong id="spentValue">0 OMR</strong></div></div>
+        </div>
+        <div class="metrics"><div class="card metric"><span>☀️</span><small>Safe today</small><strong id="safeToday">0 OMR</strong></div><div class="card metric"><span>📅</span><small>Days left</small><strong id="daysLeft">0</strong></div></div>
+        <button id="quickAdd" class="primary">＋ Add Expense</button>
+        <section class="section"><div class="section-title"><h2>Recent expenses</h2><button id="seeAll" class="link-btn">See all</button></div><div id="recentList" class="list"></div></section>
+        <section class="section"><div class="section-title"><h2>Top categories</h2></div><div id="topCategories" class="bars"></div></section>
+      </section>
+
+      <section id="expenses" class="page">
+        <div class="page-title"><div><div class="eyebrow">HISTORY</div><h2>Expenses</h2></div><button id="pageAdd" class="small-primary">＋ Add</button></div>
+        <div class="card filters"><input id="searchExpense" type="search" placeholder="Search expenses"><select id="filterCategory"><option value="">All categories</option></select></div>
+        <div id="allList" class="list"></div>
+      </section>
+
+      <section id="analytics" class="page">
+        <div class="page-title"><div><div class="eyebrow">INSIGHTS</div><h2>Analytics</h2></div></div>
+        <div class="metrics"><div class="card metric"><small>Average / day</small><strong id="avgDay">0 OMR</strong></div><div class="card metric"><small>Largest expense</small><strong id="largest">0 OMR</strong></div></div>
+        <div class="card chart"><h3>By category</h3><div id="categoryAnalytics" class="bars"></div></div>
+        <div class="card chart"><h3>Daily spending</h3><div id="dailyAnalytics" class="bars"></div></div>
+      </section>
+
+      <section id="settings" class="page">
+        <div class="page-title"><div><div class="eyebrow">TRIP</div><h2>Settings</h2></div></div>
+        <form id="settingsForm" class="card form">
+          <label>Trip name<input id="sTripName" required maxlength="60"></label>
+          <label>Destination<input id="sDestination" required maxlength="60"></label>
+          <div class="grid2"><label>Start date<input id="sStartDate" type="date" required></label><label>End date<input id="sEndDate" type="date" required></label></div>
+          <label>Total budget<input id="sBudget" type="number" min="0" step="0.001" required></label>
+          <div class="grid2"><label>Home currency<select id="sHomeCurrency"></select></label><label>Trip currency<select id="sTripCurrency"></select></label></div>
+          <button class="primary" type="submit">Save Changes</button>
+        </form>
+        <div class="card action-card"><div><strong>Backup your trip</strong><p>Export all data to a JSON file.</p></div><button id="exportBtn" class="secondary">Export Backup</button><label class="secondary file-btn">Import Backup<input id="importFile" type="file" accept="application/json,.json" hidden></label></div>
+        <div class="card action-card danger"><div><strong>Delete trip</strong><p>Clears this trip from this browser.</p></div><button id="deleteTrip" class="danger-btn">Delete Trip</button></div>
+      </section>
+    </section>
+  </main>
+
+  <nav id="nav" class="nav hidden">
+    <button class="nav-btn active" data-page="dashboard"><span>⌂</span><small>Home</small></button>
+    <button class="nav-btn" data-page="expenses"><span>☰</span><small>Expenses</small></button>
+    <button id="navAdd" class="nav-add" aria-label="Add expense">＋</button>
+    <button class="nav-btn" data-page="analytics"><span>⌁</span><small>Analytics</small></button>
+    <button class="nav-btn" data-page="settings"><span>⚙</span><small>Settings</small></button>
+  </nav>
+</div>
+
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="handle"></div><div class="page-title"><div><div class="eyebrow">TRANSACTION</div><h2 id="modalTitle">Add Expense</h2></div><button id="closeModal" class="icon-btn">✕</button></div>
+    <form id="expenseForm" class="form plain"><input id="editId" type="hidden">
+      <label>Amount<div class="amount-row"><input id="expenseAmount" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="0.00"><select id="expenseCurrency"></select></div></label>
+      <label id="rateWrap">Exchange rate<input id="exchangeRate" type="number" min="0.000001" step="0.000001" inputmode="decimal" placeholder="e.g. 100"><small id="rateHelp">1 OMR = X foreign currency</small></label>
+      <div id="conversion" class="conversion">≈ 0 OMR</div>
+      <div class="grid2"><label>Category<select id="expenseCategory"></select></label><label>Payment<select id="paymentMethod"></select></label></div>
+      <label>Date<input id="expenseDate" type="date" required></label>
+      <label>Note <small>(optional)</small><input id="expenseNote" maxlength="120" placeholder="Dinner, taxi, souvenirs..."></label>
+      <button class="primary" type="submit">Save Expense</button>
+    </form>
+  </div>
+</div>
+<div id="toast" class="toast hidden" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>
