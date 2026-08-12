@@ -336,3 +336,19 @@ TripSpend v6 focuses Home on the few things a traveler needs immediately.
 - Detailed charts + Who owes whom → **Analytics**
 
 No spending, traveler, country, planned-cost, FX, or settlement data was removed. This release changes dashboard presentation and navigation only.
+
+
+## v6.0.1
+
+- Added small country flag emoji beside country names.
+- Flags now appear on:
+  - Home current-country card
+  - multi-country header
+  - country budget cards
+  - Next destination row
+  - Countries & Costs planner
+  - expense country selector
+  - planned-cost country selector
+  - New Trip country search suggestions
+  - added-country setup cards
+- Country input values remain plain country names internally, so search/editing remains reliable.

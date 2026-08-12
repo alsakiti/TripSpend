@@ -2222,3 +2222,27 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     flex-basis:205px;
   }
 }
+
+
+/* TripSpend v6.0.1 — country flag polish */
+.country-option-name{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.country-flag{
+  flex:0 0 auto;
+  font-size:17px;
+  line-height:1;
+}
+#currentCountryName{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.v6-country-chip strong,
+.stop-card-top strong,
+.v6-plan-copy strong{
+  line-height:1.25;
+}

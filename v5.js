@@ -76,7 +76,7 @@
 
       const body = document.createElement("div");
       const strong = document.createElement("strong");
-      strong.textContent = `Country ${index + 2}: ${stop.country}`;
+      strong.textContent = `Country ${index + 2}: ${core.countryFlag(stop.country)} ${stop.country}`;
       const small = document.createElement("small");
       small.textContent = `${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)} • ${stop.currency}`;
       body.append(strong, small);
@@ -480,7 +480,7 @@
 
   function setHeaderRoute() {
     if (!state().trip || !stops().length) return;
-    const names = stops().map(s => s.country);
+    const names = stops().map(s => `${core.countryFlag(s.country)} ${s.country}`);
     const sub = $("headerSub");
     if (!sub) return;
     if (names.length === 1) return;
@@ -524,7 +524,7 @@
     const bar = $("currentCountryBudgetBar");
 
     if (status) status.textContent = beforeTrip ? "FIRST COUNTRY" : afterTrip ? "LAST COUNTRY" : "CURRENT COUNTRY";
-    if (name) name.textContent = stop.country;
+    if (name) name.textContent = `${core.countryFlag(stop.country)} ${stop.country}`;
     if (dates) dates.textContent = `${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)}`;
     if (currency) currency.textContent = stop.currency;
 
@@ -580,7 +580,7 @@
 
       const label = document.createElement("div");
       const strong = document.createElement("strong");
-      strong.textContent = stop.country;
+      strong.textContent = `${core.countryFlag(stop.country)} ${stop.country}`;
       const small = document.createElement("small");
       small.textContent = `${stop.currency} • ${core.fmtDate(stop.startDate)}–${core.fmtDate(stop.endDate)}`;
       label.append(strong, small);
@@ -647,12 +647,12 @@
 
     if (next) {
       if (label) label.textContent = today < state().trip.startDate ? "FIRST DESTINATION" : "NEXT DESTINATION";
-      name.textContent = next.country;
+      name.textContent = `${core.countryFlag(next.country)} ${next.country}`;
       dates.textContent = `${core.fmtDateWithYear(next.startDate)} • ${next.currency}`;
     } else {
       const current = stopForDate(today);
       if (label) label.textContent = today > state().trip.endDate ? "TRIP COMPLETE" : "TRIP PLAN";
-      name.textContent = today > state().trip.endDate ? "Trip complete" : (current?.country || "View trip");
+      name.textContent = today > state().trip.endDate ? "Trip complete" : (current ? `${core.countryFlag(current.country)} ${current.country}` : "View trip");
       dates.textContent = today > state().trip.endDate
         ? `${core.fmtDateWithYear(state().trip.startDate)} – ${core.fmtDateWithYear(state().trip.endDate)}`
         : "View countries & planned costs";
@@ -669,7 +669,7 @@
         const chip = document.createElement("button");
         chip.type = "button";
         chip.className = "route-chip";
-        chip.textContent = `${i + 1}. ${s.country} · ${s.currency}`;
+        chip.textContent = `${i + 1}. ${core.countryFlag(s.country)} ${s.country} · ${s.currency}`;
         chip.onclick = () => core.page("plan");
         route.append(chip);
       });
@@ -731,7 +731,7 @@
       number.textContent = String(idx + 1);
       const title = document.createElement("div");
       const strong = document.createElement("strong");
-      strong.textContent = s.country;
+      strong.textContent = `${core.countryFlag(s.country)} ${s.country}`;
       const dates = document.createElement("small");
       dates.textContent = `${core.fmtDate(s.startDate)} – ${core.fmtDate(s.endDate)} • ${s.currency}`;
       title.append(strong, dates);
@@ -790,7 +790,7 @@
     stops().forEach(s => {
       const o = document.createElement("option");
       o.value = s.id;
-      o.textContent = `${s.country} • ${s.currency}`;
+      o.textContent = `${core.countryFlag(s.country)} ${s.country} • ${s.currency}`;
       select.append(o);
     });
   }
@@ -823,7 +823,7 @@
       title.textContent = p.title;
       const meta = document.createElement("small");
       const stop = stopById(p.stopId);
-      meta.textContent = `${core.fmtDateLong(p.date)}${stop ? ` • ${stop.country}` : ""} • ${p.category}`;
+      meta.textContent = `${core.fmtDateLong(p.date)}${stop ? ` • ${core.countryFlag(stop.country)} ${stop.country}` : ""} • ${p.category}`;
       body.append(title, meta);
 
       const side = document.createElement("div");
@@ -1105,7 +1105,7 @@
     stops().forEach(s => {
       const o = document.createElement("option");
       o.value = s.id;
-      o.textContent = `${s.country} • ${s.currency}`;
+      o.textContent = `${core.countryFlag(s.country)} ${s.country} • ${s.currency}`;
       select.append(o);
     });
 
@@ -1302,7 +1302,7 @@
     const currency = $("expenseCurrency")?.value || stop?.currency || "";
     const rate = Number($("exchangeRate")?.value || 0);
 
-    if ($("quickCountryText")) $("quickCountryText").textContent = stop ? `📍 ${stop.country} · ${currency}` : `📍 ${currency}`;
+    if ($("quickCountryText")) $("quickCountryText").textContent = stop ? `${core.countryFlag(stop.country)} ${stop.country} · ${currency}` : `📍 ${currency}`;
     if ($("quickPaymentText")) $("quickPaymentText").textContent = payment ? `💳 ${payment}` : "💳 Payment";
     if ($("quickRateText")) {
       $("quickRateText").textContent = currency === state().trip.homeCurrency
