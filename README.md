@@ -1,48 +1,51 @@
-# TripSpend
+# TripSpend v2
 
-A GitHub Pages-ready travel spending tracker built with plain HTML, CSS, and JavaScript.
+A smarter, offline-first travel spending tracker that runs on GitHub Pages.
 
-## Included
+## New in v2
 
-- Trip name, destination, dates, budget, home currency, and trip currency
-- Add expenses in home or foreign currency
-- Saves the exchange rate used for each transaction
-- Budget / spent / remaining totals
-- Safe-to-spend-today calculation
-- Expense search, filtering, editing, and deletion
-- Category and daily-spending analytics
-- JSON backup export/import
-- Browser local storage
-- Responsive mobile UI and automatic dark mode
-- Offline caching after the first successful load
+- Smart trip health: on-track / watch pace / over-budget status
+- End-of-trip spending forecast
+- Smart insights for top category, biggest day, and daily spending room
+- Today spending and projected total on the dashboard
+- Automatic category suggestions from expense notes
+- Remembered exchange rates per currency pair
+- Duplicate-expense warning
+- Repeat-expense button for fast re-entry
+- Payment-method analytics and filtering
+- Average transaction and biggest-spend-day analytics
+- CSV export for Excel
+- JSON backup/import
+- Installable PWA with app icons and offline cache
+- Keeps compatibility with existing v1 TripSpend data
 
-## Publish with GitHub Pages
+## Update your GitHub Pages app
 
-1. Create a GitHub repository, e.g. `tripspend`.
-2. Upload **all files from this folder** to the repository root.
-3. Commit the files.
-4. Open **Settings → Pages**.
-5. Under **Build and deployment**, choose **Deploy from a branch**.
-6. Pick the `main` branch and `/ (root)` folder.
-7. Save.
-8. Wait for GitHub to show your live Pages URL.
+Replace the files in the root of your TripSpend repository with the v2 files, including the `icons` folder. Commit the changes. GitHub Pages will deploy automatically.
 
-## Storage warning
+If your browser shows the old version after deployment, refresh once or twice. The v2 service worker uses a new cache version so the updated app should take over.
 
-TripSpend stores data in this browser using `localStorage`. Clearing site/browser data removes the local trip. Use **Settings → Export Backup** regularly. The JSON backup can be imported later or on another device.
+## Privacy
 
-## Exchange rate convention
+Trip and expense data are stored in your browser's localStorage. GitHub hosts the app code only; your entered expenses are not written to your GitHub repository. Export a JSON backup regularly if the data matters.
 
-Enter the exchange rate as:
 
-`1 HOME currency = X EXPENSE currency`
+## v3 additions
 
-Example: if `1 OMR = 100 THB`, spending `500 THB` is stored as `5 OMR`.
+- Live Currency Exchange card on the Home dashboard
+- Latest available reference-rate lookup through Frankfurter
+- One-tap **Use Latest Rate** inside Add Expense
+- Last successful rates cached locally for offline conversion
+- Online/offline status shown in the exchange section
+- Stronger offline app-shell caching through the service worker
+- Existing trip and expense data remains stored in browser local storage
 
-## Files
+### Offline behavior
 
-- `index.html` — app structure
-- `style.css` — visual design
-- `app.js` — logic and local data
-- `manifest.webmanifest` — web-app metadata
-- `sw.js` — offline cache
+Open TripSpend successfully at least once while online after publishing v3. The service worker caches the app shell. After that, the dashboard, expense entry, analytics, settings, and saved data can open without internet.
+
+Live exchange rates require internet for a fresh rate. When offline, TripSpend uses the last successful saved rate for that exact currency pair when available.
+
+### Exchange-rate note
+
+The exchange service supplies the latest available reference rate. Your card issuer, bank, ATM, or cash exchange counter can apply a different rate or fee, so TripSpend still allows manual exchange-rate editing.
