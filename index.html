@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=4.4.0">
-  <link rel="icon" href="icons/icon-192.png?v=4.4.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=4.4.0">
-  <link rel="stylesheet" href="style.css?v=4.4.0">
+  <link rel="manifest" href="manifest.webmanifest?v=5.0.0">
+  <link rel="icon" href="icons/icon-192.png?v=5.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.0.0">
+  <link rel="stylesheet" href="style.css?v=5.0.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v4.4</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.0</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=4.4.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v4.4</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=5.0.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v5.0</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -106,6 +106,22 @@
         </div>
 
         <button id="quickAdd" class="primary">＋ Add Expense</button>
+
+        <section class="section">
+          <div class="section-title">
+            <h2>Trip plan</h2>
+            <button id="openPlan" class="link-btn">Open planner</button>
+          </div>
+          <div class="card plan-snapshot">
+            <div id="routeChips" class="route-chips"></div>
+            <div class="plan-metrics">
+              <div><small>Countries</small><strong id="countryCount">1</strong></div>
+              <div><small>Upcoming</small><strong id="upcomingCost">0</strong></div>
+              <div><small>Committed</small><strong id="committedCost">0</strong></div>
+            </div>
+            <div id="nextPlanItem" class="next-plan"></div>
+          </div>
+        </section>
 
         <section class="section">
           <div class="section-title">
@@ -240,6 +256,81 @@
         </div>
       </section>
 
+
+      <section id="plan" class="page">
+        <div class="page-title">
+          <div><div class="eyebrow">TRIP PLAN</div><h2>Countries & costs</h2></div>
+          <button id="planDone" class="small-primary">Done</button>
+        </div>
+
+        <div class="card planner-summary">
+          <div>
+            <small>Actual spent</small>
+            <strong id="plannerSpent">0</strong>
+          </div>
+          <div>
+            <small>Upcoming planned</small>
+            <strong id="plannerUpcoming">0</strong>
+          </div>
+          <div>
+            <small>Committed total</small>
+            <strong id="plannerCommitted">0</strong>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section-title"><h2>Countries</h2><span class="smart-badge">MULTI-COUNTRY</span></div>
+          <form id="addStopForm" class="card form planner-form">
+            <label>Country
+              <div class="country-combobox">
+                <input id="newStopCountry" type="text" required autocomplete="off" spellcheck="false"
+                       role="combobox" aria-autocomplete="list" aria-expanded="false"
+                       aria-controls="newStopCountryOptions" placeholder="Search for a country…">
+                <div id="newStopCountryOptions" class="country-options hidden" role="listbox"></div>
+              </div>
+            </label>
+            <div class="grid2">
+              <label>From<input id="newStopStart" type="date" required></label>
+              <label>To<input id="newStopEnd" type="date" required></label>
+            </div>
+            <div class="grid2">
+              <label>Local currency<select id="newStopCurrency"></select></label>
+              <label>Budget <small>(home currency)</small><input id="newStopBudget" type="number" min="0" step="0.001" inputmode="decimal" placeholder="Optional"></label>
+            </div>
+            <button class="secondary" type="submit">＋ Add Country</button>
+          </form>
+          <div id="stopList" class="stop-list"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h2>Planned costs</h2><span class="smart-badge">UPCOMING</span></div>
+          <form id="addPlanForm" class="card form planner-form">
+            <label>What are you planning?<input id="planTitle" maxlength="80" required placeholder="Hotel, tour, airport transfer…"></label>
+            <div class="grid2">
+              <label>Estimated cost <small id="planCurrencyHint">(home currency)</small>
+                <input id="planAmount" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="0.000">
+              </label>
+              <label>Date<input id="planDate" type="date" required></label>
+            </div>
+            <div class="grid2">
+              <label>Country<select id="planStop"></select></label>
+              <label>Category<select id="planCategory"></select></label>
+            </div>
+            <label>Note <small>(optional)</small><input id="planNote" maxlength="120" placeholder="Booking reference, details…"></label>
+            <button class="secondary" type="submit">＋ Add Planned Cost</button>
+          </form>
+          <div id="planList" class="planned-list"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-title"><h2>Settle up</h2><span class="smart-badge">GROUP</span></div>
+          <div class="card settlement-card">
+            <p class="settlement-help">TripSpend compares who paid with who benefited from each expense.</p>
+            <div id="settlementList" class="settlement-list"></div>
+          </div>
+        </section>
+      </section>
+
       <section id="settings" class="page">
         <div class="page-title"><div><div class="eyebrow">TRIP</div><h2>Settings</h2></div></div>
         <form id="settingsForm" class="card form">
@@ -265,6 +356,11 @@
           <label>Default payment method<select id="sDefaultPayment"></select></label>
           <button class="primary" type="submit">Save Changes</button>
         </form>
+
+        <div class="card action-card">
+          <div><strong>Trip planner</strong><p>Add countries, destination budgets, and upcoming planned costs.</p></div>
+          <button id="settingsPlan" class="secondary">Open Trip Planner</button>
+        </div>
 
         <div class="card action-card">
           <div><strong>Travelers</strong><p>Add people, rename them, and review individual spending totals.</p></div>
@@ -326,10 +422,21 @@
       <div id="rateMemory" class="rate-memory hidden"></div>
       <div id="conversion" class="conversion">≈ 0 OMR</div>
 
-      <label>Traveler
-        <select id="expensePerson"></select>
-        <small>Choose one person, or split the expense equally between everyone.</small>
-      </label>
+      <div class="grid2">
+        <label>Country<select id="expenseStop"></select></label>
+        <label>Paid by<select id="expensePaidBy"></select></label>
+      </div>
+
+      <select id="expensePerson" class="hidden" aria-hidden="true" tabindex="-1"></select>
+      <fieldset class="expense-for-fieldset">
+        <legend>Expense for</legend>
+        <div class="expense-for-actions">
+          <button id="expenseForEveryone" type="button" class="mini-btn">Everyone</button>
+          <button id="expenseForClear" type="button" class="mini-btn">Clear</button>
+        </div>
+        <div id="expenseForPeople" class="expense-for-people"></div>
+        <small>Select one or more travelers. TripSpend splits the cost equally between those selected.</small>
+      </fieldset>
       <label>Category<select id="expenseCategory"></select></label>
       <div id="categorySuggestion" class="suggestion hidden"><span id="suggestionText"></span><button id="applySuggestion" type="button">Use suggestion</button></div>
 
@@ -345,7 +452,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=4.4.0"></script>
-<script src="fx.js?v=4.4.0"></script>
+<script src="app.js?v=5.0.0"></script>
+<script src="fx.js?v=5.0.0"></script>
+<script src="v5.js?v=5.0.0"></script>
 </body>
 </html>

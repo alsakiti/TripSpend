@@ -1,10 +1,22 @@
-TripSpend v4.4 update
+TripSpend v5.0 update
 
-1. Extract TripSpend-v4.4-update.zip.
-2. Upload every file/folder inside to the ROOT of your existing TripSpend GitHub repository.
-3. Replace the old files and commit.
-4. Wait 1–2 minutes for GitHub Pages.
-5. Completely close the Home Screen app and reopen it online.
-6. Confirm you see v4.4 under the TripSpend logo.
+1. Extract TripSpend-v5-update.zip.
+2. Upload EVERYTHING inside to the ROOT of your existing TripSpend GitHub repository.
+3. Replace files with the same names.
+4. Commit the changes.
+5. Wait 1–2 minutes for GitHub Pages.
+6. Completely close the TripSpend Home Screen app.
+7. Reopen it while online.
+8. Confirm that the visible badge says v5.0.
 
-Changes: improved iPhone date picker appearance and blank name/destination defaults.
+New in v5.0:
+- Multiple countries with dates, currency and destination budgets
+- Trip planner with planned/upcoming costs
+- Actual + upcoming = committed trip cost
+- Paid By and Expense For on expenses
+- Multi-person expense splitting
+- Automatic group settlement (who owes whom)
+- Expenses can be assigned to a country
+- Existing v4 data remains compatible
+
+If the old version appears, open the GitHub Pages URL in Safari, refresh once, then reopen the Home Screen app.

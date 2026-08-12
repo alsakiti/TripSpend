@@ -121,3 +121,28 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - First traveler name starts blank and must be entered
 - Budget hint changed from 1000 to “Enter budget”
 - Visible version updated to v4.4
+
+
+## v5.0 — Trip Planner & Group Settlement
+
+### Multi-country trips
+- Add multiple countries with dates, local currency, and optional destination budget.
+- Expenses can be linked to the country where they happened.
+- Dashboard shows the route and number of countries.
+- Destination totals show spent, upcoming, and budget.
+
+### Planned costs
+- Add upcoming hotels, tours, transfers, activities, and other expected costs.
+- Dashboard shows **Upcoming** and **Committed** (actual + upcoming).
+- Planned costs can be turned into an expense with **Record expense**.
+
+### Paid By / Expense For
+- Every expense can store who paid.
+- Select one or more travelers who benefited.
+- Costs are split equally between selected travelers.
+- **Settle up** calculates the simplest payments between travelers.
+
+### Compatibility
+- Existing v4 expenses remain compatible.
+- Historical expenses without a payer remain valid but are excluded from settlement until edited.
+- Offline mode, live currency conversion, traveler tracking, searchable destination fields, backup/export, PWA install, and the TripSpend logo are preserved.

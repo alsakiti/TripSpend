@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "4.4.0";
+  const APP_VERSION = "5.0.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -29,7 +29,7 @@
   }
 
   function blank() {
-    return { trip: null, expenses: [], rates: {}, people: [] };
+    return { trip: null, expenses: [], rates: {}, people: [], stops: [], plans: [] };
   }
 
   function normalizeExpense(expense) {
@@ -38,6 +38,9 @@
     e.personShares = e.personShares
       .filter(s => s && s.personId)
       .map(s => ({ personId: String(s.personId), amount: num(s.amount) }));
+    e.paidByPersonId = e.paidByPersonId ? String(e.paidByPersonId) : "";
+    e.stopId = e.stopId ? String(e.stopId) : "";
+    e.planId = e.planId ? String(e.planId) : "";
     return e;
   }
 
@@ -59,11 +62,47 @@
     // Existing historical expenses remain unassigned rather than being guessed.
     if (trip && !people.length) people = [makePerson("Me")];
 
+    const stops = Array.isArray(clean.stops) && clean.stops.length
+      ? clean.stops.filter(s => s && s.id).map(s => ({
+          id: String(s.id),
+          country: String(s.country || trip?.destination || "").trim(),
+          startDate: String(s.startDate || trip?.startDate || ""),
+          endDate: String(s.endDate || trip?.endDate || ""),
+          currency: String(s.currency || trip?.tripCurrency || "USD"),
+          budget: num(s.budget, 0),
+          createdAt: num(s.createdAt, Date.now())
+        }))
+      : (trip ? [{
+          id: "stop-primary",
+          country: String(trip.destination || ""),
+          startDate: String(trip.startDate || ""),
+          endDate: String(trip.endDate || ""),
+          currency: String(trip.tripCurrency || "USD"),
+          budget: num(trip.budget, 0),
+          createdAt: num(trip.createdAt, Date.now())
+        }] : []);
+
+    const plans = Array.isArray(clean.plans)
+      ? clean.plans.filter(p => p && p.id).map(p => ({
+          id: String(p.id),
+          title: String(p.title || "Planned cost").trim().slice(0, 80),
+          homeAmount: num(p.homeAmount, 0),
+          date: String(p.date || trip?.startDate || ""),
+          stopId: p.stopId ? String(p.stopId) : "",
+          category: String(p.category || "Other"),
+          note: String(p.note || "").slice(0, 120),
+          status: p.status === "paid" ? "paid" : "planned",
+          createdAt: num(p.createdAt, Date.now())
+        }))
+      : [];
+
     return {
       trip,
       expenses: Array.isArray(clean.expenses) ? clean.expenses.map(normalizeExpense) : [],
       rates: clean.rates && typeof clean.rates === "object" ? clean.rates : {},
-      people
+      people,
+      stops,
+      plans
     };
   }
 
@@ -674,7 +713,12 @@
         if (person === "__unassigned__") return !(e.personShares || []).length;
         return (e.personShares || []).some(s => s.personId === person);
       })
-      .filter(e => !q || `${e.category} ${e.note || ""} ${e.paymentMethod} ${expenseAssignmentText(e)}`.toLowerCase().includes(q))
+      .filter(e => {
+        if (!q) return true;
+        const stop = (state.stops || []).find(s => s.id === e.stopId);
+        const payer = e.paidByPersonId ? personName(e.paidByPersonId) : "";
+        return `${e.category} ${e.note || ""} ${e.paymentMethod} ${expenseAssignmentText(e)} ${stop?.country || ""} ${payer}`.toLowerCase().includes(q);
+      })
       .slice()
       .sort(sortNew);
   }
@@ -715,7 +759,10 @@
       const title = document.createElement("strong");
       title.textContent = expense.note?.trim() || expense.category;
       const sub = document.createElement("span");
-      sub.textContent = `${expense.category} • ${fmtDateLong(expense.date)} • ${expense.paymentMethod} • ${expenseAssignmentText(expense)}`;
+      const expenseStop = (state.stops || []).find(s => s.id === expense.stopId);
+      const payerText = expense.paidByPersonId ? `Paid by ${personName(expense.paidByPersonId)}` : "Payer not tracked";
+      const stopText = expenseStop?.country ? `${expenseStop.country} • ` : "";
+      sub.textContent = `${stopText}${expense.category} • ${fmtDateLong(expense.date)} • ${payerText} • For ${expenseAssignmentText(expense)}`;
       main.append(title, sub);
 
       const side = document.createElement("div");
@@ -1025,6 +1072,7 @@
     fillSettings();
     renderRates();
     renderPeoplePage();
+    window.dispatchEvent(new CustomEvent("tripspend:render"));
   }
 
   function page(id) {
@@ -1064,6 +1112,8 @@
     rateUI(true);
     preview();
     duplicateCheck();
+
+    window.TripSpendV5?.prepareExpense?.(source, existing, isRepeat);
 
     $("modal").classList.remove("hidden");
     document.body.style.overflow = "hidden";
@@ -1271,7 +1321,17 @@
       },
       expenses: [],
       rates: {},
-      people: [makePerson(ownerName)]
+      people: [makePerson(ownerName)],
+      stops: [{
+        id: "stop-primary",
+        country: destination,
+        startDate: start,
+        endDate: end,
+        currency: $("tripCurrency").value,
+        budget: num($("budget").value),
+        createdAt: Date.now()
+      }],
+      plans: []
     };
 
     save();
@@ -1302,6 +1362,17 @@
       tripCurrency: $("sTripCurrency").value,
       defaultPayment: $("sDefaultPayment").value
     };
+
+    if (state.stops?.length === 1) {
+      state.stops[0] = {
+        ...state.stops[0],
+        country: destination,
+        startDate: start,
+        endDate: end,
+        currency: $("sTripCurrency").value,
+        budget: num($("sBudget").value)
+      };
+    }
 
     save();
     render();
@@ -1335,6 +1406,13 @@
       personShares: makePersonShares(selection, homeAmount),
       createdAt: Date.now()
     };
+
+    const v5ExpenseData = window.TripSpendV5?.expenseData?.(homeAmount);
+    if (v5ExpenseData?.__error) return toast(v5ExpenseData.__error);
+    if (v5ExpenseData) {
+      delete v5ExpenseData.__error;
+      Object.assign(x, v5ExpenseData);
+    }
 
     const index = state.expenses.findIndex(y => y.id === x.id);
     if (index >= 0) {
@@ -1383,7 +1461,7 @@
     const name = (state.trip?.name || "tripspend").replace(/[^a-z0-9]+/gi, "-");
     download(
       `${name}-backup.json`,
-      JSON.stringify({ app: "TripSpend", version: 4, exportedAt: new Date().toISOString(), data: state }, null, 2),
+      JSON.stringify({ app: "TripSpend", version: 5, exportedAt: new Date().toISOString(), data: state }, null, 2),
       "application/json"
     );
     toast("Backup exported");
@@ -1399,7 +1477,7 @@
     const headers = [
       "Date", "Category", "Note", "Payment Method",
       "Original Amount", "Original Currency", "Exchange Rate",
-      "Home Amount", "Home Currency", "Assigned To", "Traveler Shares"
+      "Home Amount", "Home Currency", "Country", "Paid By", "Expense For", "Traveler Shares"
     ];
 
     const rows = state.expenses.slice().sort(sortNew).map(e => {
@@ -1409,6 +1487,8 @@
       return [
         e.date, e.category, e.note, e.paymentMethod,
         e.amount, e.currency, e.rate, e.homeAmount, state.trip.homeCurrency,
+        (state.stops || []).find(s => s.id === e.stopId)?.country || "",
+        e.paidByPersonId ? personName(e.paidByPersonId) : "",
         assigned, detail
       ];
     });
@@ -1640,6 +1720,33 @@
 
   initDestinationAutocomplete("destination", "destinationOptions", "");
   initDestinationAutocomplete("sDestination", "sDestinationOptions", "");
+
+  window.TripSpendCore = {
+    getState: () => state,
+    save,
+    render,
+    page,
+    openModal,
+    toast,
+    uid,
+    money,
+    fmtDate,
+    fmtDateLong,
+    num,
+    today,
+    validDates,
+    opts,
+    CURS,
+    DESTS,
+    CATS,
+    PAYS,
+    activePeople,
+    personName,
+    personById,
+    initDestinationAutocomplete,
+    canonicalDestination,
+    setDestinationValue
+  };
   opts($("homeCurrency"), CURS, "OMR");
   opts($("tripCurrency"), CURS, "THB");
   opts($("sHomeCurrency"), CURS, "OMR");
@@ -1706,7 +1813,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=4.4.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.0.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
