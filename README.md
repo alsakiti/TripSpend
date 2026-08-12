@@ -388,3 +388,34 @@ The compact **AUTO-FILLED** row shows what TripSpend selected. Tap it or **More 
 - Example: **Hu → Mohammed — 15.000 OMR**
 - Paid/share accounting is hidden behind **Show calculation details**.
 - Self-paid personal expenses remain excluded from debt while still counting toward trip spending.
+
+
+## v6.2 — Analytics makeover
+
+Analytics is now organized around decisions instead of showing every chart at once.
+
+### New top overview
+- Big **Total Spent**
+- Budget percentage and progress
+- Remaining budget
+- Top spending category
+- Personal spending
+- Shared spending
+- Number of expenses
+
+### Cleaner highlights
+Only three quick statistics stay visible:
+- Average per day
+- Average expense
+- Largest expense
+
+### Spending breakdown
+**Where your money went** is the main visible chart and shows category spending clearly.
+
+### Settlement
+**Who owes whom** remains visible because it is actionable, while Paid vs Share details stay collapsed.
+
+### More insights
+Payment methods, traveler share, highest-spend day, and daily spending are now under one **More insights** control so Analytics stays compact on iPhone.
+
+No expense or analytics data was removed.

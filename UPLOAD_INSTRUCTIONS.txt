@@ -1,16 +1,18 @@
-TripSpend v6.1 update
+TripSpend v6.2 update
 
-1. Extract TripSpend-v6.1-update.zip.
+1. Extract TripSpend-v6.2-update.zip.
 2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
-3. Replace the old files and commit.
+3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
-5. Completely close the TripSpend Home Screen app.
+5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the visible badge says v6.1.
+7. Confirm the badge says v6.2.
 
-What changed:
-- Current country switches automatically from the trip dates.
-- Add Expense is much shorter: Amount → Personal/Shared → Save.
-- Tap AUTO-FILLED or More options only when you need to change details.
-- Analytics → Who owes whom now shows the final payments first.
-- Tap Show calculation details only if you want Paid vs Share accounting.
+Analytics is now:
+Trip Spending overview
+→ Key highlights
+→ Where your money went
+→ Who owes whom
+→ More insights
+
+More insights contains payment methods, traveler share, highest spend day, and daily spending.

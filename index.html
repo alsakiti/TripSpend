@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.1.0">
-  <link rel="icon" href="icons/icon-192.png?v=6.1.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.1.0">
-  <link rel="stylesheet" href="style.css?v=6.1.0">
+  <link rel="manifest" href="manifest.webmanifest?v=6.2.0">
+  <link rel="icon" href="icons/icon-192.png?v=6.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.2.0">
+  <link rel="stylesheet" href="style.css?v=6.2.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.1</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.2</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.1.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.1</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.2.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.2</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -305,22 +305,105 @@
         <div id="allList" class="list"></div>
       </section>
 
-      <section id="analytics" class="page">
-        <div class="page-title"><div><div class="eyebrow">INSIGHTS</div><h2>Analytics</h2></div></div>
-        <div class="metrics metrics-4">
-          <div class="card metric"><small>Average / day</small><strong id="avgDay">0 OMR</strong></div>
-          <div class="card metric"><small>Average transaction</small><strong id="avgTransaction">0 OMR</strong></div>
-          <div class="card metric"><small>Largest expense</small><strong id="largest">0 OMR</strong></div>
-          <div class="card metric"><small>Busiest spend day</small><strong id="biggestDay">—</strong></div>
+      <section id="analytics" class="page analytics-v62">
+        <div class="page-title analytics-page-title">
+          <div>
+            <div class="eyebrow">INSIGHTS</div>
+            <h2>Analytics</h2>
+            <p>See where your trip money is going.</p>
+          </div>
         </div>
+
+        <div class="analytics-hero">
+          <div class="analytics-hero-top">
+            <div>
+              <small>TOTAL SPENT</small>
+              <div class="analytics-total">
+                <strong id="analyticsTotalSpent">0</strong>
+                <span id="analyticsCurrency">OMR</span>
+              </div>
+            </div>
+            <span id="analyticsBudgetPct" class="analytics-budget-pill">0% of budget</span>
+          </div>
+
+          <div class="analytics-progress">
+            <div id="analyticsBudgetBar"></div>
+          </div>
+
+          <div class="analytics-hero-meta">
+            <div>
+              <small>Remaining</small>
+              <strong id="analyticsRemaining">0 OMR</strong>
+            </div>
+            <div>
+              <small>Top category</small>
+              <strong id="analyticsTopCategory">—</strong>
+            </div>
+          </div>
+
+          <div class="analytics-type-split">
+            <div>
+              <span>👤</span>
+              <div>
+                <small>Personal</small>
+                <strong id="analyticsPersonalSpend">0 OMR</strong>
+              </div>
+            </div>
+            <div>
+              <span>👥</span>
+              <div>
+                <small>Shared</small>
+                <strong id="analyticsSharedSpend">0 OMR</strong>
+              </div>
+            </div>
+            <div>
+              <span>🧾</span>
+              <div>
+                <small>Expenses</small>
+                <strong id="analyticsExpenseCount">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-highlights">
+          <div class="analytics-highlight">
+            <small>Average / day</small>
+            <strong id="avgDay">0 OMR</strong>
+          </div>
+          <div class="analytics-highlight">
+            <small>Average expense</small>
+            <strong id="avgTransaction">0 OMR</strong>
+          </div>
+          <div class="analytics-highlight">
+            <small>Largest expense</small>
+            <strong id="largest">0 OMR</strong>
+          </div>
+        </div>
+
+        <section class="section analytics-spending-section">
+          <div class="section-title analytics-section-title">
+            <div>
+              <h2>Where your money went</h2>
+              <small id="analyticsCategoryHint">Spending by category</small>
+            </div>
+          </div>
+          <div class="card chart analytics-primary-chart">
+            <div id="categoryAnalytics" class="bars analytics-category-bars"></div>
+          </div>
+        </section>
+
         <section class="section analytics-settlement-section">
-          <div class="section-title">
-            <h2>Who owes whom</h2>
+          <div class="section-title analytics-section-title">
+            <div>
+              <h2>Who owes whom</h2>
+              <small>Only real group debts</small>
+            </div>
             <span class="smart-badge">SETTLE UP</span>
           </div>
 
           <div class="card settlement-card settlement-card-v61">
-            <p class="settlement-help">This is the simplest way to settle the trip. Personal expenses paid by the same traveler do not appear here.</p>
+            <p class="settlement-help">Personal expenses paid by the same traveler are excluded automatically.</p>
 
             <div id="settlementList" class="settlement-list settlement-list-primary"></div>
 
@@ -340,10 +423,54 @@
             </div>
           </div>
         </section>
-        <div class="card chart"><h3>By category</h3><div id="categoryAnalytics" class="bars"></div></div>
-        <div class="card chart"><h3>By payment method</h3><div id="paymentAnalytics" class="bars"></div></div>
-        <div class="card chart"><h3>By traveler</h3><div id="peopleAnalytics" class="bars"></div></div>
-        <div class="card chart"><h3>Daily spending</h3><div id="dailyAnalytics" class="bars"></div></div>
+
+        <button id="analyticsMoreToggle" type="button" class="card analytics-more-toggle">
+          <span>
+            <small>MORE INSIGHTS</small>
+            <strong>Payment, travelers & daily spending</strong>
+          </span>
+          <span id="analyticsMoreArrow">⌄</span>
+        </button>
+
+        <div id="analyticsMoreDetails" class="analytics-more-details hidden">
+          <div class="analytics-busiest-card">
+            <span>📅</span>
+            <div>
+              <small>Highest spend day</small>
+              <strong id="biggestDay">—</strong>
+            </div>
+          </div>
+
+          <div class="card chart analytics-secondary-chart">
+            <div class="analytics-chart-head">
+              <div>
+                <h3>Payment methods</h3>
+                <small>How you paid</small>
+              </div>
+            </div>
+            <div id="paymentAnalytics" class="bars"></div>
+          </div>
+
+          <div class="card chart analytics-secondary-chart">
+            <div class="analytics-chart-head">
+              <div>
+                <h3>Traveler share</h3>
+                <small>Who the spending was for</small>
+              </div>
+            </div>
+            <div id="peopleAnalytics" class="bars"></div>
+          </div>
+
+          <div class="card chart analytics-secondary-chart">
+            <div class="analytics-chart-head">
+              <div>
+                <h3>Daily spending</h3>
+                <small>Your latest spending days</small>
+              </div>
+            </div>
+            <div id="dailyAnalytics" class="bars"></div>
+          </div>
+        </div>
       </section>
 
 
@@ -728,8 +855,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.1.0"></script>
-<script src="fx.js?v=6.1.0"></script>
-<script src="v5.js?v=6.1.0"></script>
+<script src="app.js?v=6.2.0"></script>
+<script src="fx.js?v=6.2.0"></script>
+<script src="v5.js?v=6.2.0"></script>
 </body>
 </html>

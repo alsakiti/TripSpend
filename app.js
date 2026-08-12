@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.1.0";
+  const APP_VERSION = "6.2.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -1054,6 +1054,77 @@
     $("expenseSummary").textContent = `${filtered.length} expense${filtered.length === 1 ? "" : "s"} • ${money(summaryTotal, state.trip.homeCurrency)}${suffix}`;
   }
 
+
+  function renderAnalyticsOverview() {
+    if (!state.trip) return;
+
+    const total = spent();
+    const budget = num(state.trip.budget);
+    const remaining = budget - total;
+    const pct = budget > 0 ? clamp(total / budget * 100, 0, 100) : 0;
+    const categories = aggregate("category");
+    const top = categories[0] || null;
+
+    let personal = 0;
+    let shared = 0;
+
+    state.expenses.forEach(expense => {
+      const type = expense.expenseType === "shared" || expense.expenseType === "personal"
+        ? expense.expenseType
+        : ((expense.personShares || []).length > 1 ? "shared" : "personal");
+
+      if (type === "shared") shared += num(expense.homeAmount);
+      else personal += num(expense.homeAmount);
+    });
+
+    if ($("analyticsTotalSpent")) {
+      $("analyticsTotalSpent").textContent = money(total, state.trip.homeCurrency)
+        .replace(` ${state.trip.homeCurrency}`, "");
+    }
+    if ($("analyticsCurrency")) $("analyticsCurrency").textContent = state.trip.homeCurrency;
+
+    if ($("analyticsBudgetPct")) {
+      $("analyticsBudgetPct").textContent = budget > 0
+        ? `${Math.round(total / budget * 100)}% of budget`
+        : "No budget";
+      $("analyticsBudgetPct").classList.toggle("over", budget > 0 && total > budget);
+    }
+
+    if ($("analyticsBudgetBar")) {
+      $("analyticsBudgetBar").style.width = `${pct}%`;
+      $("analyticsBudgetBar").classList.toggle("over", budget > 0 && total > budget);
+    }
+
+    if ($("analyticsRemaining")) {
+      $("analyticsRemaining").textContent = remaining >= 0
+        ? money(remaining, state.trip.homeCurrency)
+        : `${money(Math.abs(remaining), state.trip.homeCurrency)} over`;
+      $("analyticsRemaining").classList.toggle("analytics-over", remaining < 0);
+    }
+
+    if ($("analyticsTopCategory")) {
+      $("analyticsTopCategory").textContent = top
+        ? `${icon(top.label)} ${top.label}`
+        : "No spending yet";
+    }
+
+    if ($("analyticsCategoryHint")) {
+      $("analyticsCategoryHint").textContent = top
+        ? `${icon(top.label)} ${top.label} is highest at ${money(top.amount, state.trip.homeCurrency)}`
+        : "Spending by category";
+    }
+
+    if ($("analyticsPersonalSpend")) {
+      $("analyticsPersonalSpend").textContent = money(personal, state.trip.homeCurrency);
+    }
+    if ($("analyticsSharedSpend")) {
+      $("analyticsSharedSpend").textContent = money(shared, state.trip.homeCurrency);
+    }
+    if ($("analyticsExpenseCount")) {
+      $("analyticsExpenseCount").textContent = String(state.expenses.length);
+    }
+  }
+
   function render() {
     const hasTrip = !!state.trip;
     $("setupView").classList.toggle("hidden", hasTrip);
@@ -1092,6 +1163,8 @@
     renderBars($("topCategories"), aggregate("category").slice(0, 4), r => `${icon(r.label)} ${r.label}`);
 
     renderExpenseViews();
+
+    renderAnalyticsOverview();
 
     const count = state.expenses.length;
     $("avgDay").textContent = money(s / Math.max(1, elapsed() || 1), t.homeCurrency);
@@ -1806,6 +1879,18 @@
 
   updateInstallUI();
 
+
+  $("analyticsMoreToggle")?.addEventListener("click", () => {
+    const details = $("analyticsMoreDetails");
+    const arrow = $("analyticsMoreArrow");
+    if (!details) return;
+
+    const open = details.classList.contains("hidden");
+    details.classList.toggle("hidden", !open);
+    if (arrow) arrow.textContent = open ? "⌃" : "⌄";
+    $("analyticsMoreToggle")?.classList.toggle("open", open);
+  });
+
   function setupDateDisplays() {
     const display = (inputId, displayId) => {
       const input = $(inputId);
@@ -1949,7 +2034,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.1.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.2.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
