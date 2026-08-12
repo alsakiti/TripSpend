@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v5.3",
+  "name": "TripSpend v5.4",
   "short_name": "TripSpend",
-  "description": "Offline-first multi-country travel spending app with travelers, planning, live FX and group settlement.",
+  "description": "Offline-first multi-country travel spending app with setup-time travelers, live FX, planning and group settlement.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -178,3 +178,15 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - The quick form validates blank and duplicate traveler names.
 - New travelers immediately appear in traveler totals, expense assignment, split-expense controls, and settlement calculations.
 - Existing **Manage** control remains for rename/archive/delete and detailed traveler management.
+
+
+## v5.4
+
+- New Trip setup now includes **Traveling with others?**
+- Tap **+ Add traveler** before creating the trip.
+- Add as many additional travelers as needed.
+- Added travelers are shown inline and can be removed before creating the trip.
+- Duplicate traveler names are blocked.
+- The first traveler's name and additional travelers are all saved when **Create Trip** is tapped.
+- Travelers remain available immediately for individual spending, expense splitting, Paid By / Expense For, and Settle Up.
+- Home dashboard **+ Add traveler** from v5.3 remains available for adding people later.

@@ -7,6 +7,7 @@
   const $ = id => document.getElementById(id);
   let preparedSource = null;
   let setupDraftStops = [];
+  let setupDraftPeople = [];
 
   const CURRENCY_BY_COUNTRY = {
     Oman:"OMR", Thailand:"THB", Indonesia:"IDR", Singapore:"SGD", Malaysia:"MYR",
@@ -142,6 +143,92 @@
     renderSetupRoute();
     core.setDestinationValue("setupExtraCountry", "");
     $("setupMultiCountryPanel")?.classList.add("hidden");
+  }
+
+
+  function cleanTravelerName(value) {
+    return String(value || "").trim().replace(/\s+/g, " ").slice(0, 50);
+  }
+
+  function renderSetupTravelers() {
+    const list = $("setupTravelerList");
+    if (!list) return;
+    list.replaceChildren();
+
+    setupDraftPeople.forEach((person, index) => {
+      const row = document.createElement("div");
+      row.className = "setup-traveler-item";
+
+      const avatar = document.createElement("span");
+      avatar.className = "setup-traveler-avatar";
+      avatar.textContent = person.name
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join("")
+        .toUpperCase();
+
+      const body = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = person.name;
+      const small = document.createElement("small");
+      small.textContent = `Traveler ${index + 2}`;
+      body.append(strong, small);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "mini-btn delete";
+      remove.textContent = "Remove";
+      remove.onclick = () => {
+        setupDraftPeople.splice(index, 1);
+        renderSetupTravelers();
+      };
+
+      row.append(avatar, body, remove);
+      list.append(row);
+    });
+
+    const toggle = $("setupToggleTravelers");
+    if (toggle) {
+      toggle.textContent = setupDraftPeople.length
+        ? "＋ Add another"
+        : "＋ Add traveler";
+    }
+  }
+
+  function addSetupTraveler() {
+    const input = $("setupTravelerName");
+    if (!input) return;
+
+    const name = cleanTravelerName(input.value);
+    if (!name) return core.toast("Enter a traveler name");
+
+    const ownerName = cleanTravelerName($("ownerName")?.value);
+    if (ownerName && ownerName.toLowerCase() === name.toLowerCase()) {
+      return core.toast("That is already the first traveler");
+    }
+
+    if (setupDraftPeople.some(person => person.name.toLowerCase() === name.toLowerCase())) {
+      return core.toast("That traveler is already added");
+    }
+
+    setupDraftPeople.push({ name });
+    input.value = "";
+    renderSetupTravelers();
+    core.toast(`${name} added`);
+    setTimeout(() => input.focus(), 50);
+  }
+
+  function setupPeople() {
+    return setupDraftPeople.map(person => ({ ...person }));
+  }
+
+  function clearSetupPeople() {
+    setupDraftPeople = [];
+    renderSetupTravelers();
+    const input = $("setupTravelerName");
+    if (input) input.value = "";
+    $("setupTravelersPanel")?.classList.add("hidden");
   }
 
   function ensureV5Data() {
@@ -638,9 +725,30 @@
     prepareExpense,
     expenseData,
     setupStops,
-    clearSetupStops
+    clearSetupStops,
+    setupPeople,
+    clearSetupPeople
   };
 
+
+
+  // Optional travelers during initial trip setup.
+  $("setupToggleTravelers")?.addEventListener("click", () => {
+    const panel = $("setupTravelersPanel");
+    if (!panel) return;
+    panel.classList.toggle("hidden");
+    if (!panel.classList.contains("hidden")) {
+      setTimeout(() => $("setupTravelerName")?.focus(), 60);
+    }
+  });
+
+  $("setupAddTraveler")?.addEventListener("click", addSetupTraveler);
+
+  $("setupTravelerName")?.addEventListener("keydown", event => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    addSetupTraveler();
+  });
 
   // Optional multi-country route during initial trip setup.
   core.opts($("setupExtraCurrency"), core.CURS, "USD");
@@ -817,6 +925,7 @@
   $("planDate")?.dispatchEvent(new Event("input", { bubbles: true }));
 
   renderSetupRoute();
+  renderSetupTravelers();
 
   window.addEventListener("tripspend:render", renderAll);
   renderAll();

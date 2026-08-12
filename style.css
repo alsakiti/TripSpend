@@ -1097,3 +1097,111 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     font-size:9.5px;
   }
 }
+
+
+/* TripSpend v5.4 — add multiple travelers during initial setup */
+.setup-travelers-box{
+  margin:-1px 0 12px;
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface2);
+}
+.setup-travelers-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.setup-travelers-head>div{
+  min-width:0;
+}
+.setup-travelers-head strong,
+.setup-travelers-head span{
+  display:block;
+}
+.setup-travelers-head strong{
+  font-size:11.5px;
+}
+.setup-travelers-head span{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.35;
+}
+.setup-add-traveler-btn{
+  flex:0 0 auto;
+  width:auto!important;
+  min-height:36px!important;
+  padding:0 10px!important;
+  font-size:10.5px!important;
+}
+.setup-travelers-panel{
+  margin-top:11px;
+  padding-top:11px;
+  border-top:1px solid var(--line);
+}
+.setup-travelers-panel label{
+  margin-bottom:8px!important;
+}
+.setup-traveler-list{
+  display:grid;
+  gap:7px;
+  margin-top:8px;
+}
+.setup-traveler-item{
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--surface);
+}
+.setup-traveler-avatar{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#eaf2ff;
+  color:#175cd3;
+  font-size:10px;
+  font-weight:900;
+}
+.setup-traveler-item strong,
+.setup-traveler-item small{
+  display:block;
+}
+.setup-traveler-item strong{
+  font-size:11px;
+}
+.setup-traveler-item small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:9px;
+}
+
+@media(max-width:600px){
+  .setup-travelers-box{
+    padding:9px;
+    margin-bottom:9px;
+    border-radius:12px;
+  }
+  .setup-travelers-head{
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+  }
+  .setup-add-traveler-btn{
+    width:100%!important;
+  }
+  .setup-travelers-panel{
+    margin-top:9px;
+    padding-top:9px;
+  }
+  .setup-travelers-panel input{
+    width:100%;
+  }
+}

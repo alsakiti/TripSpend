@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "5.3.0";
+  const APP_VERSION = "5.4.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -1312,8 +1312,14 @@
     const destination = canonicalDestination("destination");
     if (!destination) return;
 
-    const ownerName = $("ownerName").value.trim();
+    const ownerName = $("ownerName").value.trim().replace(/\s+/g, " ").slice(0, 50);
     if (!ownerName) return toast("Enter your name");
+
+    const setupExtraPeople = window.TripSpendV5?.setupPeople?.() || [];
+    if (setupExtraPeople.some(person => person.name.trim().toLowerCase() === ownerName.toLowerCase())) {
+      return toast("Traveler names must be unique");
+    }
+
     const setupExtraStops = window.TripSpendV5?.setupStops?.() || [];
     const primaryStop = {
       id: "stop-primary",
@@ -1339,16 +1345,22 @@
       },
       expenses: [],
       rates: {},
-      people: [makePerson(ownerName)],
+      people: [
+        makePerson(ownerName),
+        ...(window.TripSpendV5?.setupPeople?.() || []).map(person => makePerson(person.name))
+      ],
       stops: [primaryStop, ...setupExtraStops],
       plans: []
     };
 
     window.TripSpendV5?.clearSetupStops?.();
+    window.TripSpendV5?.clearSetupPeople?.();
     save();
     render();
     page("dashboard");
-    toast(state.stops.length > 1 ? `${state.stops.length}-country trip created` : "Trip created");
+    const countryText = state.stops.length > 1 ? `${state.stops.length} countries` : "1 country";
+    const travelerText = state.people.length > 1 ? `${state.people.length} travelers` : "1 traveler";
+    toast(`Trip created • ${countryText} • ${travelerText}`);
   };
 
   $("settingsForm").onsubmit = e => {
@@ -1840,7 +1852,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=5.3.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.4.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
