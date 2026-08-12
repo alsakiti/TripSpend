@@ -8,16 +8,19 @@
   <title>TripSpend</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app">
   <header class="topbar">
-    <div>
-      <div class="eyebrow">TRIPSPEND</div>
-      <h1 id="headerTitle">TripSpend</h1>
-      <p id="headerSub">Travel spending, made simple.</p>
+    <div class="header-brand">
+      <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
+      <div>
+        <div class="eyebrow">TRIPSPEND</div>
+        <h1 id="headerTitle">TripSpend</h1>
+        <p id="headerSub">Travel spending, made simple.</p>
+      </div>
     </div>
     <button id="settingsShortcut" class="icon-btn hidden" aria-label="Trip settings">⚙️</button>
   </header>
@@ -25,19 +28,29 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <div class="hero-icon">✈️</div>
+        <img class="hero-logo" src="icons/icon-192.png" alt="TripSpend logo">
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
       </div>
       <form id="setupForm" class="card form">
         <label>Trip name<input id="tripName" required maxlength="60" placeholder="Thailand Trip"></label>
-        <label>Destination<select id="destination" required></select></label>
+        <label>Destination
+          <div class="country-combobox">
+            <input id="destination" type="text" required autocomplete="off" spellcheck="false"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false"
+                   aria-controls="destinationOptions" placeholder="Start typing a country…">
+            <div id="destinationOptions" class="country-options hidden" role="listbox"></div>
+          </div>
+          <small class="field-hint">Type any letter to instantly filter countries.</small>
+        </label>
         <div class="grid2">
           <label>Start date<input id="startDate" type="date" required></label>
           <label>End date<input id="endDate" type="date" required></label>
         </div>
         <label>Total budget<input id="budget" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="1000"></label>
+        <label>Your name <small>(first traveler)</small><input id="ownerName" maxlength="50" placeholder="Me" value="Me"></label>
+        <p class="form-note">You can add more travelers after creating the trip.</p>
         <div class="grid2">
           <label>Home currency<select id="homeCurrency"></select></label>
           <label>Trip currency<select id="tripCurrency"></select></label>
@@ -73,6 +86,14 @@
         </div>
 
         <button id="quickAdd" class="primary">＋ Add Expense</button>
+
+        <section class="section">
+          <div class="section-title">
+            <h2>Travelers</h2>
+            <button id="managePeople" class="link-btn">Manage</button>
+          </div>
+          <div id="peopleSnapshot" class="people-grid"></div>
+        </section>
 
 
         <section class="section">
@@ -137,10 +158,11 @@
           <div><div class="eyebrow">HISTORY</div><h2>Expenses</h2></div>
           <button id="pageAdd" class="small-primary">＋ Add</button>
         </div>
-        <div class="card filters">
+        <div class="card filters filters-people">
           <input id="searchExpense" type="search" placeholder="Search expenses">
           <select id="filterCategory"><option value="">All categories</option></select>
           <select id="filterPayment"><option value="">All payments</option></select>
+          <select id="filterPerson"><option value="">All travelers</option></select>
         </div>
         <div id="expenseSummary" class="mini-summary"></div>
         <div id="allList" class="list"></div>
@@ -156,14 +178,61 @@
         </div>
         <div class="card chart"><h3>By category</h3><div id="categoryAnalytics" class="bars"></div></div>
         <div class="card chart"><h3>By payment method</h3><div id="paymentAnalytics" class="bars"></div></div>
+        <div class="card chart"><h3>By traveler</h3><div id="peopleAnalytics" class="bars"></div></div>
         <div class="card chart"><h3>Daily spending</h3><div id="dailyAnalytics" class="bars"></div></div>
+      </section>
+
+
+      <section id="people" class="page">
+        <div class="page-title">
+          <div><div class="eyebrow">GROUP</div><h2>Travelers</h2></div>
+          <button id="peopleDone" class="small-primary">Done</button>
+        </div>
+
+        <div class="card people-summary-card">
+          <div>
+            <small>Group spending</small>
+            <strong id="peopleGroupTotal">0 OMR</strong>
+          </div>
+          <div>
+            <small>Unassigned</small>
+            <strong id="peopleUnassigned">0 OMR</strong>
+          </div>
+        </div>
+
+        <form id="addPersonForm" class="card inline-person-form">
+          <label>
+            <span>Add traveler</span>
+            <input id="newPersonName" maxlength="50" placeholder="Name" required>
+          </label>
+          <button class="primary" type="submit">Add Person</button>
+        </form>
+
+        <div class="section-title people-list-title">
+          <h2>People on this trip</h2>
+          <span class="smart-badge">SPLIT READY</span>
+        </div>
+        <div id="peopleList" class="people-list"></div>
+
+        <div class="card people-help">
+          <strong>How assigning works</strong>
+          <p>Choose one traveler when adding an expense, or choose <b>Everyone equally</b> to split that expense. TripSpend saves the exact historical share for each person.</p>
+        </div>
       </section>
 
       <section id="settings" class="page">
         <div class="page-title"><div><div class="eyebrow">TRIP</div><h2>Settings</h2></div></div>
         <form id="settingsForm" class="card form">
           <label>Trip name<input id="sTripName" required maxlength="60"></label>
-          <label>Destination<select id="sDestination" required></select></label>
+          <label>Destination
+            <div class="country-combobox">
+              <input id="sDestination" type="text" required autocomplete="off" spellcheck="false"
+                     role="combobox" aria-autocomplete="list" aria-expanded="false"
+                     aria-controls="sDestinationOptions" placeholder="Start typing a country…">
+              <div id="sDestinationOptions" class="country-options hidden" role="listbox"></div>
+            </div>
+            <small class="field-hint">Start typing and choose a country from the suggestions.</small>
+          </label>
           <div class="grid2">
             <label>Start date<input id="sStartDate" type="date" required></label>
             <label>End date<input id="sEndDate" type="date" required></label>
@@ -176,6 +245,11 @@
           <label>Default payment method<select id="sDefaultPayment"></select></label>
           <button class="primary" type="submit">Save Changes</button>
         </form>
+
+        <div class="card action-card">
+          <div><strong>Travelers</strong><p>Add people, rename them, and review individual spending totals.</p></div>
+          <button id="settingsPeople" class="secondary">Manage Travelers</button>
+        </div>
 
         <div class="card action-card">
           <div><strong>Install TripSpend</strong><p>Use it like an app from your home screen.</p></div>
@@ -229,6 +303,10 @@
       <div id="rateMemory" class="rate-memory hidden"></div>
       <div id="conversion" class="conversion">≈ 0 OMR</div>
 
+      <label>Traveler
+        <select id="expensePerson"></select>
+        <small>Choose one person, or split the expense equally between everyone.</small>
+      </label>
       <label>Category<select id="expenseCategory"></select></label>
       <div id="categorySuggestion" class="suggestion hidden"><span id="suggestionText"></span><button id="applySuggestion" type="button">Use suggestion</button></div>
 

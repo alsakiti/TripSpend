@@ -1,0 +1,15 @@
+TripSpend v4.1 — Searchable Destination Update
+
+1. Extract TripSpend-v4.1-update.zip.
+2. Upload the files inside to your existing TripSpend GitHub repository.
+3. Replace the old files when GitHub asks.
+4. Commit the changes.
+5. Wait for GitHub Pages to redeploy.
+6. Refresh TripSpend. Because the app works offline, refresh twice if the old version is still cached.
+
+New behavior:
+- Destination is now a searchable autocomplete field.
+- Typing "g" shows countries containing g.
+- Typing more letters instantly narrows the results.
+- Countries beginning with the typed letters appear first.
+- Works in both New Trip setup and Settings.

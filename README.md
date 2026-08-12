@@ -49,3 +49,35 @@ Live exchange rates require internet for a fresh rate. When offline, TripSpend u
 ### Exchange-rate note
 
 The exchange service supplies the latest available reference rate. Your card issuer, bank, ATM, or cash exchange counter can apply a different rate or fee, so TripSpend still allows manual exchange-rate editing.
+
+
+## v4 additions
+
+- New TripSpend wallet + airplane brand icon throughout the app and home-screen install
+- Multiple travelers per trip
+- Assign each expense to one traveler
+- Split an expense equally between all active travelers
+- Historical per-person shares are stored on each expense so adding/removing people later does not rewrite old totals
+- Traveler totals on the Home dashboard
+- Dedicated traveler management screen
+- Rename, archive, restore, or delete unused travelers
+- Traveler filter in Expense History
+- "By traveler" analytics
+- Smart insight for the highest assigned spender and unassigned spending
+- CSV export now includes assignment and traveler-share details
+- v1-v3 data migrates automatically; old expenses remain unassigned rather than being guessed
+
+### Traveler behavior
+
+When you select **Everyone equally**, TripSpend stores a fixed share for every active traveler at the time the expense is saved. If a traveler later leaves the trip, archive them instead of deleting them; their historical totals remain intact.
+
+
+## v4.1 — Searchable destination field
+
+Destination selection now uses a live autocomplete field on both Trip Setup and Settings.
+
+- Type one letter to see countries containing that letter.
+- Matches that start with the typed text are ranked first.
+- Every extra letter narrows the list immediately.
+- Supports mouse/touch selection and keyboard arrows + Enter.
+- The app validates that a country from the suggestion list was selected before saving.
