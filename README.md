@@ -806,3 +806,36 @@ Refresh App now shows **Refreshing…**, then confirms **App refreshed • v6.6.
 
 ### Memory cleanup
 Receipt preview/viewer image URLs and image sources are released when closed or when iOS backgrounds the app.
+
+
+## v6.6.5 — Design & Performance Polish
+
+This release intentionally adds no major feature. It focuses on making TripSpend cleaner, lighter and faster.
+
+### Design
+- More consistent spacing, card radius and tap targets.
+- Home uses larger readable secondary labels and a cleaner visual hierarchy.
+- Expense rows are lighter and easier to scan while keeping Repeat/Edit/Delete available.
+- Add Expense is tighter and the Save button stays easier to reach when the iPhone keyboard is open.
+- Plan country cards and planned-cost rows use lighter surfaces and cleaner actions.
+- Analytics keeps the larger v6.5.2 typography while reducing visual weight.
+- Settings is grouped into **Manage trip**, **Preferences & safety**, and **Tools & data**.
+- Dark-mode muted text and borders have stronger contrast.
+- Subtle page entrance motion respects Reduce Motion.
+
+### Performance
+- Expense text search is debounced by 120 ms.
+- Expense search text is indexed and cached until trip data changes.
+- Expense filters run in one pass instead of seven chained array scans.
+- Traveler and country filter menus rebuild only when their source data changes.
+- Expense list DOM is not rebuilt if data/filter state is unchanged.
+- Analytics charts are not rebuilt when underlying trip data has not changed.
+- Personal/shared/largest and biggest-day analytics reuse cached calculations.
+- Plan country totals are aggregated once per render instead of scanning all expenses for every country.
+- Planned-cost rendering no longer writes to storage on every page render unless a status actually changed.
+- v5 Home widgets render only when Home is visible; returning to Home refreshes them.
+- Existing 100-expense progressive rendering remains in place.
+
+### Compatibility
+- No data-model migration.
+- Existing trips, receipts, settlements, Past Trips, backups and appearance settings are preserved.

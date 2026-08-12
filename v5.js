@@ -750,9 +750,27 @@
       return;
     }
 
+    const spentByStop = new Map();
+    state().expenses.forEach(expense => {
+      if (!expense.stopId) return;
+      spentByStop.set(
+        expense.stopId,
+        (spentByStop.get(expense.stopId) || 0) + Number(expense.homeAmount || 0)
+      );
+    });
+
+    const plannedByStop = new Map();
+    upcomingPlans().forEach(plan => {
+      if (!plan.stopId) return;
+      plannedByStop.set(
+        plan.stopId,
+        (plannedByStop.get(plan.stopId) || 0) + Number(plan.homeAmount || 0)
+      );
+    });
+
     stops().forEach((s, idx) => {
-      const spent = stopSpent(s.id);
-      const planned = stopPlanned(s.id);
+      const spent = spentByStop.get(s.id) || 0;
+      const planned = plannedByStop.get(s.id) || 0;
       const card = document.createElement("div");
       card.className = "stop-card";
 
@@ -833,6 +851,10 @@
     if (!el || !state().trip) return;
     el.replaceChildren();
 
+    let statusChanged = false;
+    const recordedPlanIds = new Set(
+      state().expenses.map(expense => expense.planId).filter(Boolean)
+    );
     const rows = plans().slice().sort((a,b) => (a.date || "").localeCompare(b.date || "") || a.createdAt - b.createdAt);
 
     if (!rows.length) {
@@ -841,8 +863,11 @@
     }
 
     rows.forEach(p => {
-      const paid = p.status === "paid" || state().expenses.some(e => e.planId === p.id);
-      if (paid && p.status !== "paid") p.status = "paid";
+      const paid = p.status === "paid" || recordedPlanIds.has(p.id);
+      if (paid && p.status !== "paid") {
+        p.status = "paid";
+        statusChanged = true;
+      }
 
       const row = document.createElement("div");
       row.className = `planned-item ${paid ? "paid" : ""}`;
@@ -896,7 +921,7 @@
       el.append(row);
     });
 
-    core.save();
+    if (statusChanged) core.save();
   }
 
   function recordPlanAsExpense(p) {
@@ -1710,6 +1735,12 @@
   function renderFeaturePage(id) {
     if (!state().trip) return;
 
+    if (id === "dashboard") {
+      renderCurrentCountry();
+      renderCountryBudgets();
+      renderV6NextDestination();
+    }
+
     if (id === "plan") {
       renderPlanHero();
       renderPlannerSummary();
@@ -1735,17 +1766,12 @@
     ensureV5Data();
     setHeaderRoute();
 
-    // Home-critical information stays fresh.
-    renderCurrentCountry();
-    renderCountryBudgets();
-    renderV6NextDestination();
-
-    // Heavy planner/settlement DOM is built only when that page is visible.
     const activePage =
       event?.detail?.activePage ||
       document.querySelector(".page.active")?.id ||
       "dashboard";
 
+    // Only render the visible feature page. Returning to Home refreshes its country/budget widgets.
     renderFeaturePage(activePage);
   }
 

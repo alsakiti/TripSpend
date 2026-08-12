@@ -5540,3 +5540,624 @@ button:disabled{
   .diagnostics-list span,
   .diagnostics-list strong{font-size:9.5px}
 }
+
+
+/* =========================================================
+   TripSpend v6.6.5 — Design & Performance Polish
+   No new feature surfaces: cleaner hierarchy, readability,
+   consistent tap targets, lighter cards and faster-feeling UI.
+   ========================================================= */
+
+:root{
+  --polish-radius:16px;
+  --polish-radius-sm:12px;
+  --polish-shadow:0 5px 16px rgba(16,24,40,.045);
+  --polish-text-small:11px;
+}
+
+/* Global rhythm */
+.page-title{
+  margin:3px 0 14px!important;
+}
+.page-title h2{
+  font-size:26px;
+  line-height:1.08;
+}
+.page-title .eyebrow{
+  margin-bottom:5px;
+  font-size:10.5px;
+}
+.section{
+  margin-top:18px;
+}
+.card{
+  border-radius:var(--polish-radius);
+}
+.primary,
+.secondary,
+.danger-btn,
+.small-primary{
+  border-radius:12px;
+}
+button{
+  -webkit-tap-highlight-color:transparent;
+}
+button:active:not(:disabled){
+  transform:scale(.985);
+}
+@media(prefers-reduced-motion:reduce){
+  button:active:not(:disabled){transform:none}
+}
+
+/* Home — clearer hierarchy, fewer tiny labels */
+.v6-dashboard .v6-current-country{
+  margin-bottom:9px!important;
+  padding:12px 13px!important;
+  border-radius:var(--polish-radius)!important;
+  box-shadow:var(--polish-shadow)!important;
+}
+.v6-dashboard .current-country-status{
+  font-size:9.5px!important;
+}
+.v6-dashboard .current-country-main strong{
+  font-size:18px!important;
+}
+.v6-dashboard .current-country-main small,
+.v6-dashboard .current-country-side strong,
+.v6-dashboard .country-currency-pill{
+  font-size:10.5px!important;
+}
+.v6-budget-card{
+  margin-bottom:10px!important;
+  border-radius:18px!important;
+  box-shadow:0 7px 20px rgba(16,24,40,.055)!important;
+}
+.v6-summary{
+  padding:18px 16px 15px!important;
+}
+.v6-summary .remaining strong{
+  font-size:clamp(38px,10vw,50px)!important;
+}
+.v6-summary .remaining span{
+  font-size:15px!important;
+}
+.v6-summary .eyebrow.light{
+  font-size:10.5px!important;
+}
+.v6-summary .pill{
+  font-size:11px!important;
+  padding:7px 10px!important;
+}
+.v6-summary .progress{
+  margin:14px 0 12px!important;
+}
+.v6-budget-small small,
+.smart-budget-reserve small{
+  font-size:11px!important;
+}
+.v6-budget-small strong,
+.smart-budget-reserve strong{
+  font-size:14px!important;
+}
+.smart-budget-reserve{
+  gap:12px!important;
+}
+.v6-today-card{
+  padding:12px 14px!important;
+}
+.v6-today-card small{
+  font-size:10.5px!important;
+}
+.v6-today-card strong{
+  font-size:14px!important;
+}
+.v6-quick-add{
+  margin-bottom:13px!important;
+  box-shadow:0 7px 16px rgba(22,119,255,.15)!important;
+}
+.v6-country-budget-section{
+  margin-bottom:12px!important;
+}
+.v6-section-title h2{
+  font-size:16px!important;
+}
+.v6-country-chip{
+  flex-basis:214px!important;
+  padding:11px!important;
+  border-radius:14px!important;
+  box-shadow:none!important;
+}
+.v6-country-chip .country-budget-row-top strong{
+  font-size:11.5px!important;
+}
+.v6-country-chip .country-budget-row-top small{
+  font-size:9.5px!important;
+}
+.v6-plan-row{
+  margin-bottom:10px!important;
+  padding:11px 12px!important;
+  border-radius:15px!important;
+  box-shadow:none!important;
+}
+.v6-plan-copy small{
+  font-size:9px!important;
+}
+.v6-plan-copy strong{
+  font-size:13px!important;
+}
+.v6-plan-copy span{
+  font-size:10.5px!important;
+}
+.v6-health-banner{
+  padding:10px 12px!important;
+}
+.v6-health-banner strong{
+  font-size:11.5px!important;
+}
+.v6-health-banner span{
+  font-size:10px!important;
+}
+
+/* Expenses — scan amount first, keep actions quiet */
+.expense-search-tools{
+  margin-bottom:9px!important;
+}
+.expense-search-row{
+  gap:8px!important;
+}
+.expense-search-row input{
+  min-height:45px!important;
+  border-radius:12px!important;
+  font-size:12px!important;
+}
+.expense-filter-button{
+  min-height:45px!important;
+  border-radius:12px!important;
+  font-size:11px!important;
+}
+#expenseSummary{
+  margin:2px 2px 11px!important;
+  font-size:11px!important;
+}
+#allList{
+  gap:8px!important;
+}
+.expense{
+  grid-template-columns:42px minmax(0,1fr) auto!important;
+  gap:10px!important;
+  padding:12px!important;
+  border-radius:15px!important;
+  box-shadow:none!important;
+}
+.expense-icon{
+  width:42px!important;
+  height:42px!important;
+  border-radius:12px!important;
+  font-size:19px!important;
+}
+.expense-main>strong{
+  font-size:13px!important;
+  line-height:1.25;
+}
+.expense-main>span{
+  margin-top:3px!important;
+  font-size:10.5px!important;
+  line-height:1.35;
+}
+.expense-side strong{
+  font-size:13px!important;
+  font-weight:850;
+}
+.expense-side span{
+  font-size:9.5px!important;
+}
+.expense-receipt-badge{
+  margin-top:5px!important;
+  padding:3px 7px!important;
+  font-size:9px!important;
+  letter-spacing:.01em;
+}
+.expense-actions{
+  gap:5px!important;
+  margin-top:-1px;
+}
+.expense-actions .mini{
+  min-height:31px;
+  padding:0 9px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+}
+.expense-load-more-btn{
+  min-height:39px!important;
+  border-radius:11px!important;
+  font-size:10.5px!important;
+}
+
+/* Add Expense — keep primary path compact and Save reachable with keyboard open */
+.sheet{
+  border-radius:24px 24px 20px 20px!important;
+}
+.smart-expense-form{
+  padding-top:14px!important;
+}
+.smart-expense-form .smart-amount-label{
+  margin-bottom:10px!important;
+}
+.smart-type-fieldset{
+  margin-bottom:10px!important;
+}
+.smart-expense-summary{
+  margin-bottom:9px!important;
+}
+.receipt-field{
+  margin:4px 0 9px!important;
+  padding:10px 11px!important;
+  border-radius:12px!important;
+}
+.receipt-field-head strong{
+  font-size:12px!important;
+}
+.receipt-field-head small{
+  font-size:10px!important;
+  line-height:1.3;
+}
+.receipt-add-btn{
+  font-size:10.5px!important;
+}
+.smart-more-options{
+  min-height:40px!important;
+  font-size:11px!important;
+  border-radius:11px!important;
+}
+.smart-save-expense{
+  position:sticky;
+  z-index:3;
+  bottom:0;
+  min-height:48px!important;
+  margin-top:8px;
+  box-shadow:0 -8px 18px rgba(255,255,255,.78),0 8px 18px rgba(22,119,255,.15)!important;
+}
+html[data-theme="dark"] .smart-save-expense{
+  box-shadow:0 -8px 18px rgba(18,26,38,.82),0 8px 18px rgba(0,0,0,.18)!important;
+}
+
+/* Plan — lighter timeline/card treatment */
+.plan-v651 .plan-page-title{
+  margin-bottom:13px!important;
+}
+.plan-v651 .plan-page-title p{
+  max-width:38rem;
+}
+.plan-v651 .plan-hero{
+  border:1px solid var(--line)!important;
+  border-radius:18px!important;
+  box-shadow:var(--polish-shadow)!important;
+}
+.plan-flag{
+  box-shadow:none!important;
+}
+.plan-overview-row>div{
+  border:1px solid rgba(255,255,255,.09);
+}
+.plan-section-title{
+  margin-bottom:9px!important;
+}
+.plan-v651 #stopList,
+.plan-v651 #planList{
+  gap:8px!important;
+}
+.plan-v651 .stop-card{
+  border-radius:15px!important;
+  box-shadow:none!important;
+}
+.plan-v651 .stop-metrics>div{
+  background:var(--surface2)!important;
+}
+.plan-v651 .stop-actions{
+  justify-content:flex-end;
+}
+.plan-v651 .stop-actions .mini-btn{
+  min-height:34px!important;
+  padding:0 11px!important;
+  border-radius:10px!important;
+}
+.plan-v651 .planned-item{
+  border-radius:14px!important;
+  box-shadow:none!important;
+}
+.plan-v651 .planned-actions{
+  gap:5px!important;
+}
+.plan-v651 .planned-actions .mini-btn{
+  min-height:32px!important;
+  border-radius:9px!important;
+}
+
+/* Analytics — cleaner surfaces, same readable scale */
+.analytics-v651 .analytics-page-title{
+  margin-bottom:13px!important;
+}
+.analytics-main-card{
+  border-radius:20px!important;
+  box-shadow:0 8px 22px rgba(15,23,42,.13)!important;
+}
+.analytics-quick-row{
+  margin-top:9px!important;
+}
+.analytics-quick-row>div{
+  border:1px solid var(--line);
+  background:var(--surface)!important;
+  box-shadow:none!important;
+}
+.analytics-category-section,
+.analytics-settlement-section{
+  margin-top:19px!important;
+}
+.analytics-v651 .analytics-category-bars{
+  gap:13px!important;
+}
+.analytics-v651 .analytics-category-bars .bar-track{
+  background:var(--surface2)!important;
+}
+.analytics-v651 .settlement-list-primary .settlement-payment-row{
+  border:1px solid var(--line)!important;
+  box-shadow:none!important;
+}
+.analytics-v651 .settlement-paid-btn{
+  border-radius:9px!important;
+  font-weight:850!important;
+}
+.analytics-v651 .settlement-details-toggle,
+.analytics-v651 .settlement-history-toggle{
+  border-radius:11px!important;
+}
+.analytics-more-row{
+  margin-top:16px!important;
+  border:1px solid var(--line)!important;
+  box-shadow:none!important;
+}
+.analytics-secondary-block{
+  box-shadow:none!important;
+}
+
+/* Settings — strong grouping, less wall-of-cards feeling */
+#settings{
+  max-width:620px;
+  margin:0 auto;
+}
+#settingsForm{
+  padding:16px!important;
+  box-shadow:var(--polish-shadow)!important;
+}
+#settingsForm label{
+  margin-bottom:13px!important;
+  font-size:12px!important;
+}
+#settingsForm input,
+#settingsForm select{
+  min-height:45px!important;
+  border-radius:11px!important;
+}
+.settings-group-label{
+  margin:19px 3px 8px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.settings-manage-card{
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:11px!important;
+  min-height:auto!important;
+  margin-top:8px!important;
+  padding:13px 14px!important;
+  box-shadow:none!important;
+}
+.settings-manage-card>div strong{
+  font-size:12.5px!important;
+}
+.settings-manage-card>div p{
+  margin-top:3px!important;
+  font-size:10px!important;
+  line-height:1.35;
+}
+.settings-manage-card>button{
+  width:auto!important;
+  min-height:38px!important;
+  padding:0 11px!important;
+  font-size:10px!important;
+  white-space:nowrap;
+}
+.appearance-card,
+.data-safety-card,
+.app-update-card,
+.diagnostics-card,
+.settings-fx-card,
+.settings-tool-card{
+  box-shadow:none!important;
+}
+.appearance-card,
+.data-safety-card,
+.app-update-card,
+.diagnostics-card{
+  margin-top:8px!important;
+}
+.appearance-copy p,
+.data-safety-head p,
+.app-update-head p,
+.diagnostics-head p{
+  font-size:10.5px!important;
+  line-height:1.4!important;
+}
+.storage-status-row,
+.backup-list,
+.storage-usage-grid,
+.app-update-versions,
+.diagnostics-list{
+  border-radius:11px!important;
+}
+.settings-tools-label{
+  margin-bottom:-7px!important;
+}
+.settings-tools-section{
+  margin-top:14px!important;
+}
+.settings-tools-section .section-title{
+  margin-bottom:9px!important;
+}
+.settings-tool-card{
+  margin-top:8px!important;
+  padding:14px!important;
+}
+.settings-tool-card>div strong{
+  font-size:12.5px!important;
+}
+.settings-tool-card>div p{
+  font-size:10px!important;
+  line-height:1.4;
+}
+.install-card{
+  margin-top:8px!important;
+}
+
+/* Expense details */
+.expense-detail-sheet{
+  max-width:540px!important;
+}
+.expense-detail-amount{
+  border-radius:14px!important;
+}
+.expense-detail-item{
+  border-radius:10px!important;
+}
+.expense-detail-item small{
+  font-size:9.5px!important;
+}
+.expense-detail-item strong{
+  font-size:11.5px!important;
+}
+.expense-detail-actions{
+  gap:6px!important;
+}
+.expense-detail-actions button{
+  border-radius:10px!important;
+}
+
+/* Bottom navigation — slightly lighter */
+.nav{
+  min-height:70px!important;
+  border-radius:22px!important;
+  box-shadow:0 12px 32px rgba(16,24,40,.12)!important;
+}
+.nav-btn{
+  min-height:50px!important;
+  border-radius:12px!important;
+}
+.nav-btn small{
+  font-size:10.5px!important;
+}
+.nav-add{
+  box-shadow:0 8px 18px rgba(15,23,42,.18)!important;
+}
+
+/* Dark mode contrast without heavy outlines */
+html[data-theme="dark"] .expense,
+html[data-theme="dark"] .plan-v651 .stop-card,
+html[data-theme="dark"] .plan-v651 .planned-item,
+html[data-theme="dark"] .analytics-quick-row>div,
+html[data-theme="dark"] .analytics-v651 .settlement-payment-row,
+html[data-theme="dark"] .settings-manage-card{
+  border-color:#2e3b4f!important;
+}
+html[data-theme="dark"] .expense-main>span,
+html[data-theme="dark"] .expense-side span,
+html[data-theme="dark"] .plan-v651 small,
+html[data-theme="dark"] #settings p,
+html[data-theme="dark"] #settings small{
+  color:#aab4c2!important;
+}
+
+/* Tiny, cheap page entrance motion */
+@keyframes v665-page-in{
+  from{opacity:.86;transform:translateY(2px)}
+  to{opacity:1;transform:none}
+}
+.page.active{
+  animation:v665-page-in .12s ease-out;
+}
+@media(prefers-reduced-motion:reduce){
+  .page.active{animation:none}
+}
+
+/* Mobile readability floor */
+@media(max-width:600px){
+  .page-title h2{
+    font-size:24px!important;
+  }
+  .v6-summary{
+    padding:16px 14px 14px!important;
+  }
+  .v6-summary .remaining strong{
+    font-size:40px!important;
+  }
+  .v6-budget-small small,
+  .smart-budget-reserve small{
+    font-size:10.5px!important;
+  }
+  .v6-budget-small strong,
+  .smart-budget-reserve strong{
+    font-size:13px!important;
+  }
+  .expense{
+    grid-template-columns:40px minmax(0,1fr) auto!important;
+    padding:11px!important;
+  }
+  .expense-icon{
+    width:40px!important;
+    height:40px!important;
+  }
+  .expense-actions{
+    grid-column:2 / 4!important;
+  }
+  .plan-v651 .stop-metrics{
+    gap:6px!important;
+  }
+  .plan-v651 .stop-metrics>div{
+    padding:9px!important;
+  }
+  .analytics-main-card{
+    padding:16px!important;
+  }
+  .analytics-main-card .analytics-total strong{
+    font-size:44px!important;
+  }
+  .settings-manage-card{
+    grid-template-columns:minmax(0,1fr) auto!important;
+    padding:12px!important;
+  }
+  .settings-manage-card>button{
+    min-height:36px!important;
+    padding:0 9px!important;
+    font-size:9.5px!important;
+  }
+  .settings-group-label{
+    margin-top:17px;
+  }
+}
+
+@media(max-width:380px){
+  .settings-manage-card{
+    grid-template-columns:1fr!important;
+  }
+  .settings-manage-card>button{
+    width:100%!important;
+  }
+  .analytics-main-card .analytics-total strong{
+    font-size:39px!important;
+  }
+  .expense-side strong{
+    font-size:12px!important;
+  }
+}

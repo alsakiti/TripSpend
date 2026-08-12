@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.4";
+  const APP_VERSION = "6.6.5";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -35,6 +35,11 @@
   let receiptViewerURL = "";
   let receiptViewerScale = 1;
   let latestVersionKnown = "";
+  let lastExpenseRenderKey = "";
+  let lastAnalyticsRenderKey = "";
+  let expensePersonFilterSignature = "";
+  let expenseCountryFilterSignature = "";
+  let expenseSearchTimer = 0;
 
 
   const KEY = "tripspend.v1";
@@ -517,7 +522,10 @@
     await persistStateImmediately(state);
     resetSetupForNewTrip();
     render();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+    });
     toast("Ready for a new trip");
   }
 
@@ -2005,6 +2013,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   function invalidateAnalyticsCache() {
     analyticsCacheRevision += 1;
     analyticsCache.clear();
+    lastExpenseRenderKey = "";
+    lastAnalyticsRenderKey = "";
   }
 
   function cachedAnalytics(key, calculate) {
@@ -2345,6 +2355,29 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     return a.date < b.date ? 1 : -1;
   }
 
+  function expenseSearchIndex() {
+    return cachedAnalytics("expenseSearchIndex", () => {
+      const stopNames = new Map((state.stops || []).map(stop => [stop.id, stop.country || ""]));
+      const personNames = new Map((state.people || []).map(person => [person.id, person.name || ""]));
+      const index = new Map();
+
+      state.expenses.forEach(expense => {
+        const payer = expense.paidByPersonId ? (personNames.get(expense.paidByPersonId) || "") : "";
+        const assigned = (expense.personShares || [])
+          .map(share => personNames.get(share.personId) || "")
+          .join(" ");
+        const typeText = inferredExpenseType(expense);
+
+        index.set(
+          expense.id,
+          `${expense.category || ""} ${expense.note || ""} ${expense.paymentMethod || ""} ${assigned} ${stopNames.get(expense.stopId) || ""} ${payer} ${typeText}`.toLowerCase()
+        );
+      });
+
+      return index;
+    });
+  }
+
   function filteredExpenses() {
     const q = $("searchExpense").value.trim().toLowerCase();
     const category = $("filterCategory").value;
@@ -2354,33 +2387,41 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const person = $("filterPerson").value;
     const dateFrom = $("filterDateFrom")?.value || "";
     const dateTo = $("filterDateTo")?.value || "";
+    const searchIndex = q ? expenseSearchIndex() : null;
 
-    return state.expenses
-      .filter(e => !category || e.category === category)
-      .filter(e => !type || inferredExpenseType(e) === type)
-      .filter(e => !country || e.stopId === country)
-      .filter(e => !payment || e.paymentMethod === payment)
-      .filter(e => !dateFrom || e.date >= dateFrom)
-      .filter(e => !dateTo || e.date <= dateTo)
-      .filter(e => {
-        if (!person) return true;
-        if (person === "__unassigned__") return !(e.personShares || []).length;
-        return (e.personShares || []).some(s => s.personId === person);
-      })
-      .filter(e => {
-        if (!q) return true;
-        const stop = (state.stops || []).find(s => s.id === e.stopId);
-        const payer = e.paidByPersonId ? personName(e.paidByPersonId) : "";
-        const typeText = inferredExpenseType(e);
-        return `${e.category} ${e.note || ""} ${e.paymentMethod} ${expenseAssignmentText(e)} ${stop?.country || ""} ${payer} ${typeText}`.toLowerCase().includes(q);
-      })
-      .slice()
-      .sort(sortNew);
+    const rows = [];
+    for (const expense of state.expenses) {
+      if (category && expense.category !== category) continue;
+      if (type && inferredExpenseType(expense) !== type) continue;
+      if (country && expense.stopId !== country) continue;
+      if (payment && expense.paymentMethod !== payment) continue;
+      if (dateFrom && expense.date < dateFrom) continue;
+      if (dateTo && expense.date > dateTo) continue;
+
+      if (person) {
+        if (person === "__unassigned__") {
+          if ((expense.personShares || []).length) continue;
+        } else if (!(expense.personShares || []).some(share => share.personId === person)) {
+          continue;
+        }
+      }
+
+      if (q && !searchIndex.get(expense.id)?.includes(q)) continue;
+      rows.push(expense);
+    }
+
+    return rows.sort(sortNew);
   }
 
   function renderCountryFilter() {
     const select = $("filterCountry");
     if (!select) return;
+
+    const signature = (state.stops || [])
+      .map(stop => `${stop.id}:${stop.country}`)
+      .join("|");
+    if (signature === expenseCountryFilterSignature && select.options.length) return;
+    expenseCountryFilterSignature = signature;
 
     const current = select.value;
     select.replaceChildren();
@@ -2556,6 +2597,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   function renderPersonFilter() {
     const select = $("filterPerson");
+    if (!select) return;
+
+    const signature = state.people
+      .map(person => `${person.id}:${person.name}:${person.active !== false}`)
+      .join("|");
+    if (signature === expensePersonFilterSignature && select.options.length) return;
+    expensePersonFilterSignature = signature;
+
     const current = select.value;
     select.replaceChildren();
 
@@ -2576,7 +2625,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       select.append(option);
     });
 
-    if ([...select.options].some(o => o.value === current)) select.value = current;
+    if ([...select.options].some(option => option.value === current)) select.value = current;
   }
 
   function fillExpensePeople(selected = "", includeIds = []) {
@@ -2756,9 +2805,27 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   function renderExpenseViews() {
     if (!state.trip) return;
+
     renderPersonFilter();
     renderCountryFilter();
     renderExpenseFilterUI();
+
+    const renderKey = [
+      analyticsCacheRevision,
+      state.trip.id,
+      expenseRenderLimit,
+      $("searchExpense")?.value || "",
+      $("filterCategory")?.value || "",
+      $("filterType")?.value || "",
+      $("filterCountry")?.value || "",
+      $("filterPayment")?.value || "",
+      $("filterPerson")?.value || "",
+      $("filterDateFrom")?.value || "",
+      $("filterDateTo")?.value || ""
+    ].join("|");
+
+    if (renderKey === lastExpenseRenderKey) return;
+    lastExpenseRenderKey = renderKey;
 
     const filtered = filteredExpenses();
     const visible = filtered.slice(0, expenseRenderLimit);
@@ -2789,6 +2856,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   function resetExpenseRenderLimit() {
     expenseRenderLimit = 100;
+    lastExpenseRenderKey = "";
   }
 
 
@@ -2802,17 +2870,26 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const categories = aggregate("category");
     const top = categories[0] || null;
 
-    let personal = 0;
-    let shared = 0;
+    const splitStats = cachedAnalytics("analyticsSplitStats", () => {
+      let personal = 0;
+      let shared = 0;
+      let largest = 0;
 
-    state.expenses.forEach(expense => {
-      const type = expense.expenseType === "shared" || expense.expenseType === "personal"
-        ? expense.expenseType
-        : ((expense.personShares || []).length > 1 ? "shared" : "personal");
+      state.expenses.forEach(expense => {
+        const type = expense.expenseType === "shared" || expense.expenseType === "personal"
+          ? expense.expenseType
+          : ((expense.personShares || []).length > 1 ? "shared" : "personal");
+        const amount = num(expense.homeAmount);
 
-      if (type === "shared") shared += num(expense.homeAmount);
-      else personal += num(expense.homeAmount);
+        if (type === "shared") shared += amount;
+        else personal += amount;
+        if (amount > largest) largest = amount;
+      });
+
+      return { personal, shared, largest };
     });
+
+    const { personal, shared } = splitStats;
 
     if ($("analyticsTotalSpent")) {
       $("analyticsTotalSpent").textContent = money(total, state.trip.homeCurrency)
@@ -2865,20 +2942,39 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   function renderAnalyticsPage() {
     if (!state.trip) return;
 
+    const renderKey = `${analyticsCacheRevision}|${state.trip.id}|${today()}`;
+    if (renderKey === lastAnalyticsRenderKey) return;
+    lastAnalyticsRenderKey = renderKey;
+
     const t = state.trip;
     const s = spent();
     const count = state.expenses.length;
+    const splitStats = cachedAnalytics("analyticsSplitStats", () => {
+      let personal = 0;
+      let shared = 0;
+      let largest = 0;
+      state.expenses.forEach(expense => {
+        const type = inferredExpenseType(expense);
+        const amount = num(expense.homeAmount);
+        if (type === "shared") shared += amount;
+        else personal += amount;
+        largest = Math.max(largest, amount);
+      });
+      return { personal, shared, largest };
+    });
 
     renderAnalyticsOverview();
     $("avgDay").textContent = money(s / Math.max(1, elapsed() || 1), t.homeCurrency);
     $("avgTransaction").textContent = money(count ? s / count : 0, t.homeCurrency);
-    $("largest").textContent = money(state.expenses.reduce((m, e) => Math.max(m, num(e.homeAmount)), 0), t.homeCurrency);
+    $("largest").textContent = money(splitStats.largest, t.homeCurrency);
 
     const drows = dailyRows();
-    const biggest = drows.length ? drows.slice().sort((a, b) => b.amount - a.amount)[0] : null;
+    const biggest = cachedAnalytics("biggestDay", () =>
+      drows.length ? drows.reduce((best, row) => !best || row.amount > best.amount ? row : best, null) : null
+    );
     $("biggestDay").textContent = biggest ? `${fmtDate(biggest.date)} • ${money(biggest.amount, t.homeCurrency)}` : "—";
 
-    renderBars($("categoryAnalytics"), aggregate("category"), r => `${icon(r.label)} ${r.label}`);
+    renderBars($("categoryAnalytics"), aggregate("category"), row => `${icon(row.label)} ${row.label}`);
     renderBars($("paymentAnalytics"), aggregate("paymentMethod"));
     renderPeopleBars();
     renderDaily($("dailyAnalytics"));
@@ -4038,7 +4134,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   $("searchExpense").oninput = () => {
     resetExpenseRenderLimit();
-    renderExpenseViews();
+    clearTimeout(expenseSearchTimer);
+    expenseSearchTimer = setTimeout(renderExpenseViews, 120);
   };
   ["filterCategory","filterType","filterCountry","filterPayment","filterPerson","filterDateFrom","filterDateTo"].forEach(id => {
     if ($(id)) $(id).onchange = () => {
@@ -4531,7 +4628,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.4", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.5", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
