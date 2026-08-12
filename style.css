@@ -870,3 +870,145 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     width:100%;
   }
 }
+
+
+/* TripSpend v5.2 — setup-time multi-country routes + planner date cards */
+.setup-route-box{
+  margin:-1px 0 12px;
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface2);
+}
+.setup-route-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.setup-route-head>div{
+  min-width:0;
+}
+.setup-route-head strong,
+.setup-route-head span{
+  display:block;
+}
+.setup-route-head strong{
+  font-size:11.5px;
+}
+.setup-route-head span{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.35;
+}
+.setup-add-country-btn{
+  flex:0 0 auto;
+  width:auto!important;
+  min-height:36px!important;
+  padding:0 10px!important;
+  font-size:10.5px!important;
+}
+.setup-multi-country-panel{
+  margin-top:11px;
+  padding-top:11px;
+  border-top:1px solid var(--line);
+}
+.setup-multi-country-panel label{
+  margin-bottom:9px;
+}
+.setup-route-list{
+  display:grid;
+  gap:7px;
+  margin-top:8px;
+}
+.setup-route-item{
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--surface);
+}
+.setup-route-number{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:#eaf2ff;
+  color:#175cd3;
+  font-size:10px;
+  font-weight:900;
+}
+.setup-route-item strong,
+.setup-route-item small{
+  display:block;
+}
+.setup-route-item strong{
+  font-size:11px;
+}
+.setup-route-item small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:9px;
+}
+.planner-date-grid .date-picker-card,
+.planner-single-date{
+  min-height:44px;
+}
+.planner-form .date-display{
+  font-size:13px;
+  font-weight:800;
+}
+.planner-form .native-date-input{
+  height:100%!important;
+  min-height:0!important;
+  font-size:16px!important;
+}
+#plan .planner-form .date-field-label{
+  min-width:0!important;
+}
+
+@media(max-width:600px){
+  .setup-route-box{
+    padding:9px;
+    margin-bottom:9px;
+    border-radius:12px;
+  }
+  .setup-route-head{
+    align-items:stretch;
+    flex-direction:column;
+    gap:8px;
+  }
+  .setup-add-country-btn{
+    width:100%!important;
+  }
+  .setup-multi-country-panel .date-grid,
+  #plan .planner-date-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  .setup-multi-country-panel .date-picker-card,
+  #plan .planner-form .date-picker-card{
+    width:100%;
+    height:42px;
+    min-height:42px;
+    padding:0 9px;
+    border-radius:11px;
+  }
+  .setup-multi-country-panel .date-display,
+  #plan .planner-form .date-display{
+    font-size:12px;
+    font-weight:800;
+  }
+  #plan .planner-form{
+    padding:13px;
+  }
+  #plan .planner-form label{
+    margin-bottom:10px;
+  }
+}

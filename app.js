@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "5.1.0";
+  const APP_VERSION = "5.2.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -1314,6 +1314,17 @@
 
     const ownerName = $("ownerName").value.trim();
     if (!ownerName) return toast("Enter your name");
+    const setupExtraStops = window.TripSpendV5?.setupStops?.() || [];
+    const primaryStop = {
+      id: "stop-primary",
+      country: destination,
+      startDate: start,
+      endDate: end,
+      currency: $("tripCurrency").value,
+      budget: setupExtraStops.length ? 0 : num($("budget").value),
+      createdAt: Date.now()
+    };
+
     state = {
       trip: {
         name: $("tripName").value.trim(),
@@ -1329,22 +1340,15 @@
       expenses: [],
       rates: {},
       people: [makePerson(ownerName)],
-      stops: [{
-        id: "stop-primary",
-        country: destination,
-        startDate: start,
-        endDate: end,
-        currency: $("tripCurrency").value,
-        budget: num($("budget").value),
-        createdAt: Date.now()
-      }],
+      stops: [primaryStop, ...setupExtraStops],
       plans: []
     };
 
+    window.TripSpendV5?.clearSetupStops?.();
     save();
     render();
     page("dashboard");
-    toast("Trip created");
+    toast(state.stops.length > 1 ? `${state.stops.length}-country trip created` : "Trip created");
   };
 
   $("settingsForm").onsubmit = e => {
@@ -1835,7 +1839,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=5.1.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.2.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

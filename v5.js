@@ -6,6 +6,7 @@
 
   const $ = id => document.getElementById(id);
   let preparedSource = null;
+  let setupDraftStops = [];
 
   const CURRENCY_BY_COUNTRY = {
     Oman:"OMR", Thailand:"THB", Indonesia:"IDR", Singapore:"SGD", Malaysia:"MYR",
@@ -23,6 +24,125 @@
   function people() { return core.activePeople(); }
   function stopById(id) { return stops().find(s => s.id === id) || null; }
   function personById(id) { return state().people.find(p => p.id === id) || null; }
+
+
+  function bindDateDisplay(inputId, displayId, withYear = true) {
+    const input = $(inputId);
+    const display = $(displayId);
+    if (!input || !display || input.dataset.v5DateBound === "1") return;
+    const refresh = () => {
+      if (!input.value) {
+        display.textContent = "Select date";
+      } else {
+        display.textContent = withYear
+          ? core.fmtDateWithYear(input.value)
+          : core.fmtDate(input.value);
+      }
+    };
+    input.addEventListener("input", refresh);
+    input.addEventListener("change", refresh);
+    input.dataset.v5DateBound = "1";
+    refresh();
+  }
+
+  function daysAfter(iso, days = 1) {
+    if (!iso) return core.today();
+    const [y,m,d] = iso.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    date.setDate(date.getDate() + days);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0,10);
+  }
+
+  function setupRouteCurrency(country) {
+    return CURRENCY_BY_COUNTRY[country] || "USD";
+  }
+
+  function renderSetupRoute() {
+    const list = $("setupRouteList");
+    if (!list) return;
+    list.replaceChildren();
+
+    setupDraftStops.forEach((stop, index) => {
+      const row = document.createElement("div");
+      row.className = "setup-route-item";
+
+      const number = document.createElement("span");
+      number.className = "setup-route-number";
+      number.textContent = String(index + 2);
+
+      const body = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = stop.country;
+      const small = document.createElement("small");
+      small.textContent = `${core.fmtDate(stop.startDate)} – ${core.fmtDate(stop.endDate)} • ${stop.currency}`;
+      body.append(strong, small);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "mini-btn delete";
+      remove.textContent = "Remove";
+      remove.onclick = () => {
+        setupDraftStops.splice(index, 1);
+        renderSetupRoute();
+      };
+
+      row.append(number, body, remove);
+      list.append(row);
+    });
+
+    const toggle = $("setupToggleCountries");
+    if (toggle) toggle.textContent = setupDraftStops.length ? "＋ Add another" : "＋ Add another country";
+  }
+
+  function setSetupExtraDefaults() {
+    const lastEnd = setupDraftStops.at(-1)?.endDate || $("endDate")?.value || $("startDate")?.value || core.today();
+    const start = daysAfter(lastEnd, setupDraftStops.length ? 1 : 0);
+    const tripEnd = $("endDate")?.value || start;
+    $("setupExtraStart").value = start;
+    $("setupExtraEnd").value = tripEnd >= start ? tripEnd : start;
+    $("setupExtraStart").dispatchEvent(new Event("input", { bubbles: true }));
+    $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  function addSetupCountry() {
+    const country = core.canonicalDestination("setupExtraCountry");
+    if (!country) return;
+
+    const startDate = $("setupExtraStart").value;
+    const endDate = $("setupExtraEnd").value;
+    if (!core.validDates(startDate, endDate)) return core.toast("Country end date must be after its start date");
+
+    if (setupDraftStops.some(s => s.country === country && s.startDate === startDate)) {
+      return core.toast("That country is already in your route");
+    }
+
+    setupDraftStops.push({
+      id: core.uid("stop"),
+      country,
+      startDate,
+      endDate,
+      currency: $("setupExtraCurrency").value || setupRouteCurrency(country),
+      budget: 0,
+      createdAt: Date.now()
+    });
+
+    setupDraftStops.sort((a,b) => a.startDate.localeCompare(b.startDate));
+    core.setDestinationValue("setupExtraCountry", "");
+    renderSetupRoute();
+    setSetupExtraDefaults();
+    core.toast(`${country} added to route`);
+  }
+
+  function setupStops() {
+    return setupDraftStops.map(s => ({ ...s }));
+  }
+
+  function clearSetupStops() {
+    setupDraftStops = [];
+    renderSetupRoute();
+    core.setDestinationValue("setupExtraCountry", "");
+    $("setupMultiCountryPanel")?.classList.add("hidden");
+  }
 
   function ensureV5Data() {
     const s = state();
@@ -485,7 +605,40 @@
     }
   }
 
-  window.TripSpendV5 = { prepareExpense, expenseData };
+  window.TripSpendV5 = {
+    prepareExpense,
+    expenseData,
+    setupStops,
+    clearSetupStops
+  };
+
+
+  // Optional multi-country route during initial trip setup.
+  core.opts($("setupExtraCurrency"), core.CURS, "USD");
+  core.initDestinationAutocomplete("setupExtraCountry", "setupExtraCountryOptions", "");
+
+  bindDateDisplay("setupExtraStart", "setupExtraStartDisplay", true);
+  bindDateDisplay("setupExtraEnd", "setupExtraEndDisplay", true);
+  bindDateDisplay("newStopStart", "newStopStartDisplay", true);
+  bindDateDisplay("newStopEnd", "newStopEndDisplay", true);
+  bindDateDisplay("planDate", "planDateDisplay", true);
+
+  $("setupToggleCountries")?.addEventListener("click", () => {
+    const panel = $("setupMultiCountryPanel");
+    if (!panel) return;
+    panel.classList.toggle("hidden");
+    if (!panel.classList.contains("hidden")) {
+      setSetupExtraDefaults();
+      setTimeout(() => $("setupExtraCountry")?.focus(), 80);
+    }
+  });
+
+  $("setupExtraCountry")?.addEventListener("change", () => {
+    const exact = core.DESTS.find(c => c.toLowerCase() === $("setupExtraCountry").value.trim().toLowerCase());
+    if (exact) $("setupExtraCurrency").value = setupRouteCurrency(exact);
+  });
+
+  $("setupAddCountry")?.addEventListener("click", addSetupCountry);
 
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));
@@ -536,6 +689,8 @@
     const last = stops()[stops().length - 1];
     $("newStopStart").value = last?.endDate || state().trip.startDate;
     $("newStopEnd").value = last?.endDate || state().trip.endDate;
+    $("newStopStart").dispatchEvent(new Event("input", { bubbles: true }));
+    $("newStopEnd").dispatchEvent(new Event("input", { bubbles: true }));
     core.opts($("newStopCurrency"), core.CURS, state().trip.tripCurrency);
 
     core.save();
@@ -567,6 +722,7 @@
 
     $("addPlanForm").reset();
     $("planDate").value = core.today();
+    $("planDate").dispatchEvent(new Event("input", { bubbles: true }));
     core.opts($("planCategory"), core.CATS, "Hotel");
     renderPlanStopOptions();
 
@@ -611,6 +767,11 @@
   if ($("newStopStart")) $("newStopStart").value = state().trip?.startDate || core.today();
   if ($("newStopEnd")) $("newStopEnd").value = state().trip?.endDate || core.today();
   if ($("planDate")) $("planDate").value = core.today();
+  $("newStopStart")?.dispatchEvent(new Event("input", { bubbles: true }));
+  $("newStopEnd")?.dispatchEvent(new Event("input", { bubbles: true }));
+  $("planDate")?.dispatchEvent(new Event("input", { bubbles: true }));
+
+  renderSetupRoute();
 
   window.addEventListener("tripspend:render", renderAll);
   renderAll();

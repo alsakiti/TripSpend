@@ -157,3 +157,15 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - Settings shows how many countries are currently in the trip.
 - **Manage Countries & Plans** is clearer than the old Trip Planner wording.
 - Tapping **+ Add another country** opens the planner directly at the country form.
+
+
+## v5.2
+
+- Planner **From / To** fields now use compact date cards instead of oversized native iPhone date inputs.
+- Planned-cost Date uses the same clean date card.
+- New Trip setup now includes an optional **+ Add another country** flow.
+- Users can build a multi-country route before creating the trip.
+- Each extra country can have its own dates and local currency.
+- The route is shown inline before Create Trip and individual countries can be removed.
+- One-country setup remains just as simple; the extra-country UI stays collapsed until requested.
+- If a trip is created with multiple countries, the total trip budget remains the overall budget and can later be allocated by country in the planner.
