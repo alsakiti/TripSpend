@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=5.6.0">
-  <link rel="icon" href="icons/icon-192.png?v=5.6.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.6.0">
-  <link rel="stylesheet" href="style.css?v=5.6.0">
+  <link rel="manifest" href="manifest.webmanifest?v=5.7.0">
+  <link rel="icon" href="icons/icon-192.png?v=5.7.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.7.0">
+  <link rel="stylesheet" href="style.css?v=5.7.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.6</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.7</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=5.6.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v5.6</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=5.7.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v5.7</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -83,9 +83,14 @@
                 </label>
               </div>
 
-              <label>Local currency
-                <select id="tripCurrency"></select>
-              </label>
+              <div class="grid2 country-money-grid">
+                <label>Local currency
+                  <select id="tripCurrency"></select>
+                </label>
+                <label>Country budget <small>(optional)</small>
+                  <input id="primaryCountryBudget" type="number" min="0" step="0.001" inputmode="decimal" placeholder="Home currency">
+                </label>
+              </div>
             </div>
           </div>
 
@@ -105,8 +110,8 @@
             </label>
 
             <div class="grid2 date-grid setup-extra-date-grid">
-              <label class="date-field-label"><span>From</span>
-                <div class="date-picker-card">
+              <label class="date-field-label"><span>From <small>(automatic)</small></span>
+                <div class="date-picker-card automatic-date-card">
                   <span id="setupExtraStartDisplay" class="date-display">Select date</span>
                   <span class="date-calendar" aria-hidden="true">▣</span>
                   <input id="setupExtraStart" class="native-date-input" type="date" aria-label="Additional country start date">
@@ -121,9 +126,14 @@
               </label>
             </div>
 
-            <label>Local currency
-              <select id="setupExtraCurrency"></select>
-            </label>
+            <div class="grid2 country-money-grid">
+              <label>Local currency
+                <select id="setupExtraCurrency"></select>
+              </label>
+              <label>Country budget <small>(optional)</small>
+                <input id="setupExtraBudget" type="number" min="0" step="0.001" inputmode="decimal" placeholder="Home currency">
+              </label>
+            </div>
 
             <div class="setup-panel-actions">
               <button id="setupCancelCountry" class="secondary" type="button">Cancel</button>
@@ -177,6 +187,19 @@
 
     <section id="mainView" class="hidden">
       <section id="dashboard" class="page active">
+        <div id="currentCountryCard" class="current-country-card">
+          <div class="current-country-main">
+            <span id="currentCountryStatus" class="current-country-status">CURRENT COUNTRY</span>
+            <strong id="currentCountryName">—</strong>
+            <small id="currentCountryDates">—</small>
+          </div>
+          <div class="current-country-side">
+            <span id="currentCountryCurrency" class="country-currency-pill">—</span>
+            <strong id="currentCountryBudgetText">No country budget</strong>
+          </div>
+          <div class="current-country-progress"><div id="currentCountryBudgetBar"></div></div>
+        </div>
+
         <div id="healthBanner" class="health-banner on-track">
           <div class="health-icon" id="healthIcon">✓</div>
           <div><strong id="healthTitle">On track</strong><span id="healthText">Your budget looks healthy.</span></div>
@@ -197,11 +220,20 @@
         <div class="metrics metrics-4">
           <div class="card metric"><span>☀️</span><small>Safe today</small><strong id="safeToday">0 OMR</strong></div>
           <div class="card metric"><span>🧾</span><small>Spent today</small><strong id="spentToday">0 OMR</strong></div>
-          <div class="card metric"><span>🔮</span><small>Projected total</small><strong id="projectedTotal">0 OMR</strong></div>
-          <div class="card metric"><span>📅</span><small>Days left</small><strong id="daysLeft">0</strong></div>
+          <div class="card metric dashboard-secondary-metric"><span>🔮</span><small>Projected total</small><strong id="projectedTotal">0 OMR</strong></div>
+          <div class="card metric dashboard-secondary-metric"><span>📅</span><small>Days left</small><strong id="daysLeft">0</strong></div>
         </div>
 
         <button id="quickAdd" class="primary">＋ Add Expense</button>
+
+        <section class="section country-budget-section">
+          <div class="section-title">
+            <h2>Country budgets</h2>
+            <button id="countryBudgetManage" class="link-btn" type="button">Manage</button>
+          </div>
+          <div id="countryBudgetSummary" class="country-budget-summary"></div>
+          <div id="countryBudgetList" class="country-budget-list"></div>
+        </section>
 
         <section class="section">
           <div class="section-title">
@@ -219,7 +251,7 @@
           </div>
         </section>
 
-        <section class="section">
+        <section class="section legacy-dashboard-travelers">
           <div class="section-title">
             <h2>Travelers</h2>
             <button id="managePeople" class="link-btn">Manage</button>
@@ -296,7 +328,7 @@
           </div>
         </section>
 
-        <section class="section">
+        <section class="section dashboard-advanced-section">
           <div class="section-title"><h2>Smart insights</h2><span class="smart-badge">SMART</span></div>
           <div id="smartInsights" class="insight-list"></div>
         </section>
@@ -306,7 +338,7 @@
           <div id="recentList" class="list"></div>
         </section>
 
-        <section class="section">
+        <section class="section dashboard-advanced-section">
           <div class="section-title"><h2>Top categories</h2></div>
           <div id="topCategories" class="bars"></div>
         </section>
@@ -573,6 +605,11 @@
     <div class="modal-head"><div><div class="eyebrow">TRANSACTION</div><h2 id="modalTitle">Add Expense</h2></div><button id="closeModal" class="icon-btn">✕</button></div>
     <form id="expenseForm" class="form modal-form">
       <input id="editId" type="hidden">
+      <div id="expenseQuickContext" class="expense-quick-context">
+        <span id="quickCountryText">Current country</span>
+        <span id="quickPaymentText">Payment</span>
+        <span id="quickRateText">Rate ready</span>
+      </div>
       <label>Amount<div class="amount-row"><input id="expenseAmount" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="0.00"><select id="expenseCurrency"></select></div></label>
       <label id="rateWrap">Exchange rate
         <input id="exchangeRate" type="number" min="0.000001" step="0.000001" inputmode="decimal">
@@ -599,6 +636,7 @@
         <small>Select one or more travelers. TripSpend splits the cost equally between those selected.</small>
       </fieldset>
       <label>Category<select id="expenseCategory"></select></label>
+      <div id="recentCategoryChips" class="recent-category-chips hidden"></div>
       <div id="categorySuggestion" class="suggestion hidden"><span id="suggestionText"></span><button id="applySuggestion" type="button">Use suggestion</button></div>
 
       <div class="grid2">
@@ -613,8 +651,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=5.6.0"></script>
-<script src="fx.js?v=5.6.0"></script>
-<script src="v5.js?v=5.6.0"></script>
+<script src="app.js?v=5.7.0"></script>
+<script src="fx.js?v=5.7.0"></script>
+<script src="v5.js?v=5.7.0"></script>
 </body>
 </html>

@@ -219,3 +219,43 @@ The New Trip screen was redesigned after mobile usability feedback.
 - Country 1 remains directly editable in its visible fields.
 - The first traveler remains directly editable in the **Your name** field.
 - Prevents invalid country dates: moving From after To automatically adjusts To.
+
+
+## v5.6.1
+
+- Country dates are now continuous by default with **no gap**.
+- If Country 1 ends on 18 Aug, Country 2 starts on 18 Aug.
+- If Country 2 ends on 22 Aug, Country 3 starts on 22 Aug.
+- Additional-country **From** is automatic during New Trip setup.
+- Changing an earlier country's end date automatically shifts following countries to keep the trip continuous.
+- Removing a country automatically closes the gap between the remaining countries.
+- The Countries & Costs planner also defaults each newly added country to the previous country's end date.
+
+
+## v5.7
+
+### Country budgets
+- Every country can have its own optional budget in the home currency.
+- Country 1 and additional countries can receive budgets during New Trip setup.
+- A one-country trip automatically uses the total trip budget as the country budget if no separate country budget is entered.
+- Home shows spent, remaining, progress and upcoming planned costs by country.
+- Tap any country budget card to set/edit its budget.
+- Countries & Costs also has Set budget / Edit budget controls.
+- TripSpend warns if country budgets are under-allocated or exceed the total trip budget.
+
+### Faster Add Expense
+- Remembers the last payment method.
+- Remembers the last category and shows recent category shortcut chips.
+- Automatically selects the country based on today's/date-selected country.
+- Automatically switches to that country's local currency.
+- Remembers exchange rates and can automatically load the latest live/cached FX rate when needed.
+- Remembers the last payer for quicker group-trip entry.
+- Shows a compact context strip with country, payment method and exchange-rate readiness.
+
+### Focused Home dashboard
+- Home starts with the current country, dates, local currency and country-budget status.
+- Main budget area focuses on Remaining, Safe today and Spent today.
+- Forecast/Days Left remain calculated but are removed from the primary Home metrics.
+- Country budgets are directly below Add Expense.
+- Duplicate traveler summary, Home smart-insights list and Home top-category bars are hidden to reduce clutter.
+- Analytics remains the place for detailed categories, forecasts and spending analysis.

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "5.6.0";
+  const APP_VERSION = "5.7.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -29,7 +29,7 @@
   }
 
   function blank() {
-    return { trip: null, expenses: [], rates: {}, people: [], stops: [], plans: [] };
+    return { trip: null, expenses: [], rates: {}, people: [], stops: [], plans: [], preferences: {} };
   }
 
   function normalizeExpense(expense) {
@@ -102,7 +102,16 @@
       rates: clean.rates && typeof clean.rates === "object" ? clean.rates : {},
       people,
       stops,
-      plans
+      plans,
+      preferences: {
+        lastPaymentMethod: String(clean.preferences?.lastPaymentMethod || trip?.defaultPayment || "Credit Card"),
+        lastCategory: String(clean.preferences?.lastCategory || "Food"),
+        recentCategories: Array.isArray(clean.preferences?.recentCategories)
+          ? clean.preferences.recentCategories.filter(x => CATS.includes(x)).slice(0, 5)
+          : [],
+        lastStopId: clean.preferences?.lastStopId ? String(clean.preferences.lastStopId) : "",
+        lastPaidByPersonId: clean.preferences?.lastPaidByPersonId ? String(clean.preferences.lastPaidByPersonId) : ""
+      }
     };
   }
 
@@ -1088,6 +1097,32 @@
     if (id === "expenses") renderExpenseViews();
   }
 
+
+  function renderRecentCategoryChips() {
+    const el = $("recentCategoryChips");
+    if (!el) return;
+
+    el.replaceChildren();
+    const recent = (state.preferences?.recentCategories || [])
+      .filter(category => CATS.includes(category))
+      .slice(0, 4);
+
+    el.classList.toggle("hidden", !recent.length);
+
+    recent.forEach(category => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "recent-category-chip";
+      button.textContent = `${icon(category)} ${category}`;
+      button.onclick = () => {
+        $("expenseCategory").value = category;
+        duplicateCheck();
+        renderRecentCategoryChips();
+      };
+      el.append(button);
+    });
+  }
+
   function openModal(id = "", template = null) {
     if (!state.trip) return;
 
@@ -1099,8 +1134,8 @@
     $("modalTitle").textContent = existing ? "Edit Expense" : isRepeat ? "Repeat Expense" : "Add Expense";
 
     opts($("expenseCurrency"), CURS, source?.currency || state.trip.tripCurrency);
-    opts($("expenseCategory"), CATS, source?.category || "Food");
-    opts($("paymentMethod"), PAYS, source?.paymentMethod || state.trip.defaultPayment || "Credit Card");
+    opts($("expenseCategory"), CATS, source?.category || state.preferences?.lastCategory || "Food");
+    opts($("paymentMethod"), PAYS, source?.paymentMethod || state.preferences?.lastPaymentMethod || state.trip.defaultPayment || "Credit Card");
 
     const selection = source ? selectedPersonValue(source) : (activePeople().length === 1 ? activePeople()[0].id : "");
     const includeIds = source?.personShares?.map(s => s.personId) || [];
@@ -1117,6 +1152,7 @@
     rateUI(true);
     preview();
     duplicateCheck();
+    renderRecentCategoryChips();
 
     window.TripSpendV5?.prepareExpense?.(source, existing, isRepeat);
 
@@ -1327,7 +1363,7 @@
       startDate: primaryStart,
       endDate: primaryEnd,
       currency: $("tripCurrency").value,
-      budget: setupExtraStops.length ? 0 : num($("budget").value),
+      budget: num($("primaryCountryBudget")?.value, 0),
       createdAt: Date.now()
     };
 
@@ -1354,8 +1390,21 @@
         ...(window.TripSpendV5?.setupPeople?.() || []).map(person => makePerson(person.name))
       ],
       stops: allSetupStops,
-      plans: []
+      plans: [],
+      preferences: {
+        lastPaymentMethod: "Credit Card",
+        lastCategory: "Food",
+        recentCategories: [],
+        lastStopId: "",
+        lastPaidByPersonId: ""
+      }
     };
+
+    // A one-country trip automatically uses the total trip budget as its
+    // country budget when the user leaves Country budget blank.
+    if (state.stops.length === 1 && !(state.stops[0].budget > 0)) {
+      state.stops[0].budget = num(state.trip.budget);
+    }
 
     window.TripSpendV5?.clearSetupStops?.();
     window.TripSpendV5?.clearSetupPeople?.();
@@ -1450,6 +1499,16 @@
     }
 
     if (currency !== state.trip.homeCurrency) state.rates[rateKey(currency)] = rate;
+
+    state.preferences = state.preferences || {};
+    state.preferences.lastPaymentMethod = x.paymentMethod;
+    state.preferences.lastCategory = x.category;
+    state.preferences.lastStopId = x.stopId || "";
+    state.preferences.lastPaidByPersonId = x.paidByPersonId || "";
+    state.preferences.recentCategories = [
+      x.category,
+      ...(state.preferences.recentCategories || []).filter(category => category !== x.category)
+    ].filter(category => CATS.includes(category)).slice(0, 5);
 
     save();
     closeModal();
@@ -1776,6 +1835,8 @@
     fmtDateLong,
     num,
     today,
+    spent,
+    todaySpent,
     validDates,
     opts,
     CURS,
@@ -1856,7 +1917,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=5.6.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.7.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

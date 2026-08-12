@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v5.6",
+  "name": "TripSpend v5.7",
   "short_name": "TripSpend",
-  "description": "Offline-first multi-country trip spending app with editable setup countries and travelers.",
+  "description": "Offline-first multi-country trip spending app with country budgets, smart quick expense entry and a focused dashboard.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

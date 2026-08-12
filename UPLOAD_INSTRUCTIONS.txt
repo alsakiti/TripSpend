@@ -1,15 +1,17 @@
-TripSpend v5.6 update
+TripSpend v5.7 update
 
-1. Extract TripSpend-v5.6-update.zip.
-2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
+1. Extract TripSpend-v5.7-update.zip.
+2. Upload EVERYTHING inside it to the ROOT of your existing TripSpend GitHub repository.
 3. Replace existing files and commit.
-4. Wait 1–2 minutes.
-5. Completely close TripSpend and reopen it while online.
-6. Confirm the version badge says v5.6.
+4. Wait about 1–2 minutes for GitHub Pages.
+5. Completely close the TripSpend Home Screen app.
+6. Reopen it while connected to the internet.
+7. Confirm the visible version badge says v5.7.
 
-New:
-- Added countries now have Edit + Remove.
-- Added travelers now have Edit + Remove.
-- Country 1 is edited directly in its visible fields.
-- The first traveler is edited directly in the Your name field.
-- Invalid From/To date combinations are corrected automatically.
+What to test:
+- Create a multi-country trip and optionally enter a budget for each country.
+- Home should show the current country and country-budget cards.
+- Tap a country-budget card to change its budget.
+- Add an expense: TripSpend should select the current country/local currency automatically.
+- Save expenses using different categories/payment methods, then Add Expense again.
+  The previous payment method and recent category shortcuts should be remembered.

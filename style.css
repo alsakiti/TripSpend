@@ -1426,3 +1426,256 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     font-size:9px;
   }
 }
+
+
+/* TripSpend v5.6.1 — continuous country dates */
+.automatic-date-card{
+  background:var(--surface2);
+}
+.automatic-date-card .date-display{
+  color:var(--text);
+}
+.date-field-label>span small{
+  color:var(--muted);
+  font-size:9px;
+  font-weight:700;
+}
+
+
+/* TripSpend v5.7 — country budgets, fast expense entry, focused Home */
+.current-country-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px 14px;
+  align-items:center;
+  margin-bottom:10px;
+  padding:14px 15px;
+  border:1px solid #b2ccff;
+  border-radius:17px;
+  background:linear-gradient(135deg,#f7faff,#edf4ff);
+}
+.current-country-main strong,
+.current-country-main small,
+.current-country-side strong{
+  display:block;
+}
+.current-country-status{
+  display:block;
+  margin-bottom:3px;
+  color:#175cd3;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.11em;
+}
+.current-country-main strong{
+  font-size:19px;
+  letter-spacing:-.02em;
+}
+.current-country-main small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:10px;
+}
+.current-country-side{
+  text-align:right;
+}
+.country-currency-pill{
+  display:inline-flex;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#fff;
+  color:#175cd3;
+  font-size:10px;
+  font-weight:900;
+}
+.current-country-side strong{
+  margin-top:5px;
+  font-size:10px;
+}
+.current-country-progress{
+  grid-column:1/-1;
+  height:5px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#dbe7f8;
+}
+.current-country-progress>div{
+  height:100%;
+  width:0;
+  border-radius:inherit;
+  background:#1677ff;
+}
+
+#dashboard .metrics.metrics-4{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+#dashboard .dashboard-secondary-metric{
+  display:none;
+}
+.legacy-dashboard-travelers,
+.dashboard-advanced-section{
+  display:none!important;
+}
+
+.country-budget-section{
+  margin-top:15px;
+}
+.country-budget-summary{
+  margin-bottom:8px;
+  padding:9px 11px;
+  border-radius:11px;
+  font-size:10px;
+  line-height:1.35;
+}
+.country-budget-summary.neutral{
+  background:var(--surface2);
+  color:var(--muted);
+}
+.country-budget-summary.good{
+  background:var(--okbg);
+  color:var(--ok);
+}
+.country-budget-summary.warn{
+  background:#fff4e5;
+  color:#b54708;
+}
+.country-budget-list{
+  display:grid;
+  gap:8px;
+}
+.country-budget-row{
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--surface);
+  cursor:pointer;
+}
+.country-budget-row-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.country-budget-row-top strong,
+.country-budget-row-top small{
+  display:block;
+}
+.country-budget-row-top small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:9.5px;
+}
+.country-budget-row-top>strong{
+  flex:0 0 auto;
+  text-align:right;
+  font-size:10.5px;
+}
+.country-over-budget{
+  color:var(--danger)!important;
+}
+.country-budget-track{
+  height:5px;
+  margin-top:9px;
+  overflow:hidden;
+  border-radius:999px;
+  background:var(--surface2);
+}
+.country-budget-fill{
+  height:100%;
+  border-radius:inherit;
+  background:#1677ff;
+}
+.country-budget-planned{
+  display:block;
+  min-height:12px;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:9px;
+}
+
+.country-money-grid small{
+  color:var(--muted);
+  font-size:9px;
+}
+
+.expense-quick-context{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  margin-bottom:11px;
+  padding-bottom:1px;
+  scrollbar-width:none;
+}
+.expense-quick-context::-webkit-scrollbar{
+  display:none;
+}
+.expense-quick-context span{
+  flex:0 0 auto;
+  padding:6px 8px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface2);
+  color:var(--muted);
+  font-size:9.5px;
+  font-weight:800;
+}
+.expense-quick-context span.needs-rate{
+  border-color:#fedf89;
+  background:#fffaeb;
+  color:#b54708;
+}
+.recent-category-chips{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  margin:-8px 0 11px;
+  scrollbar-width:none;
+}
+.recent-category-chips::-webkit-scrollbar{
+  display:none;
+}
+.recent-category-chip{
+  flex:0 0 auto;
+  min-height:30px;
+  padding:0 9px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--surface2);
+  color:var(--text);
+  font-size:9.5px;
+  font-weight:800;
+}
+
+@media(max-width:600px){
+  .current-country-card{
+    margin-bottom:8px;
+    padding:11px 12px;
+    border-radius:14px;
+  }
+  .current-country-main strong{
+    font-size:17px;
+  }
+  #dashboard .health-banner{
+    margin-bottom:8px;
+  }
+  #dashboard .summary{
+    margin-bottom:8px;
+  }
+  #dashboard .metrics{
+    margin:8px 0;
+  }
+  #dashboard #quickAdd{
+    min-height:46px;
+  }
+  .country-budget-section{
+    margin-top:13px;
+  }
+  .country-budget-row{
+    padding:10px;
+  }
+  .country-money-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+}
