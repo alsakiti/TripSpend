@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "5.9.0";
+  const APP_VERSION = "5.9.1";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -1147,6 +1147,7 @@
     $("expenseAmount").value = source?.amount ?? "";
     $("exchangeRate").value = source?.rate ?? "";
     $("expenseDate").value = existing ? existing.date : today();
+    $("expenseDate").dispatchEvent(new Event("input", { bubbles: true }));
     $("expenseNote").value = source?.note || "";
     $("liveRateStatus").textContent = "";
 
@@ -1809,6 +1810,7 @@
     };
     settingsDisplay("sStartDate", "sStartDateDisplay");
     settingsDisplay("sEndDate", "sEndDateDisplay");
+    settingsDisplay("expenseDate", "expenseDateDisplay");
   }
 
   function initDates() {
@@ -1921,7 +1923,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=5.9.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.9.1", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

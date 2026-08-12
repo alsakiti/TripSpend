@@ -1049,7 +1049,7 @@
 
     if (personalInfoEl && selfPersonalCount > 0) {
       personalInfoEl.textContent =
-        `${selfPersonalCount} personal expense${selfPersonalCount === 1 ? "" : "s"} (${core.money(selfPersonalAmount, state().trip.homeCurrency)}) paid by the same traveler are correctly excluded from group debts.`;
+        `${selfPersonalCount} self-paid personal expense${selfPersonalCount === 1 ? "" : "s"} (${core.money(selfPersonalAmount, state().trip.homeCurrency)}) still count toward trip spending and budgets, but are correctly excluded from group debts.`;
       personalInfoEl.classList.remove("hidden");
     }
 
@@ -1150,7 +1150,7 @@
     const help = $("expenseTypeHelp");
     if (help) {
       help.textContent = currentExpenseType === "personal"
-        ? "If the same traveler pays for themselves, it counts as spending but creates no debt."
+        ? "Counts toward trip and country budgets. If the same traveler pays for themselves, it creates no debt."
         : "Choose everyone who shared this expense. TripSpend divides the cost equally between them.";
     }
 

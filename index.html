@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=5.9.0">
-  <link rel="icon" href="icons/icon-192.png?v=5.9.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.9.0">
-  <link rel="stylesheet" href="style.css?v=5.9.0">
+  <link rel="manifest" href="manifest.webmanifest?v=5.9.1">
+  <link rel="icon" href="icons/icon-192.png?v=5.9.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.9.1">
+  <link rel="stylesheet" href="style.css?v=5.9.1">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.9</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.9.1</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=5.9.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v5.9</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=5.9.1" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v5.9.1</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -646,7 +646,7 @@
             <small>Split with others</small>
           </button>
         </div>
-        <small id="expenseTypeHelp" class="expense-type-help">If someone pays for themselves, it will not create any debt.</small>
+        <small id="expenseTypeHelp" class="expense-type-help">Counts toward trip and country budgets. If the same traveler pays for themselves, it creates no debt.</small>
       </fieldset>
 
       <div class="grid2">
@@ -677,7 +677,13 @@
 
       <div class="grid2">
         <label>Payment<select id="paymentMethod"></select></label>
-        <label>Date<input id="expenseDate" type="date" required></label>
+        <label class="date-field-label expense-date-label"><span>Date</span>
+          <div class="date-picker-card expense-date-card">
+            <span id="expenseDateDisplay" class="date-display">Select date</span>
+            <span class="date-calendar" aria-hidden="true">▣</span>
+            <input id="expenseDate" class="native-date-input" type="date" required aria-label="Expense date">
+          </div>
+        </label>
       </div>
       <label>Note <small>(optional)</small><input id="expenseNote" maxlength="120" placeholder="Dinner, taxi, hotel..."></label>
       <div id="duplicateWarning" class="warning hidden">⚠️ This looks similar to an expense you already saved.</div>
@@ -687,8 +693,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=5.9.0"></script>
-<script src="fx.js?v=5.9.0"></script>
-<script src="v5.js?v=5.9.0"></script>
+<script src="app.js?v=5.9.1"></script>
+<script src="fx.js?v=5.9.1"></script>
+<script src="v5.js?v=5.9.1"></script>
 </body>
 </html>

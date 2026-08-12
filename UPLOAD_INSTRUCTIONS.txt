@@ -1,18 +1,15 @@
-TripSpend v5.9 update
+TripSpend v5.9.1 update
 
-1. Extract TripSpend-v5.9-update.zip.
+1. Extract TripSpend-v5.9.1-update.zip.
 2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
-3. Replace existing files and commit.
-4. Wait 1–2 minutes.
+3. Replace the old files and commit.
+4. Wait 1–2 minutes for GitHub Pages.
 5. Completely close TripSpend and reopen it online.
-6. Confirm the version badge says v5.9.
+6. Confirm the visible version badge says v5.9.1.
 
-Add Expense:
-- Personal: one person's own expense.
-  Example: Me paid 10 OMR for Me → no debt.
-- Personal paid for another:
-  Example: Me paid 10 OMR for Hu → Hu owes Me 10 OMR.
-- Shared:
-  Example: Me paid 30 OMR for Me + Hu → each share is 15 OMR, so Hu owes Me 15 OMR.
+Personal expense behavior:
+- Me paid for Me → counts toward trip/country spending, creates no debt.
+- Me paid for Hu → counts toward trip/country spending, Hu owes Me.
+- Shared expense → counts toward trip/country spending and is split between selected travelers.
 
-Analytics → Who owes whom only shows real group debts.
+The Add Expense Date control is now compact and matches the other date fields.

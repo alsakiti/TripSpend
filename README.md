@@ -295,3 +295,12 @@ The New Trip screen was redesigned after mobile usability feedback.
 - Each person's settlement summary now says **Group paid / Group share**, making it clear this is not their total personal spending.
 - Analytics explains how much self-paid personal spending was intentionally excluded.
 - “Not tracked” was renamed to **No payer (exclude settlement)**.
+
+
+## v5.9.1
+
+- Fixed the oversized **Date** control inside Add/Edit Expense.
+- Expense Date now uses the same compact iPhone date-card design as the rest of TripSpend.
+- Personal expenses explicitly state that they **count toward overall trip spending and country budgets**.
+- A self-paid personal expense creates no debt in **Who owes whom**, but still reduces the relevant budgets and appears in spending analytics.
+- Analytics settlement explanation now makes this distinction clear.
