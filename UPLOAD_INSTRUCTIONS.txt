@@ -1,15 +1,15 @@
-TripSpend v6.5.1 update
+TripSpend v6.5.2 update
 
-1. Extract TripSpend-v6.5.1-update.zip.
+1. Extract TripSpend-v6.5.2-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace the old files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.5.1.
+7. Confirm the badge says v6.5.2.
 
-This update redesigns:
-- Plan
-- Analytics
+This update mainly improves readability:
+- Larger fonts in Plan
+- Larger fonts in Analytics
 
-All v6.5 functionality remains unchanged.
+No features were removed.

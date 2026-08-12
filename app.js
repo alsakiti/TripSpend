@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.5.1";
+  const APP_VERSION = "6.5.2";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 1;
@@ -3226,7 +3226,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.5.1", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.5.2", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

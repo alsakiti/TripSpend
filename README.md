@@ -584,7 +584,7 @@ Search also matches:
 - Trip History is stored inside the same protected database and portable JSON backup.
 
 
-## v6.5.1 — Plan & Analytics Makeover
+## v6.5.2 — Plan & Analytics Makeover
 
 ### Plan
 - New compact trip-progress hero.
@@ -606,3 +606,25 @@ Search also matches:
 - Dark Mode remains supported.
 
 This release does not change trip data, multi-trip history, settlement records, filters, IndexedDB, restore points, or backup behavior.
+
+
+## v6.5.2 — Larger Typography Tuning
+
+This version keeps all v6.5.1 functionality, but increases text size in the two redesigned sections:
+
+- Plan
+- Analytics
+
+What changed:
+- Bigger section headings
+- Bigger subtitles and helper text
+- Larger country names and dates
+- Larger country metric cards
+- Larger planned-cost cards
+- Bigger Total Spent number
+- Bigger remaining / top category text
+- Bigger Personal / Shared / Expenses blocks
+- Bigger settlement text and buttons
+- Improved readability on iPhone
+
+No feature logic was changed in this release.

@@ -4411,3 +4411,440 @@ html[data-theme="dark"] .analytics-main-card{
   .analytics-quick-row{gap:5px}
   .analytics-quick-row>div{padding:8px 7px}
 }
+
+
+/* =========================================================
+   TripSpend v6.5.2 — Bigger typography for Plan + Analytics
+   ========================================================= */
+
+.plan-v651 .page-title h2,
+.analytics-v651 .page-title h2{
+  font-size:27px!important;
+  line-height:1.08!important;
+  letter-spacing:-.03em!important;
+}
+.plan-v651 .eyebrow,
+.analytics-v651 .eyebrow{
+  font-size:12px!important;
+  letter-spacing:.18em!important;
+}
+.plan-v651 .plan-page-title p,
+.analytics-v651 .analytics-page-title p{
+  font-size:14px!important;
+  line-height:1.42!important;
+}
+
+.plan-v651 .small-primary,
+.plan-v651 .link-btn,
+.analytics-v651 .small-primary{
+  font-size:13px!important;
+  min-height:42px!important;
+}
+
+.plan-v651 .plan-hero{
+  padding:18px!important;
+}
+.plan-hero-top small{
+  font-size:10px!important;
+}
+.plan-hero-top strong{
+  font-size:30px!important;
+  line-height:1.08!important;
+}
+.plan-hero-top span{
+  font-size:14px!important;
+}
+.plan-progress-pill{
+  font-size:14px!important;
+  padding:8px 12px!important;
+}
+.plan-progress-track{
+  height:8px!important;
+  margin-top:14px!important;
+}
+.plan-flag-route{
+  margin-top:16px!important;
+  gap:8px!important;
+}
+.plan-flag{
+  width:40px!important;
+  height:40px!important;
+  border-radius:12px!important;
+  font-size:22px!important;
+}
+.plan-flag-stop small{
+  max-width:86px!important;
+  font-size:10px!important;
+}
+.plan-route-line{
+  flex:0 0 28px!important;
+}
+
+.plan-overview-row{
+  gap:8px!important;
+  margin-top:15px!important;
+}
+.plan-overview-row>div{
+  padding:10px 11px!important;
+  border-radius:12px!important;
+}
+.plan-overview-row small{
+  font-size:9px!important;
+}
+.plan-overview-row strong{
+  font-size:13px!important;
+}
+
+.plan-section-title h2,
+.analytics-v651 .analytics-section-title h2{
+  font-size:20px!important;
+}
+.plan-section-title small,
+.analytics-v651 .analytics-section-title small{
+  font-size:12px!important;
+  line-height:1.4!important;
+}
+
+.plan-v651 .plan-inline-editor{
+  padding:14px!important;
+}
+.plan-editor-head strong{
+  font-size:14px!important;
+}
+.plan-v651 .planner-form label,
+.plan-v651 .planner-form small,
+.plan-v651 .planner-form input,
+.plan-v651 .planner-form select{
+  font-size:13px!important;
+}
+.plan-v651 .planner-form .primary{
+  min-height:46px!important;
+  font-size:15px!important;
+}
+
+.plan-v651 .stop-card{
+  padding:14px!important;
+  border-radius:16px!important;
+}
+.plan-v651 .stop-card-top strong{
+  font-size:18px!important;
+  line-height:1.18!important;
+}
+.plan-v651 .stop-card-top small{
+  font-size:13px!important;
+}
+.plan-v651 .stop-metrics{
+  gap:8px!important;
+  margin-top:10px!important;
+}
+.plan-v651 .stop-metrics>div{
+  padding:10px!important;
+  border-radius:12px!important;
+}
+.plan-v651 .stop-metrics small{
+  font-size:9px!important;
+}
+.plan-v651 .stop-metrics strong{
+  font-size:13px!important;
+}
+.plan-v651 .stop-actions{
+  gap:8px!important;
+  margin-top:10px!important;
+}
+.plan-v651 .stop-actions .mini-btn{
+  min-height:36px!important;
+  padding:0 12px!important;
+  font-size:12px!important;
+  border-radius:999px!important;
+}
+
+.plan-v651 .planned-item{
+  padding:13px!important;
+  border-radius:15px!important;
+}
+.plan-v651 .planned-item strong{
+  font-size:15px!important;
+  line-height:1.22!important;
+}
+.plan-v651 .planned-item small{
+  font-size:12px!important;
+  line-height:1.4!important;
+}
+
+.analytics-main-card{
+  padding:18px!important;
+  border-radius:22px!important;
+}
+.analytics-main-top small{
+  font-size:10px!important;
+}
+.analytics-main-card .analytics-total strong{
+  font-size:52px!important;
+  line-height:1!important;
+}
+.analytics-main-card .analytics-total span{
+  font-size:18px!important;
+  font-weight:800!important;
+}
+.analytics-budget-pill{
+  font-size:14px!important;
+  padding:9px 13px!important;
+}
+.analytics-main-card .analytics-progress{
+  height:9px!important;
+  margin:15px 0 14px!important;
+}
+.analytics-main-meta{
+  gap:14px!important;
+}
+.analytics-main-meta small{
+  font-size:10px!important;
+}
+.analytics-main-meta strong{
+  font-size:15px!important;
+}
+.analytics-split{
+  gap:8px!important;
+  margin-top:14px!important;
+}
+.analytics-split>div{
+  padding:10px 11px!important;
+  border-radius:12px!important;
+}
+.analytics-split small{
+  font-size:9px!important;
+}
+.analytics-split strong{
+  font-size:13px!important;
+}
+
+.analytics-quick-row{
+  gap:8px!important;
+  margin-top:10px!important;
+}
+.analytics-quick-row>div{
+  padding:11px 12px!important;
+  border-radius:14px!important;
+}
+.analytics-quick-row small{
+  font-size:10px!important;
+}
+.analytics-quick-row strong{
+  font-size:14px!important;
+}
+
+.analytics-v651 .analytics-category-bars .bar-meta{
+  font-size:14px!important;
+}
+.analytics-v651 .analytics-category-bars .bar-track{
+  height:8px!important;
+}
+.analytics-v651 .analytics-category-bars .bar-caption,
+.analytics-v651 .analytics-category-bars .muted,
+.analytics-v651 #analyticsCategoryHint{
+  font-size:12px!important;
+}
+.analytics-v651 .settlement-list-primary .settlement-payment-row{
+  padding:13px!important;
+  border-radius:14px!important;
+}
+.analytics-v651 .settlement-payment-copy strong{
+  font-size:16px!important;
+}
+.analytics-v651 .settlement-payment-copy small{
+  font-size:12px!important;
+}
+.analytics-v651 .settlement-payment-amount{
+  font-size:17px!important;
+}
+.analytics-v651 .settlement-paid-btn{
+  min-height:34px!important;
+  font-size:12px!important;
+  padding:0 12px!important;
+}
+.analytics-v651 .settlement-details-toggle,
+.analytics-v651 .settlement-history-toggle{
+  min-height:42px!important;
+  font-size:13px!important;
+}
+.analytics-more-row{
+  padding:14px 15px!important;
+  border-radius:15px!important;
+}
+.analytics-more-row small{
+  font-size:9px!important;
+}
+.analytics-more-row strong{
+  font-size:14px!important;
+}
+.analytics-busiest-row{
+  padding:11px 12px!important;
+}
+.analytics-busiest-row small{
+  font-size:10px!important;
+}
+.analytics-busiest-row strong{
+  font-size:14px!important;
+}
+.analytics-secondary-block{
+  padding:14px!important;
+  border-radius:15px!important;
+}
+.analytics-block-title h3{
+  font-size:17px!important;
+}
+.analytics-block-title small{
+  font-size:12px!important;
+}
+.analytics-secondary-block .bar-meta{
+  font-size:13px!important;
+}
+.analytics-secondary-block .bar-track{
+  height:7px!important;
+}
+.analytics-secondary-block .daily{
+  font-size:12px!important;
+}
+
+@media(max-width:600px){
+  .plan-v651 .page-title h2,
+  .analytics-v651 .page-title h2{
+    font-size:24px!important;
+  }
+  .plan-v651 .eyebrow,
+  .analytics-v651 .eyebrow{
+    font-size:11px!important;
+  }
+  .plan-v651 .plan-page-title p,
+  .analytics-v651 .analytics-page-title p{
+    font-size:13px!important;
+  }
+
+  .plan-v651 .small-primary,
+  .plan-v651 .link-btn,
+  .analytics-v651 .small-primary{
+    font-size:12px!important;
+    min-height:40px!important;
+  }
+
+  .plan-v651 .plan-hero{
+    padding:15px!important;
+  }
+  .plan-hero-top strong{
+    font-size:24px!important;
+  }
+  .plan-hero-top span{
+    font-size:13px!important;
+  }
+  .plan-progress-pill{
+    font-size:12px!important;
+    padding:7px 10px!important;
+  }
+  .plan-flag{
+    width:36px!important;
+    height:36px!important;
+    font-size:20px!important;
+  }
+  .plan-flag-stop small{
+    font-size:9px!important;
+  }
+  .plan-overview-row{
+    gap:6px!important;
+  }
+  .plan-overview-row>div{
+    padding:9px 10px!important;
+  }
+  .plan-overview-row small{
+    font-size:8px!important;
+  }
+  .plan-overview-row strong{
+    font-size:12px!important;
+  }
+  .plan-section-title h2,
+  .analytics-v651 .analytics-section-title h2{
+    font-size:18px!important;
+  }
+  .plan-section-title small,
+  .analytics-v651 .analytics-section-title small{
+    font-size:11px!important;
+  }
+  .plan-v651 .stop-card-top strong{
+    font-size:16px!important;
+  }
+  .plan-v651 .stop-card-top small{
+    font-size:12px!important;
+  }
+  .plan-v651 .stop-metrics small{
+    font-size:8px!important;
+  }
+  .plan-v651 .stop-metrics strong{
+    font-size:12px!important;
+  }
+  .plan-v651 .stop-actions .mini-btn{
+    min-height:34px!important;
+    font-size:11px!important;
+  }
+  .plan-v651 .planned-item strong{
+    font-size:14px!important;
+  }
+  .plan-v651 .planned-item small{
+    font-size:11px!important;
+  }
+
+  .analytics-main-card{
+    padding:15px!important;
+  }
+  .analytics-main-card .analytics-total strong{
+    font-size:42px!important;
+  }
+  .analytics-main-card .analytics-total span{
+    font-size:16px!important;
+  }
+  .analytics-budget-pill{
+    font-size:12px!important;
+    padding:8px 11px!important;
+  }
+  .analytics-main-meta small{
+    font-size:9px!important;
+  }
+  .analytics-main-meta strong{
+    font-size:13px!important;
+  }
+  .analytics-split small{
+    font-size:8px!important;
+  }
+  .analytics-split strong{
+    font-size:11px!important;
+  }
+  .analytics-quick-row small{
+    font-size:9px!important;
+  }
+  .analytics-quick-row strong{
+    font-size:12px!important;
+  }
+  .analytics-v651 .analytics-category-bars .bar-meta{
+    font-size:13px!important;
+  }
+  .analytics-v651 .settlement-payment-copy strong{
+    font-size:14px!important;
+  }
+  .analytics-v651 .settlement-payment-copy small{
+    font-size:11px!important;
+  }
+  .analytics-v651 .settlement-payment-amount{
+    font-size:15px!important;
+  }
+  .analytics-v651 .settlement-paid-btn{
+    min-height:32px!important;
+    font-size:11px!important;
+  }
+  .analytics-more-row strong{
+    font-size:13px!important;
+  }
+  .analytics-block-title h3{
+    font-size:15px!important;
+  }
+  .analytics-block-title small{
+    font-size:11px!important;
+  }
+}
