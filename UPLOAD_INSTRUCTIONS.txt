@@ -1,15 +1,16 @@
-TripSpend v5.9.1 update
+TripSpend v6.0 update
 
-1. Extract TripSpend-v5.9.1-update.zip.
+1. Extract TripSpend-v6.0-update.zip.
 2. Upload EVERYTHING inside it to the root of your existing TripSpend GitHub repository.
 3. Replace the old files and commit.
-4. Wait 1–2 minutes for GitHub Pages.
-5. Completely close TripSpend and reopen it online.
-6. Confirm the visible version badge says v5.9.1.
+4. Wait about 1–2 minutes for GitHub Pages.
+5. Completely close the TripSpend Home Screen app.
+6. Reopen it while online.
+7. Confirm the visible badge says v6.0.
 
-Personal expense behavior:
-- Me paid for Me → counts toward trip/country spending, creates no debt.
-- Me paid for Hu → counts toward trip/country spending, Hu owes Me.
-- Shared expense → counts toward trip/country spending and is split between selected travelers.
+Home is intentionally much simpler now:
+Current country → Remaining → Safe today / Spent today → Add Expense → Countries → Next destination → Trip status.
 
-The Add Expense Date control is now compact and matches the other date fields.
+Currency converter moved to Settings.
+Detailed expense history remains in Expenses.
+Who owes whom and charts remain in Analytics.

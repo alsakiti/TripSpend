@@ -540,9 +540,16 @@
   function renderCountryBudgets() {
     const list = $("countryBudgetList");
     const summary = $("countryBudgetSummary");
+    const section = $("countryBudgetSection");
     if (!list || !summary || !state().trip) return;
 
     list.replaceChildren();
+
+    // Country 1's budget is already shown in the current-country card.
+    // The horizontal country strip only adds value on multi-country trips.
+    if (section) section.classList.toggle("hidden", stops().length <= 1);
+    if (stops().length <= 1) return;
+
     const home = state().trip.homeCurrency;
     const allocated = stops().reduce((sum, stop) => sum + Number(stop.budget || 0), 0);
     const tripBudget = Number(state().trip.budget || 0);
@@ -550,22 +557,23 @@
 
     if (allocated <= 0) {
       summary.className = "country-budget-summary neutral";
-      summary.textContent = "No country budgets set yet. Your total trip budget still works normally.";
+      summary.textContent = "Tap a country to set its budget.";
     } else if (Math.abs(allocationDiff) < 0.000001) {
       summary.className = "country-budget-summary good";
-      summary.textContent = `All ${core.money(tripBudget, home)} of your trip budget is allocated.`;
+      summary.textContent = "Trip budget fully allocated.";
     } else if (allocationDiff > 0) {
       summary.className = "country-budget-summary neutral";
-      summary.textContent = `${core.money(allocationDiff, home)} of the total trip budget is not allocated to a country yet.`;
+      summary.textContent = `${core.money(allocationDiff, home)} still unallocated.`;
     } else {
       summary.className = "country-budget-summary warn";
-      summary.textContent = `Country budgets exceed the total trip budget by ${core.money(Math.abs(allocationDiff), home)}.`;
+      summary.textContent = `${core.money(Math.abs(allocationDiff), home)} over-allocated.`;
     }
 
     stops().forEach(stop => {
       const b = stopBudgetState(stop);
-      const row = document.createElement("div");
-      row.className = "country-budget-row";
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "country-budget-row v6-country-chip";
 
       const top = document.createElement("div");
       top.className = "country-budget-row-top";
@@ -574,15 +582,15 @@
       const strong = document.createElement("strong");
       strong.textContent = stop.country;
       const small = document.createElement("small");
-      small.textContent = b.budget > 0
-        ? `${core.money(b.spent, home)} spent of ${core.money(b.budget, home)}`
-        : `${core.money(b.spent, home)} spent • budget not set`;
+      small.textContent = `${stop.currency} • ${core.fmtDate(stop.startDate)}–${core.fmtDate(stop.endDate)}`;
       label.append(strong, small);
 
       const amount = document.createElement("strong");
       amount.className = b.budget > 0 && b.remaining < 0 ? "country-over-budget" : "";
       amount.textContent = b.budget > 0
-        ? (b.remaining >= 0 ? `${core.money(b.remaining, home)} left` : `${core.money(Math.abs(b.remaining), home)} over`)
+        ? (b.remaining >= 0
+            ? `${core.money(b.remaining, home)} left`
+            : `${core.money(Math.abs(b.remaining), home)} over`)
         : "Set budget";
 
       top.append(label, amount);
@@ -594,11 +602,7 @@
       fill.style.width = `${b.pct}%`;
       track.append(fill);
 
-      const planned = document.createElement("small");
-      planned.className = "country-budget-planned";
-      planned.textContent = b.planned > 0 ? `Upcoming planned: ${core.money(b.planned, home)}` : "";
-
-      row.append(top, track, planned);
+      row.append(top, track);
       row.onclick = () => setCountryBudget(stop.id);
       list.append(row);
     });
@@ -620,6 +624,39 @@
     core.save();
     core.render();
     core.toast(`${stop.country} budget updated`);
+  }
+
+
+  function renderV6NextDestination() {
+    const button = $("v6PlanRow");
+    const label = $("v6PlanLabel");
+    const name = $("v6NextCountry");
+    const dates = $("v6NextCountryDates");
+    if (!button || !name || !dates || !state().trip) return;
+
+    const ordered = stops().slice().sort((a,b) =>
+      (a.startDate || "").localeCompare(b.startDate || "")
+    );
+    const today = core.today();
+
+    let next = ordered.find(stop => stop.startDate > today);
+
+    if (!next && today < state().trip.startDate) {
+      next = ordered[0] || null;
+    }
+
+    if (next) {
+      if (label) label.textContent = today < state().trip.startDate ? "FIRST DESTINATION" : "NEXT DESTINATION";
+      name.textContent = next.country;
+      dates.textContent = `${core.fmtDateWithYear(next.startDate)} • ${next.currency}`;
+    } else {
+      const current = stopForDate(today);
+      if (label) label.textContent = today > state().trip.endDate ? "TRIP COMPLETE" : "TRIP PLAN";
+      name.textContent = today > state().trip.endDate ? "Trip complete" : (current?.country || "View trip");
+      dates.textContent = today > state().trip.endDate
+        ? `${core.fmtDateWithYear(state().trip.startDate)} – ${core.fmtDateWithYear(state().trip.endDate)}`
+        : "View countries & planned costs";
+    }
   }
 
   function renderDashboardPlan() {
@@ -1342,6 +1379,7 @@
     setHeaderRoute();
     renderCurrentCountry();
     renderCountryBudgets();
+    renderV6NextDestination();
     renderDashboardPlan();
     renderPlannerSummary();
     renderStops();
@@ -1527,6 +1565,7 @@
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));
   $("countryBudgetManage")?.addEventListener("click", () => core.page("plan"));
+  $("v6PlanRow")?.addEventListener("click", () => core.page("plan"));
   $("settingsPlan")?.addEventListener("click", () => core.page("plan"));
   $("settingsAddCountry")?.addEventListener("click", () => {
     core.page("plan");

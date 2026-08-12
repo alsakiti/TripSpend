@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v5.9.1",
+  "name": "TripSpend v6.0",
   "short_name": "TripSpend",
-  "description": "Offline-first travel spending app with compact expense dates and accurate personal/shared budgeting.",
+  "description": "A focused offline-first travel spending dashboard with multi-country budgets, live FX and group settlement.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

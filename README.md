@@ -304,3 +304,35 @@ The New Trip screen was redesigned after mobile usability feedback.
 - Personal expenses explicitly state that they **count toward overall trip spending and country budgets**.
 - A self-paid personal expense creates no debt in **Who owes whom**, but still reduces the relevant budgets and appears in spending analytics.
 - Analytics settlement explanation now makes this distinction clear.
+
+
+## v6.0 — Dashboard redesign
+
+TripSpend v6 focuses Home on the few things a traveler needs immediately.
+
+### New Home hierarchy
+1. Current country, dates, local currency, and country-budget progress
+2. Remaining trip budget
+3. Safe to spend today + spent today
+4. One prominent **Add Expense** button
+5. Compact country budget cards on multi-country trips
+6. One compact **Next destination** row
+7. Small trip-health status
+
+### Removed from Home
+- Live Currency Exchange
+- Large Trip Plan widget
+- Travelers
+- Recent Expenses
+- Smart Insights
+- Top Categories
+- Projected Total / Days Left cards
+
+### Where those features live now
+- Currency Converter → **Settings**
+- Countries / planned costs → **Countries & trip planner**
+- Travelers → **Settings → Manage Travelers**
+- Expense history → **Expenses**
+- Detailed charts + Who owes whom → **Analytics**
+
+No spending, traveler, country, planned-cost, FX, or settlement data was removed. This release changes dashboard presentation and navigation only.

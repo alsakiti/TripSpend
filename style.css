@@ -1918,3 +1918,307 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     font-size:12px;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.0 — focused, one-screen Home dashboard
+   ========================================================= */
+
+.v6-dashboard{
+  max-width:620px;
+  margin:0 auto;
+}
+
+.v6-dashboard .v6-current-country{
+  margin:0 0 8px;
+  padding:11px 12px;
+  border-radius:15px;
+  box-shadow:none;
+}
+
+.v6-dashboard .current-country-status{
+  font-size:8px;
+  letter-spacing:.12em;
+}
+.v6-dashboard .current-country-main strong{
+  font-size:17px;
+}
+.v6-dashboard .current-country-main small{
+  font-size:9px;
+}
+.v6-dashboard .current-country-side strong{
+  font-size:9px;
+}
+.v6-dashboard .country-currency-pill{
+  font-size:9px;
+  padding:4px 7px;
+}
+
+.v6-budget-card{
+  overflow:hidden;
+  margin-bottom:9px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--surface);
+  box-shadow:0 6px 18px rgba(16,24,40,.05);
+}
+.v6-summary{
+  margin:0!important;
+  padding:15px 15px 12px!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.v6-summary .summary-head{
+  align-items:flex-start;
+}
+.v6-summary .remaining{
+  margin-top:2px;
+}
+.v6-summary .remaining strong{
+  font-size:36px;
+  line-height:1;
+}
+.v6-summary .remaining span{
+  font-size:13px;
+}
+.v6-summary .pill{
+  margin-top:2px;
+  font-size:9px;
+}
+.v6-summary .progress{
+  margin:12px 0 9px;
+  height:6px;
+}
+.v6-budget-small{
+  display:flex;
+  gap:18px;
+}
+.v6-budget-small span{
+  display:block;
+}
+.v6-budget-small small,
+.v6-budget-small strong{
+  display:block;
+}
+.v6-budget-small small{
+  color:var(--muted);
+  font-size:8.5px;
+}
+.v6-budget-small strong{
+  margin-top:2px;
+  font-size:10.5px;
+}
+
+.v6-today-metrics{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:0!important;
+  margin:0!important;
+  border-top:1px solid var(--line);
+}
+.v6-today-card{
+  min-height:auto!important;
+  padding:11px 14px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:var(--surface2)!important;
+  box-shadow:none!important;
+}
+.v6-today-card + .v6-today-card{
+  border-left:1px solid var(--line)!important;
+}
+.v6-today-card small,
+.v6-today-card strong{
+  display:block;
+}
+.v6-today-card small{
+  margin:0 0 4px!important;
+  color:var(--muted);
+  font-size:9px!important;
+}
+.v6-today-card strong{
+  font-size:13px!important;
+}
+
+.v6-quick-add{
+  min-height:48px!important;
+  margin:0 0 12px;
+  border-radius:14px!important;
+  font-size:15px!important;
+  box-shadow:0 8px 18px rgba(22,119,255,.18);
+}
+
+.v6-section-title{
+  margin-bottom:7px!important;
+}
+.v6-section-title h2{
+  font-size:15px!important;
+}
+
+.v6-country-budget-section{
+  margin:0 0 10px!important;
+}
+.v6-country-budget-section .country-budget-summary{
+  display:inline-flex;
+  width:auto;
+  margin:0 0 7px;
+  padding:5px 8px;
+  border-radius:999px;
+  font-size:8.5px;
+}
+.v6-country-budget-list{
+  display:flex!important;
+  gap:7px!important;
+  overflow-x:auto;
+  padding:0 0 2px;
+  scroll-snap-type:x proximity;
+  scrollbar-width:none;
+}
+.v6-country-budget-list::-webkit-scrollbar{
+  display:none;
+}
+.v6-country-chip{
+  flex:0 0 220px;
+  scroll-snap-align:start;
+  padding:10px!important;
+  border-radius:13px!important;
+  text-align:left;
+}
+.v6-country-chip .country-budget-row-top strong{
+  font-size:10px;
+}
+.v6-country-chip .country-budget-row-top small{
+  font-size:8px;
+}
+.v6-country-chip .country-budget-track{
+  margin-top:7px;
+  height:4px;
+}
+
+.v6-plan-row{
+  width:100%;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  margin:0 0 9px;
+  padding:10px 11px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface);
+  color:var(--text);
+  text-align:left;
+}
+.v6-plan-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  background:var(--surface2);
+  font-size:17px;
+}
+.v6-plan-copy{
+  min-width:0;
+}
+.v6-plan-copy small,
+.v6-plan-copy strong,
+.v6-plan-copy span{
+  display:block;
+}
+.v6-plan-copy small{
+  color:var(--muted);
+  font-size:7.5px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.v6-plan-copy strong{
+  margin-top:1px;
+  font-size:12px;
+}
+.v6-plan-copy span{
+  margin-top:2px;
+  overflow:hidden;
+  color:var(--muted);
+  font-size:9px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.v6-plan-arrow{
+  color:var(--muted);
+  font-size:24px;
+  font-weight:300;
+}
+
+.v6-health-banner{
+  margin:0!important;
+  padding:9px 11px!important;
+  border-radius:13px!important;
+}
+.v6-health-banner .health-icon{
+  width:27px!important;
+  height:27px!important;
+  font-size:12px!important;
+}
+.v6-health-banner strong{
+  font-size:10.5px!important;
+}
+.v6-health-banner span{
+  font-size:8.5px!important;
+}
+
+.v6-compat{
+  display:none!important;
+}
+
+/* Currency conversion is a Settings tool now, not a Home widget. */
+.settings-tools-section{
+  margin-top:14px;
+}
+.settings-tools-section .section-title h2{
+  font-size:17px;
+}
+.settings-fx-card{
+  padding:14px;
+}
+.settings-fx-card .fx-result{
+  margin-top:10px;
+}
+.settings-fx-card .fx-status{
+  margin-top:9px;
+}
+
+/* Remove older Home layouts even if an old DOM fragment survives an update. */
+#dashboard .plan-snapshot,
+#dashboard .fx-card,
+#dashboard .dashboard-travelers-section,
+#dashboard .legacy-dashboard-travelers,
+#dashboard .dashboard-advanced-section,
+#dashboard .home-removed-section{
+  display:none!important;
+}
+
+@media(max-width:600px){
+  .v6-dashboard{
+    padding-top:1px;
+  }
+  .v6-dashboard .v6-current-country{
+    padding:10px 11px;
+  }
+  .v6-summary{
+    padding:13px 13px 10px!important;
+  }
+  .v6-summary .remaining strong{
+    font-size:32px;
+  }
+  .v6-today-card{
+    padding:10px 12px!important;
+  }
+  .v6-quick-add{
+    min-height:46px!important;
+  }
+  .v6-country-chip{
+    flex-basis:205px;
+  }
+}
