@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.6.5">
-  <link rel="icon" href="icons/icon-192.png?v=6.6.5">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.5">
-  <link rel="stylesheet" href="style.css?v=6.6.5">
+  <link rel="manifest" href="manifest.webmanifest?v=6.6.6">
+  <link rel="icon" href="icons/icon-192.png?v=6.6.6">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.6">
+  <link rel="stylesheet" href="style.css?v=6.6.6">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,8 +32,11 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6.5</span></div>
-        <h1 id="headerTitle">TripSpend</h1>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6.6</span></div>
+        <div class="header-trip-title-row">
+          <h1 id="headerTitle">TripSpend</h1>
+          <button id="tripSwitcherTrigger" class="trip-switcher-trigger hidden" type="button" aria-label="Switch trip" title="Switch trip">⌄</button>
+        </div>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
     </div>
@@ -43,8 +46,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.6.5" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.6.5</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.6.6" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.6.6</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -293,6 +296,15 @@
             <span id="healthText">Your budget looks healthy.</span>
           </div>
         </div>
+
+        <button id="homeTripHistoryBtn" class="card home-trip-history-btn" type="button">
+          <span class="home-trip-history-icon" aria-hidden="true">🧳</span>
+          <span class="home-trip-history-copy">
+            <strong>Trips & history</strong>
+            <small id="homeTripHistoryMeta">Switch trips or open past trips</small>
+          </span>
+          <span class="home-trip-history-arrow" aria-hidden="true">›</span>
+        </button>
 
         <!-- Compatibility targets kept hidden. Detailed views live elsewhere. -->
         <div class="v6-compat hidden" aria-hidden="true">
@@ -877,7 +889,7 @@
             <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
           </div>
           <div class="app-update-versions">
-            <span><small>Current</small><strong id="currentVersionText">v6.6.5</strong></span>
+            <span><small>Current</small><strong id="currentVersionText">v6.6.6</strong></span>
             <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
           </div>
           <div class="app-update-actions">
@@ -1025,6 +1037,35 @@
     <div class="finish-trip-actions">
       <button id="cancelFinishTrip" class="secondary" type="button">Cancel</button>
       <button id="confirmFinishTrip" class="primary" type="button">Finish & Archive</button>
+    </div>
+  </div>
+</div>
+
+<div id="tripSwitcherModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tripSwitcherTitle">
+  <div class="sheet trip-switcher-sheet">
+    <div class="handle"></div>
+    <div class="modal-head trip-switcher-head">
+      <div>
+        <div class="eyebrow">YOUR TRIPS</div>
+        <h2 id="tripSwitcherTitle">Switch trip</h2>
+      </div>
+      <button id="closeTripSwitcher" class="icon-btn" type="button">✕</button>
+    </div>
+
+    <div id="tripSwitcherCurrent" class="trip-switcher-current"></div>
+
+    <div class="trip-switcher-section-head">
+      <div>
+        <strong>Past trips</strong>
+        <small id="tripSwitcherPastCount">0 trips</small>
+      </div>
+    </div>
+
+    <div id="tripSwitcherPastList" class="trip-switcher-past-list"></div>
+
+    <div class="trip-switcher-actions">
+      <button id="tripSwitcherManageBtn" class="secondary" type="button">Manage All Trips</button>
+      <button id="tripSwitcherNewBtn" class="primary" type="button">＋ Start New Trip</button>
     </div>
   </div>
 </div>
@@ -1236,8 +1277,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.6.5"></script>
-<script src="fx.js?v=6.6.5"></script>
-<script src="v5.js?v=6.6.5"></script>
+<script src="app.js?v=6.6.6"></script>
+<script src="fx.js?v=6.6.6"></script>
+<script src="v5.js?v=6.6.6"></script>
 </body>
 </html>

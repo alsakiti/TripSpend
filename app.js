@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.5";
+  const APP_VERSION = "6.6.6";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -577,6 +577,7 @@
     await persistStateImmediately(state);
     renderTripsPage();
     renderSetupTripHistory();
+    renderHomeTripHistoryAccess();
     cleanupUnusedReceipts({ silent: true }).catch(() => {});
     toast("Past trip deleted");
   }
@@ -664,6 +665,168 @@
     list.replaceChildren();
 
     history.slice(0, 4).forEach(record => list.append(renderTripHistoryCard(record, true)));
+  }
+
+  function closeTripSwitcher() {
+    $("tripSwitcherModal")?.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+
+  function renderHomeTripHistoryAccess() {
+    const meta = $("homeTripHistoryMeta");
+    if (!meta) return;
+
+    const count = (state.tripHistory || []).length;
+    if (count === 0) {
+      meta.textContent = "No past trips yet • tap to manage trips";
+    } else if (count === 1) {
+      meta.textContent = "1 past trip • tap to switch";
+    } else {
+      meta.textContent = `${count} past trips • tap to switch`;
+    }
+  }
+
+  function tripSwitcherCurrentCard() {
+    const data = snapshotTripData();
+    const summary = tripSummaryFor(data);
+
+    const card = document.createElement("div");
+    card.className = "trip-switcher-current-card";
+
+    const top = document.createElement("div");
+    top.className = "trip-switcher-current-top";
+
+    const identity = document.createElement("div");
+    identity.className = "trip-switcher-current-identity";
+
+    const flags = document.createElement("span");
+    flags.className = "trip-switcher-flags";
+    flags.textContent = tripFlagsFor(data);
+
+    const copy = document.createElement("div");
+    const name = document.createElement("strong");
+    name.textContent = state.trip?.name || "Current trip";
+    const dates = document.createElement("small");
+    dates.textContent = `${fmtDateWithYear(state.trip?.startDate)} – ${fmtDateWithYear(state.trip?.endDate)}`;
+    copy.append(name, dates);
+    identity.append(flags, copy);
+
+    const active = document.createElement("span");
+    active.className = "trip-switcher-active-pill";
+    active.textContent = "CURRENT";
+
+    top.append(identity, active);
+
+    const metrics = document.createElement("div");
+    metrics.className = "trip-switcher-current-metrics";
+    [
+      ["Spent", money(summary.spent || 0, state.trip?.homeCurrency || "OMR")],
+      ["Countries", String(summary.countries || (state.stops || []).length)],
+      ["Expenses", String(summary.expenseCount || state.expenses.length)]
+    ].forEach(([label, value]) => {
+      const item = document.createElement("div");
+      const small = document.createElement("small");
+      small.textContent = label;
+      const strong = document.createElement("strong");
+      strong.textContent = value;
+      item.append(small, strong);
+      metrics.append(item);
+    });
+
+    card.append(top, metrics);
+    return card;
+  }
+
+  function tripSwitcherPastCard(record) {
+    const data = record.data || {};
+    const trip = data.trip || {};
+    const summary = record.summary && Object.keys(record.summary).length
+      ? record.summary
+      : tripSummaryFor(data);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "trip-switcher-past-card";
+
+    const flags = document.createElement("span");
+    flags.className = "trip-switcher-past-flags";
+    flags.textContent = tripFlagsFor(data);
+
+    const copy = document.createElement("span");
+    copy.className = "trip-switcher-past-copy";
+    const name = document.createElement("strong");
+    name.textContent = trip.name || "Trip";
+    const dates = document.createElement("small");
+    dates.textContent = `${fmtDateWithYear(trip.startDate)} – ${fmtDateWithYear(trip.endDate)}`;
+    const spent = document.createElement("span");
+    spent.textContent = `${money(summary.spent || 0, trip.homeCurrency || "OMR")} spent`;
+    copy.append(name, dates, spent);
+
+    const side = document.createElement("span");
+    side.className = "trip-switcher-past-side";
+    const status = document.createElement("small");
+    status.textContent = record.status === "completed" ? "COMPLETED" : "PAST";
+    const arrow = document.createElement("strong");
+    arrow.textContent = "›";
+    side.append(status, arrow);
+
+    button.append(flags, copy, side);
+    button.onclick = async () => {
+      closeTripSwitcher();
+      await openTripFromHistory(record.id);
+    };
+
+    return button;
+  }
+
+  function renderTripSwitcher() {
+    const currentHost = $("tripSwitcherCurrent");
+    const pastList = $("tripSwitcherPastList");
+    const countText = $("tripSwitcherPastCount");
+    if (!currentHost || !pastList || !state.trip) return;
+
+    currentHost.replaceChildren(tripSwitcherCurrentCard());
+
+    const history = (state.tripHistory || [])
+      .slice()
+      .sort((a, b) => Number(b.archivedAt || 0) - Number(a.archivedAt || 0));
+
+    countText.textContent = `${history.length} trip${history.length === 1 ? "" : "s"}`;
+    pastList.replaceChildren();
+
+    if (!history.length) {
+      const empty = document.createElement("div");
+      empty.className = "trip-switcher-empty";
+      const strong = document.createElement("strong");
+      strong.textContent = "No past trips yet";
+      const small = document.createElement("small");
+      small.textContent = "Finished or archived trips will appear here for quick switching.";
+      empty.append(strong, small);
+      pastList.append(empty);
+    } else {
+      history.slice(0, 5).forEach(record => pastList.append(tripSwitcherPastCard(record)));
+
+      if (history.length > 5) {
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "trip-switcher-more-btn";
+        more.textContent = `View all ${history.length} past trips`;
+        more.onclick = () => {
+          closeTripSwitcher();
+          page("trips");
+        };
+        pastList.append(more);
+      }
+    }
+
+    $("tripSwitcherNewBtn").textContent = state.trip ? "＋ Start New Trip" : "＋ New Trip";
+  }
+
+  function openTripSwitcher() {
+    if (!state.trip) return;
+    renderTripSwitcher();
+    $("tripSwitcherModal")?.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
   }
 
   function renderTripsPage() {
@@ -2987,6 +3150,29 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     $("nav").classList.toggle("hidden", !hasTrip);
     $("navAdd")?.classList.toggle("hidden", !hasTrip);
     $("settingsShortcut").classList.toggle("hidden", !hasTrip);
+    $("tripSwitcherTrigger")?.classList.toggle("hidden", !hasTrip);
+
+    const headerTitle = $("headerTitle");
+    if (headerTitle) {
+      headerTitle.classList.toggle("trip-title-switchable", hasTrip);
+      headerTitle.onclick = hasTrip ? openTripSwitcher : null;
+      headerTitle.onkeydown = hasTrip ? event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openTripSwitcher();
+        }
+      } : null;
+
+      if (hasTrip) {
+        headerTitle.setAttribute("role", "button");
+        headerTitle.setAttribute("tabindex", "0");
+        headerTitle.setAttribute("aria-label", "Switch trip");
+      } else {
+        headerTitle.removeAttribute("role");
+        headerTitle.removeAttribute("tabindex");
+        headerTitle.removeAttribute("aria-label");
+      }
+    }
 
     if (!hasTrip) {
       $("headerTitle").textContent = "TripSpend";
@@ -3002,6 +3188,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
     $("headerTitle").textContent = t.name;
     $("headerSub").textContent = `${countryFlag(t.destination)} ${t.destination} • ${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}`;
+    renderHomeTripHistoryAccess();
 
     renderHealth();
     $("remainingValue").textContent = money(remaining, t.homeCurrency).replace(` ${t.homeCurrency}`, "");
@@ -4155,6 +4342,22 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   $("seeAll").onclick = () => page("expenses");
   $("settingsShortcut").onclick = () => page("settings");
+
+  $("tripSwitcherTrigger")?.addEventListener("click", openTripSwitcher);
+  $("homeTripHistoryBtn")?.addEventListener("click", openTripSwitcher);
+  $("closeTripSwitcher")?.addEventListener("click", closeTripSwitcher);
+  $("tripSwitcherModal")?.addEventListener("click", event => {
+    if (event.target === $("tripSwitcherModal")) closeTripSwitcher();
+  });
+  $("tripSwitcherManageBtn")?.addEventListener("click", () => {
+    closeTripSwitcher();
+    page("trips");
+  });
+  $("tripSwitcherNewBtn")?.addEventListener("click", () => {
+    closeTripSwitcher();
+    startNewTripFlow();
+  });
+
   $("managePeople").onclick = () => page("people");
   $("settingsPeople").onclick = () => page("people");
   $("settingsTrips")?.addEventListener("click", () => page("trips"));
@@ -4628,7 +4831,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.5", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.6", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

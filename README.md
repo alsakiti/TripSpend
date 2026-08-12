@@ -839,3 +839,29 @@ This release intentionally adds no major feature. It focuses on making TripSpend
 ### Compatibility
 - No data-model migration.
 - Existing trips, receipts, settlements, Past Trips, backups and appearance settings are preserved.
+
+
+## v6.6.6 — Trip Switcher & Easier Past Trips
+
+Past Trips are now much easier to discover without adding another bottom-navigation tab.
+
+### Quick access
+- Tap the **current trip name** at the top of the app.
+- Or tap **Trips & history** near the bottom of Home.
+
+### Trip Switcher
+The new bottom sheet shows:
+- Current Trip with flags, dates, amount spent, country count and expense count.
+- Up to 5 recent Past Trips with flags, dates, status and total spent.
+- Tap a Past Trip to reopen it.
+- **Manage All Trips** opens the full Trips & History page.
+- **Start New Trip** is available directly from the switcher.
+- If you have more than 5 Past Trips, a **View all** shortcut appears.
+
+### Full management remains available
+Settings → Trips & history still contains Finish Trip, Trip Report, Start New Trip, full history and Delete controls.
+
+### Compatibility
+- No new bottom navigation item.
+- No data-model or IndexedDB migration.
+- Existing trips, receipts, settlements, reports, Past Trips and backups are preserved.

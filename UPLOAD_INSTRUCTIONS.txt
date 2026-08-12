@@ -1,21 +1,18 @@
-TripSpend v6.6.5 update
+TripSpend v6.6.6 update
 
-1. Extract TripSpend-v6.6.5-update.zip.
+1. Extract TripSpend-v6.6.6-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.6.5.
+7. Confirm the badge says v6.6.6.
 
-This release is a design + performance pass:
-- Cleaner Home, Expenses, Add Expense, Plan, Analytics and Settings
-- Better typography consistency and Dark Mode contrast
-- Faster expense search/filtering
-- Less unnecessary DOM rebuilding
-- Cached Analytics rendering
-- Faster Plan country totals
-- Fewer unnecessary storage writes
-- Existing data model unchanged
-
-Your current trips and local data are preserved.
+New:
+- Tap current trip name / arrow to open Trip Switcher
+- Home has a visible Trips & history shortcut
+- Switcher shows current trip + recent Past Trips
+- Tap a Past Trip to reopen it
+- Manage All Trips + Start New Trip in the switcher
+- No extra bottom-nav tab
+- No data migration
