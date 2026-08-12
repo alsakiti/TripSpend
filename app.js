@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.8";
+  const APP_VERSION = "6.6.9";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -1970,13 +1970,37 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     return Math.max(a, Math.min(b, n));
   }
 
-  function money(v, c) {
+  function currencyDecimals(c) {
+    return ["OMR", "KWD", "BHD"].includes(c) ? 3 : 2;
+  }
+
+  function smartAmount(v, c) {
     const n = num(v);
-    const dec = ["OMR", "KWD", "BHD"].includes(c) ? 3 : 2;
+    const dec = currencyDecimals(c);
+    const rounded = Number(n.toFixed(dec));
+    const isWhole = Math.abs(rounded - Math.round(rounded)) < 10 ** -(dec + 1);
+
     return new Intl.NumberFormat(undefined, {
-      minimumFractionDigits: dec,
+      minimumFractionDigits: isWhole ? 0 : dec,
       maximumFractionDigits: dec
-    }).format(n) + " " + c;
+    }).format(rounded);
+  }
+
+  function money(v, c) {
+    return `${smartAmount(v, c)} ${c}`;
+  }
+
+  function percentText(v) {
+    const n = num(v);
+    const nearestWhole = Math.round(n);
+    const display = Math.abs(n - nearestWhole) < 0.05
+      ? nearestWhole
+      : Number(n.toFixed(1));
+
+    return new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1
+    }).format(display) + "%";
   }
 
   function fmtDate(s) {
@@ -2369,6 +2393,13 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if (elapsed() > 0 && p > t.budget * 1.05) return { cls: "watch", icon: "↗", title: "Watch your pace", text: `At this pace you may finish around ${money(p - t.budget, t.homeCurrency)} over budget.` };
     if (elapsed() > 0 && p > 0) return { cls: "on-track", icon: "✓", title: "On track", text: `At your current pace you may finish around ${money(Math.max(0, t.budget - p), t.homeCurrency)} under budget.` };
     return { cls: "on-track", icon: "✓", title: "Budget ready", text: `You have ${money(t.budget, t.homeCurrency)} planned for this trip.` };
+  }
+
+  function applyLargeMoneyClass(el, text) {
+    if (!el) return;
+    const length = String(text || "").replace(/[\s,.]/g, "").length;
+    el.classList.toggle("money-large", length >= 10);
+    el.classList.toggle("money-xlarge", length >= 13);
   }
 
   function renderHealth() {
@@ -3153,14 +3184,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const { personal, shared } = splitStats;
 
     if ($("analyticsTotalSpent")) {
-      $("analyticsTotalSpent").textContent = money(total, state.trip.homeCurrency)
-        .replace(` ${state.trip.homeCurrency}`, "");
+      $("analyticsTotalSpent").textContent = smartAmount(total, state.trip.homeCurrency);
+      applyLargeMoneyClass($("analyticsTotalSpent"), $("analyticsTotalSpent").textContent);
     }
     if ($("analyticsCurrency")) $("analyticsCurrency").textContent = state.trip.homeCurrency;
 
     if ($("analyticsBudgetPct")) {
       $("analyticsBudgetPct").textContent = budget > 0
-        ? `${Math.round(total / budget * 100)}% of budget`
+        ? `${percentText(total / budget * 100)} of budget`
         : "No budget";
       $("analyticsBudgetPct").classList.toggle("over", budget > 0 && total > budget);
     }
@@ -3323,10 +3354,11 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     renderHomeTripHistoryAccess();
 
     renderHealth();
-    $("remainingValue").textContent = money(remaining, t.homeCurrency).replace(` ${t.homeCurrency}`, "");
+    $("remainingValue").textContent = smartAmount(remaining, t.homeCurrency);
+    applyLargeMoneyClass($("remainingValue"), $("remainingValue").textContent);
     $("remainingCode").textContent = t.homeCurrency;
     const rawBudgetPct = t.budget > 0 ? (s / t.budget * 100) : 0;
-    $("usedPct").textContent = `${Math.round(rawBudgetPct)}% used`;
+    $("usedPct").textContent = `${percentText(rawBudgetPct)} used`;
     $("usedPct").classList.toggle("budget-watch", rawBudgetPct >= 80 && rawBudgetPct <= 100);
     $("usedPct").classList.toggle("budget-over", rawBudgetPct > 100);
     $("progressBar").style.width = `${pct}%`;
@@ -3490,9 +3522,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
     $("expenseDetailTitle").textContent = expense.note?.trim() || expense.category;
     $("expenseDetailAmount").textContent = money(expense.homeAmount, state.trip.homeCurrency);
+    applyLargeMoneyClass($("expenseDetailAmount"), $("expenseDetailAmount").textContent);
     $("expenseDetailOriginal").textContent = expense.currency === state.trip.homeCurrency
-      ? `${num(expense.amount).toFixed(3)} ${expense.currency}`
-      : `${num(expense.amount).toFixed(3)} ${expense.currency} • rate ${Number(expense.rate || 0).toPrecision(6).replace(/0+$/,"").replace(/\.$/,"")}`;
+      ? money(expense.amount, expense.currency)
+      : `${money(expense.amount, expense.currency)} • rate ${Number(expense.rate || 0).toPrecision(6).replace(/0+$/,"").replace(/\.$/,"")}`;
 
     const grid = $("expenseDetailGrid");
     grid.replaceChildren(
@@ -4999,7 +5032,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.8", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.9", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

@@ -949,3 +949,42 @@ This release intentionally adds no major feature. It focuses on making TripSpend
 ### Compatibility
 - No data-model or IndexedDB migration.
 - Existing trips, receipts, settlements, Past Trips, backups and settings remain compatible.
+
+
+## v6.6.9 — Number & Readability Polish
+
+### Smart money formatting
+Whole currency amounts no longer show unnecessary decimal zeros.
+
+Examples for OMR:
+- `1,000.000 OMR` → `1,000 OMR`
+- `500.000 OMR` → `500 OMR`
+- `0.000 OMR` → `0 OMR`
+
+If an OMR amount has a real fractional value, TripSpend keeps all 3 decimal places:
+- `17.767 OMR` → `17.767 OMR`
+- `1,250.500 OMR` → `1,250.500 OMR`
+- `982.233 OMR` → `982.233 OMR`
+
+Currencies normally displayed with 2 decimal places follow the same rule: whole values hide `.00`, while fractional values keep their normal precision.
+
+### Cleaner percentages
+- Whole percentages display without `.0`.
+- Meaningful fractional percentages may use one decimal.
+- Progress-bar calculations are unchanged.
+
+### Large values
+- Main Home balance, Analytics total and Expense Details automatically use a smaller font when values become very long.
+- Numeric values use tabular figures for cleaner alignment.
+- Narrow iPhone layouts are protected from monetary-value overflow.
+
+### Consistency
+The shared money formatter is used throughout Home, Expenses, Plan, Analytics, Past Trips, settlement and trip reports.
+
+Exchange-rate precision is intentionally unchanged.
+
+### Compatibility
+- Display-only update.
+- No calculation changes.
+- No data-model or IndexedDB migration.
+- Existing trips, receipts, settlements, Past Trips and backups remain compatible.

@@ -7158,3 +7158,116 @@ html[data-theme="dark"] .analytics-main-card{
     background:rgba(12,18,28,.56)!important;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.6.9 — Number & Readability Polish
+   ========================================================= */
+
+/* Cleaner financial figures and stable digit widths. */
+#remainingValue,
+#analyticsTotalSpent,
+#expenseDetailAmount,
+.v6-budget-small strong,
+.smart-budget-reserve strong,
+.expense-side strong,
+.trip-history-metrics strong,
+.trip-switcher-current-metrics strong,
+.trip-switcher-past-copy span,
+.settlement-payment-amount{
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+}
+
+/* Large monetary values automatically step down rather than overflow. */
+#remainingValue.money-large{
+  font-size:clamp(35px,9vw,46px)!important;
+}
+#remainingValue.money-xlarge{
+  font-size:clamp(29px,7.4vw,39px)!important;
+}
+
+#analyticsTotalSpent.money-large{
+  font-size:clamp(35px,8.6vw,43px)!important;
+}
+#analyticsTotalSpent.money-xlarge{
+  font-size:clamp(29px,7.2vw,37px)!important;
+}
+
+#expenseDetailAmount.money-large{
+  font-size:24px!important;
+}
+#expenseDetailAmount.money-xlarge{
+  font-size:21px!important;
+}
+
+/* Keep the hero dominant. Budget and Spent remain useful but secondary. */
+.v6-budget-small strong{
+  font-size:13px!important;
+  font-weight:780!important;
+  letter-spacing:-.012em;
+}
+.v6-budget-small small{
+  opacity:.88;
+}
+.smart-budget-reserve strong{
+  font-size:12.5px!important;
+  font-weight:760!important;
+}
+
+/* Percent pills remain compact. */
+#usedPct,
+#analyticsBudgetPct{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:0!important;
+}
+
+/* Long values should never push mobile layouts wider. */
+.expense-side,
+.trip-history-metrics>div,
+.trip-switcher-current-metrics>div{
+  min-width:0;
+}
+.expense-side strong,
+.trip-history-metrics strong,
+.trip-switcher-current-metrics strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+@media(max-width:600px){
+  #remainingValue.money-large{
+    font-size:36px!important;
+  }
+  #remainingValue.money-xlarge{
+    font-size:31px!important;
+  }
+
+  #analyticsTotalSpent.money-large{
+    font-size:35px!important;
+  }
+  #analyticsTotalSpent.money-xlarge{
+    font-size:30px!important;
+  }
+
+  .v6-budget-small strong{
+    font-size:12.5px!important;
+  }
+}
+
+@media(max-width:380px){
+  #remainingValue.money-large{
+    font-size:32px!important;
+  }
+  #remainingValue.money-xlarge{
+    font-size:28px!important;
+  }
+
+  #analyticsTotalSpent.money-large{
+    font-size:31px!important;
+  }
+  #analyticsTotalSpent.money-xlarge{
+    font-size:27px!important;
+  }
+}
