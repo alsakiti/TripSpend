@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.4.0">
-  <link rel="icon" href="icons/icon-192.png?v=6.4.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.4.0">
-  <link rel="stylesheet" href="style.css?v=6.4.0">
+  <link rel="manifest" href="manifest.webmanifest?v=6.5.0">
+  <link rel="icon" href="icons/icon-192.png?v=6.5.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.5.0">
+  <link rel="stylesheet" href="style.css?v=6.5.0">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,7 +32,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.4</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.5</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -43,12 +43,23 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.4.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.4</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.5.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.5</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
       </div>
+
+      <section id="setupHistorySection" class="setup-history-section hidden">
+        <div class="section-title">
+          <div>
+            <h2>Past trips</h2>
+            <small>Open a previous trip or start a new one below.</small>
+          </div>
+        </div>
+        <div id="setupHistoryList" class="trip-history-list compact"></div>
+      </section>
+
       <form id="setupForm" class="card form setup-form">
         <label>Trip name
           <input id="tripName" required maxlength="60" placeholder="Enter trip name">
@@ -304,11 +315,58 @@
           <div><div class="eyebrow">HISTORY</div><h2>Expenses</h2></div>
           <button id="pageAdd" class="small-primary">＋ Add</button>
         </div>
-        <div class="card filters filters-people">
-          <input id="searchExpense" type="search" placeholder="Search expenses">
-          <select id="filterCategory"><option value="">All categories</option></select>
-          <select id="filterPayment"><option value="">All payments</option></select>
-          <select id="filterPerson"><option value="">All travelers</option></select>
+        <div class="expense-search-tools">
+          <div class="expense-search-row">
+            <input id="searchExpense" type="search" placeholder="Search note, category, country, payer…">
+            <button id="expenseFiltersToggle" class="secondary expense-filter-button" type="button">
+              Filters <span id="expenseFilterCount" class="filter-count hidden">0</span>
+            </button>
+          </div>
+
+          <div id="expenseAdvancedFilters" class="card expense-advanced-filters hidden">
+            <div class="expense-filter-grid">
+              <label>Category
+                <select id="filterCategory"><option value="">All categories</option></select>
+              </label>
+              <label>Type
+                <select id="filterType">
+                  <option value="">Personal + Shared</option>
+                  <option value="personal">Personal only</option>
+                  <option value="shared">Shared only</option>
+                </select>
+              </label>
+              <label>Country
+                <select id="filterCountry"><option value="">All countries</option></select>
+              </label>
+              <label>Traveler
+                <select id="filterPerson"><option value="">All travelers</option></select>
+              </label>
+              <label>Payment
+                <select id="filterPayment"><option value="">All payments</option></select>
+              </label>
+            </div>
+
+            <div class="expense-date-filter-grid">
+              <label class="date-field-label"><span>From</span>
+                <div class="date-picker-card filter-date-card">
+                  <span id="filterDateFromDisplay" class="date-display">Any date</span>
+                  <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
+                  <input id="filterDateFrom" class="native-date-input" type="date" aria-label="Filter expenses from date">
+                </div>
+              </label>
+              <label class="date-field-label"><span>To</span>
+                <div class="date-picker-card filter-date-card">
+                  <span id="filterDateToDisplay" class="date-display">Any date</span>
+                  <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
+                  <input id="filterDateTo" class="native-date-input" type="date" aria-label="Filter expenses to date">
+                </div>
+              </label>
+            </div>
+
+            <div class="expense-filter-actions">
+              <button id="clearExpenseFilters" class="secondary compact-btn" type="button">Clear filters</button>
+            </div>
+          </div>
         </div>
         <div id="expenseSummary" class="mini-summary"></div>
         <div id="allList" class="list"></div>
@@ -415,6 +473,13 @@
             <p class="settlement-help">Personal expenses paid by the same traveler are excluded automatically.</p>
 
             <div id="settlementList" class="settlement-list settlement-list-primary"></div>
+
+            <button id="settlementHistoryToggle" type="button" class="secondary settlement-history-toggle hidden">
+              Settlement history
+              <span id="settlementHistoryCount" class="settlement-history-count">0</span>
+              <span id="settlementHistoryArrow">⌄</span>
+            </button>
+            <div id="settlementHistory" class="settlement-history hidden"></div>
 
             <button id="settlementDetailsToggle" type="button" class="secondary settlement-details-toggle">
               Show calculation details
@@ -607,6 +672,40 @@
 
       </section>
 
+      <section id="trips" class="page trips-page">
+        <div class="page-title">
+          <div>
+            <div class="eyebrow">YOUR TRIPS</div>
+            <h2>Trips & history</h2>
+          </div>
+          <button id="tripsDone" class="small-primary" type="button">Done</button>
+        </div>
+
+        <section id="currentTripHistorySection" class="section">
+          <div class="section-title">
+            <h2>Current trip</h2>
+            <span class="smart-badge">ACTIVE</span>
+          </div>
+          <div id="currentTripHistoryCard"></div>
+        </section>
+
+        <div class="trip-history-actions">
+          <button id="finishTripBtn" class="primary" type="button">Finish Trip</button>
+          <button id="startNewTripBtn" class="secondary" type="button">＋ Start New Trip</button>
+        </div>
+
+        <section class="section trip-past-section">
+          <div class="section-title">
+            <div>
+              <h2>Past trips</h2>
+              <small>Open any trip to see its expenses, analytics and settlements again.</small>
+            </div>
+          </div>
+          <div id="tripHistoryList" class="trip-history-list"></div>
+        </section>
+      </section>
+
+
       <section id="settings" class="page">
         <div class="page-title"><div><div class="eyebrow">TRIP</div><h2>Settings</h2></div></div>
         <form id="settingsForm" class="card form">
@@ -652,6 +751,11 @@
           <label>Default payment method<select id="sDefaultPayment"></select></label>
           <button class="primary" type="submit">Save Changes</button>
         </form>
+
+        <div class="card action-card trips-action-card">
+          <div><strong>Trips & history</strong><p>Finish this trip, start another one, or reopen a past trip.</p></div>
+          <button id="settingsTrips" class="secondary">Manage Trips</button>
+        </div>
 
         <div class="card action-card">
           <div><strong>Countries & trip planner</strong><p>Manage every country, its dates, local currency, budget, and upcoming costs.</p></div>
@@ -790,6 +894,41 @@
   <button id="navAdd" class="floating-add hidden" aria-label="Add expense"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
 </div>
 
+<div id="finishTripModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="finishTripTitle">
+  <div class="sheet finish-trip-sheet">
+    <div class="handle"></div>
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">TRIP COMPLETE</div>
+        <h2 id="finishTripTitle">Finish Trip</h2>
+      </div>
+      <button id="closeFinishTrip" class="icon-btn" type="button">✕</button>
+    </div>
+
+    <div class="finish-trip-identity">
+      <div id="finishTripFlags" class="finish-trip-flags"></div>
+      <strong id="finishTripName">Trip</strong>
+      <span id="finishTripDates">—</span>
+    </div>
+
+    <div class="finish-trip-summary">
+      <div><small>Budget</small><strong id="finishTripBudget">0</strong></div>
+      <div><small>Spent</small><strong id="finishTripSpent">0</strong></div>
+      <div><small id="finishTripSavedLabel">Saved</small><strong id="finishTripSaved">0</strong></div>
+      <div><small>Top category</small><strong id="finishTripTopCategory">—</strong></div>
+      <div><small>Countries</small><strong id="finishTripCountries">0</strong></div>
+      <div><small>Settlement left</small><strong id="finishTripSettlement">0</strong></div>
+    </div>
+
+    <p class="finish-trip-help">Finishing moves this trip into Past Trips. You can reopen it later with all expenses and analytics intact.</p>
+
+    <div class="finish-trip-actions">
+      <button id="cancelFinishTrip" class="secondary" type="button">Cancel</button>
+      <button id="confirmFinishTrip" class="primary" type="button">Finish & Archive</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <div class="handle"></div>
@@ -910,8 +1049,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.4.0"></script>
-<script src="fx.js?v=6.4.0"></script>
-<script src="v5.js?v=6.4.0"></script>
+<script src="app.js?v=6.5.0"></script>
+<script src="fx.js?v=6.5.0"></script>
+<script src="v5.js?v=6.5.0"></script>
 </body>
 </html>

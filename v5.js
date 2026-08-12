@@ -426,6 +426,7 @@
     const s = state();
     if (!Array.isArray(s.stops)) s.stops = [];
     if (!Array.isArray(s.plans)) s.plans = [];
+    if (!Array.isArray(s.settlements)) s.settlements = [];
 
     if (s.trip && !s.stops.length) {
       s.stops.push({
@@ -905,6 +906,71 @@
     });
   }
 
+  function recordSettlement(fromPersonId, toPersonId, amount) {
+    const value = Number(amount || 0);
+    if (!(value > 0) || !personById(fromPersonId) || !personById(toPersonId)) return;
+
+    state().settlements = Array.isArray(state().settlements) ? state().settlements : [];
+    state().settlements.push({
+      id: core.uid("settlement"),
+      fromPersonId,
+      toPersonId,
+      amount: value,
+      date: core.today(),
+      createdAt: Date.now()
+    });
+
+    core.save();
+    renderSettlement();
+    core.toast("Marked as paid");
+  }
+
+  function undoSettlement(id) {
+    const payment = (state().settlements || []).find(item => item.id === id);
+    if (!payment) return;
+
+    state().settlements = state().settlements.filter(item => item.id !== id);
+    core.save();
+    renderSettlement();
+    core.toast("Settlement removed");
+  }
+
+  function renderSettlementHistory() {
+    const list = $("settlementHistory");
+    const toggle = $("settlementHistoryToggle");
+    const count = $("settlementHistoryCount");
+    if (!list || !toggle || !count) return;
+
+    const rows = (state().settlements || []).slice().sort((a, b) => b.createdAt - a.createdAt);
+    count.textContent = String(rows.length);
+    toggle.classList.toggle("hidden", !rows.length);
+    list.replaceChildren();
+
+    rows.forEach(payment => {
+      const row = document.createElement("div");
+      row.className = "settlement-history-row";
+
+      const copy = document.createElement("div");
+      const strong = document.createElement("strong");
+      const from = personById(payment.fromPersonId)?.name || "Traveler";
+      const to = personById(payment.toPersonId)?.name || "Traveler";
+      strong.textContent = `${from} → ${to}`;
+
+      const small = document.createElement("small");
+      small.textContent = `${core.fmtDateWithYear(payment.date)} • ${core.money(payment.amount, state().trip.homeCurrency)}`;
+      copy.append(strong, small);
+
+      const undo = document.createElement("button");
+      undo.type = "button";
+      undo.className = "mini-btn";
+      undo.textContent = "Undo";
+      undo.onclick = () => undoSettlement(payment.id);
+
+      row.append(copy, undo);
+      list.append(row);
+    });
+  }
+
   function renderSettlement() {
     const el = $("settlementList");
     const summaryEl = $("settlementPeopleSummary");
@@ -978,6 +1044,19 @@
 
     state().people.forEach(person => {
       net.set(person.id, (paid.get(person.id) || 0) - (shares.get(person.id) || 0));
+    });
+
+    // Real-world repayments reduce the remaining group balances.
+    (state().settlements || []).forEach(payment => {
+      const amount = Number(payment.amount || 0);
+      if (!(amount > 0)) return;
+
+      if (net.has(payment.fromPersonId)) {
+        net.set(payment.fromPersonId, (net.get(payment.fromPersonId) || 0) + amount);
+      }
+      if (net.has(payment.toPersonId)) {
+        net.set(payment.toPersonId, (net.get(payment.toPersonId) || 0) - amount);
+      }
     });
 
     const visiblePeople = state().people
@@ -1107,11 +1186,21 @@
           names.append(strongFrom, arrow, strongTo);
           text.append(names, label);
 
+          const action = document.createElement("div");
+          action.className = "settlement-payment-action";
+
           const amount = document.createElement("strong");
           amount.className = "settlement-payment-amount";
           amount.textContent = core.money(settlement.amount, state().trip.homeCurrency);
 
-          row.append(text, amount);
+          const markPaid = document.createElement("button");
+          markPaid.type = "button";
+          markPaid.className = "settlement-paid-btn";
+          markPaid.textContent = "Mark Paid ✓";
+          markPaid.onclick = () => recordSettlement(settlement.from, settlement.to, settlement.amount);
+
+          action.append(amount, markPaid);
+          row.append(text, action);
           el.append(row);
         });
       }
@@ -1128,6 +1217,8 @@
         `${untrackedCount} expense${untrackedCount === 1 ? "" : "s"} (${core.money(untrackedAmount, state().trip.homeCurrency)}) are not included because the payer or beneficiary is missing.`;
       warningEl.classList.remove("hidden");
     }
+
+    renderSettlementHistory();
   }
 
   function fillExpenseStop(selectedId = "") {
@@ -1498,6 +1589,10 @@
     if (id === "settings") {
       renderSettingsCountrySummary();
     }
+
+    if (id === "trips") {
+      core.renderTripsPage?.();
+    }
   }
 
   function renderAll(event) {
@@ -1652,6 +1747,17 @@
 
   $("personalExpenseFor")?.addEventListener("change", updateSmartExpenseSummary);
   $("expenseForPeople")?.addEventListener("change", updateSmartExpenseSummary);
+
+  // Settlement payments are kept as a small collapsible history.
+  $("settlementHistoryToggle")?.addEventListener("click", () => {
+    const history = $("settlementHistory");
+    const arrow = $("settlementHistoryArrow");
+    if (!history) return;
+
+    const open = history.classList.contains("hidden");
+    history.classList.toggle("hidden", !open);
+    if (arrow) arrow.textContent = open ? "⌃" : "⌄";
+  });
 
   // Simpler settlement: final payments first, accounting details on demand.
   $("settlementDetailsToggle")?.addEventListener("click", () => {

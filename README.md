@@ -509,3 +509,76 @@ TripSpend creates another safety snapshot before a restore.
 - Old TripSpend caches are removed on activation.
 - Navigation Preload is enabled when the browser supports it.
 - Offline app-shell behavior is preserved.
+
+
+## v6.5 — Trips, Settlements & Search
+
+This release combines the planned v6.5, v6.6 and v6.7 functionality into one update.
+
+### Multiple Trips + Trip History
+- Your current v6.4 trip remains the **Current Trip** automatically after upgrading.
+- Every trip now has a stable internal trip ID.
+- Settings → **Trips & history** shows:
+  - Current Trip
+  - Finish Trip
+  - Start New Trip
+  - Past Trips
+- Starting another trip archives the current trip instead of deleting it.
+- Past trips keep their:
+  - expenses
+  - travelers
+  - countries
+  - budgets
+  - planned costs
+  - exchange-rate memory
+  - analytics
+  - settlement history
+- Tap **Open Trip** to make any previous trip current again. If another trip is currently active, it is safely moved to Past Trips.
+- Past trips can be deleted independently.
+- The New Trip screen also shows recent Past Trips when there is no active trip.
+
+### Finish Trip
+- **Finish Trip** opens a final summary showing:
+  - Budget
+  - Total spent
+  - Saved / over budget
+  - Top category
+  - Country count
+  - Outstanding settlement
+- **Finish & Archive** moves the complete trip to Past Trips.
+- A safety snapshot is created before finishing when IndexedDB is active.
+
+### Settlement History + Mark Paid
+- **Who owes whom** now has **Mark Paid ✓** beside each suggested payment.
+- Marking a payment as paid updates the remaining balances immediately.
+- Real-world repayments are stored separately from expenses.
+- **Settlement history** shows who paid whom, the date and amount.
+- **Undo** removes an accidental settlement record and restores the debt.
+
+### Advanced Expense Search & Filters
+Expenses now keeps Search visible and hides detailed filters until needed.
+
+Filters include:
+- Category
+- Personal / Shared
+- Country
+- Traveler
+- Payment method
+- From date
+- To date
+
+The Filters button shows how many filters are currently active.
+**Clear filters** resets them all.
+
+Search also matches:
+- note
+- category
+- country
+- payer
+- traveler assignment
+- payment method
+- Personal / Shared type
+
+### Data safety
+- v6.4 IndexedDB storage and automatic restore points remain unchanged.
+- Trip History is stored inside the same protected database and portable JSON backup.

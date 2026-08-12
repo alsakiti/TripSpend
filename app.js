@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.4.0";
+  const APP_VERSION = "6.5.0";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 1;
@@ -109,7 +109,7 @@
   }
 
   function blank() {
-    return { trip: null, expenses: [], rates: {}, people: [], stops: [], plans: [], preferences: {} };
+    return { trip: null, expenses: [], rates: {}, people: [], stops: [], plans: [], settlements: [], tripHistory: [], preferences: {} };
   }
 
   function normalizeExpense(expense) {
@@ -129,7 +129,12 @@
 
   function normalizeState(raw) {
     const clean = raw && typeof raw === "object" ? raw : {};
-    const trip = clean.trip || null;
+    const trip = clean.trip
+      ? {
+          ...clean.trip,
+          id: String(clean.trip.id || uid("trip"))
+        }
+      : null;
     let people = Array.isArray(clean.people)
       ? clean.people
           .filter(p => p && p.id)
@@ -179,6 +184,33 @@
         }))
       : [];
 
+    const settlements = Array.isArray(clean.settlements)
+      ? clean.settlements
+          .filter(s => s && s.id && s.fromPersonId && s.toPersonId && num(s.amount) > 0)
+          .map(s => ({
+            id: String(s.id),
+            fromPersonId: String(s.fromPersonId),
+            toPersonId: String(s.toPersonId),
+            amount: num(s.amount),
+            date: String(s.date || ""),
+            note: String(s.note || ""),
+            createdAt: num(s.createdAt, Date.now())
+          }))
+      : [];
+
+    const tripHistory = Array.isArray(clean.tripHistory)
+      ? clean.tripHistory
+          .filter(record => record && record.id && record.data?.trip)
+          .map(record => ({
+            id: String(record.id),
+            status: record.status === "completed" ? "completed" : "archived",
+            archivedAt: num(record.archivedAt, Date.now()),
+            completedAt: num(record.completedAt, 0),
+            summary: record.summary && typeof record.summary === "object" ? record.summary : {},
+            data: record.data
+          }))
+      : [];
+
     return {
       trip,
       expenses: Array.isArray(clean.expenses) ? clean.expenses.map(normalizeExpense) : [],
@@ -186,6 +218,8 @@
       people,
       stops,
       plans,
+      settlements,
+      tripHistory,
       preferences: {
         lastPaymentMethod: String(clean.preferences?.lastPaymentMethod || trip?.defaultPayment || "Credit Card"),
         lastCategory: String(clean.preferences?.lastCategory || "Food"),
@@ -197,6 +231,427 @@
         appearance: normalizedAppearance(clean.preferences?.appearance || "system")
       }
     };
+  }
+
+  function snapshotTripData(source = state) {
+    return {
+      trip: safeClone(source.trip),
+      expenses: safeClone(source.expenses || []),
+      rates: safeClone(source.rates || {}),
+      people: safeClone(source.people || []),
+      stops: safeClone(source.stops || []),
+      plans: safeClone(source.plans || []),
+      settlements: safeClone(source.settlements || []),
+      preferences: safeClone(source.preferences || {})
+    };
+  }
+
+  function inferredExpenseType(expense) {
+    if (expense?.expenseType === "shared" || expense?.expenseType === "personal") {
+      return expense.expenseType;
+    }
+    return (expense?.personShares || []).length > 1 ? "shared" : "personal";
+  }
+
+  function settlementBalancesFor(data) {
+    const people = Array.isArray(data?.people) ? data.people : [];
+    const balances = new Map(people.map(person => [person.id, 0]));
+    const paid = new Map(people.map(person => [person.id, 0]));
+    const shares = new Map(people.map(person => [person.id, 0]));
+
+    (data?.expenses || []).forEach(expense => {
+      const payerId = expense.paidByPersonId;
+      const expenseShares = Array.isArray(expense.personShares) ? expense.personShares : [];
+      if (!payerId || !balances.has(payerId) || !expenseShares.length) return;
+
+      const type = inferredExpenseType(expense);
+      const selfPaidPersonal =
+        type === "personal" &&
+        expenseShares.length === 1 &&
+        expenseShares[0].personId === payerId;
+
+      if (selfPaidPersonal) return;
+
+      paid.set(payerId, (paid.get(payerId) || 0) + num(expense.homeAmount));
+
+      expenseShares.forEach(share => {
+        if (!balances.has(share.personId)) return;
+        shares.set(share.personId, (shares.get(share.personId) || 0) + num(share.amount));
+      });
+    });
+
+    people.forEach(person => {
+      balances.set(person.id, (paid.get(person.id) || 0) - (shares.get(person.id) || 0));
+    });
+
+    (data?.settlements || []).forEach(payment => {
+      const amount = num(payment.amount);
+      if (!(amount > 0)) return;
+      if (balances.has(payment.fromPersonId)) {
+        balances.set(payment.fromPersonId, (balances.get(payment.fromPersonId) || 0) + amount);
+      }
+      if (balances.has(payment.toPersonId)) {
+        balances.set(payment.toPersonId, (balances.get(payment.toPersonId) || 0) - amount);
+      }
+    });
+
+    return balances;
+  }
+
+  function settlementOutstandingFor(data) {
+    const balances = settlementBalancesFor(data);
+    let total = 0;
+    balances.forEach(value => {
+      if (value < -0.000001) total += Math.abs(value);
+    });
+    return total;
+  }
+
+  function tripSummaryFor(data) {
+    const trip = data?.trip;
+    if (!trip) return {};
+
+    const totalSpent = (data.expenses || []).reduce((sum, expense) => sum + num(expense.homeAmount), 0);
+    const byCategory = new Map();
+
+    (data.expenses || []).forEach(expense => {
+      const category = expense.category || "Other";
+      byCategory.set(category, (byCategory.get(category) || 0) + num(expense.homeAmount));
+    });
+
+    const topCategory = [...byCategory.entries()].sort((a, b) => b[1] - a[1])[0] || null;
+
+    return {
+      tripName: trip.name,
+      destination: trip.destination,
+      startDate: trip.startDate,
+      endDate: trip.endDate,
+      budget: num(trip.budget),
+      spent: totalSpent,
+      difference: num(trip.budget) - totalSpent,
+      homeCurrency: trip.homeCurrency,
+      countries: (data.stops || []).length,
+      flags: (data.stops || []).map(stop => countryFlag(stop.country)),
+      topCategory: topCategory?.[0] || "",
+      topCategoryAmount: topCategory?.[1] || 0,
+      settlementOutstanding: settlementOutstandingFor(data),
+      expenseCount: (data.expenses || []).length
+    };
+  }
+
+  function makeTripHistoryRecord(status = "archived", data = snapshotTripData()) {
+    if (!data?.trip) return null;
+    const normalizedStatus = status === "completed" || data.trip.historyStatus === "completed"
+      ? "completed"
+      : "archived";
+    return {
+      id: String(data.trip.id || uid("trip")),
+      status: normalizedStatus,
+      archivedAt: Date.now(),
+      completedAt: normalizedStatus === "completed" ? Date.now() : 0,
+      summary: tripSummaryFor(data),
+      data: safeClone(data)
+    };
+  }
+
+  function archiveCurrentTrip(status = "archived") {
+    if (!state.trip) return null;
+    const record = makeTripHistoryRecord(status);
+    state.tripHistory = Array.isArray(state.tripHistory) ? state.tripHistory : [];
+    state.tripHistory = [
+      ...state.tripHistory.filter(item => item.id !== record.id),
+      record
+    ];
+    return record;
+  }
+
+  function emptyActiveTripState(history = state.tripHistory || [], appearance = state.preferences?.appearance || "system") {
+    const next = blank();
+    next.tripHistory = safeClone(history);
+    next.preferences = { appearance: normalizedAppearance(appearance) };
+    return next;
+  }
+
+  function tripFlagsFor(data) {
+    const flags = (data?.stops || []).map(stop => countryFlag(stop.country)).filter(Boolean);
+    return flags.length ? flags.join(" ") : countryFlag(data?.trip?.destination || "");
+  }
+
+  function resetSetupForNewTrip() {
+    $("setupForm")?.reset();
+    initDates();
+    if ($("ownerName")) $("ownerName").value = "";
+    setDestinationValue("destination", "");
+    opts($("homeCurrency"), CURS, "OMR");
+    opts($("tripCurrency"), CURS, "THB");
+    window.TripSpendV5?.clearSetupStops?.();
+    window.TripSpendV5?.clearSetupPeople?.();
+  }
+
+  async function startNewTripFlow() {
+    if (state.trip) {
+      const ok = confirm(`Archive “${state.trip.name}” and start a new trip? You can reopen it anytime from Past Trips.`);
+      if (!ok) return;
+
+      if (storageMode === "indexeddb") {
+        await createBackupSnapshot("Before starting a new trip", state, "manual");
+      }
+      archiveCurrentTrip("archived");
+    }
+
+    const history = safeClone(state.tripHistory || []);
+    const appearance = state.preferences?.appearance || "system";
+    state = emptyActiveTripState(history, appearance);
+    await persistStateImmediately(state);
+    resetSetupForNewTrip();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast("Ready for a new trip");
+  }
+
+  async function openTripFromHistory(id) {
+    const record = (state.tripHistory || []).find(item => item.id === id);
+    if (!record?.data?.trip) return;
+
+    if (state.trip && state.trip.id !== id) {
+      const ok = confirm(`Open “${record.data.trip.name}”? Your current trip will move to Past Trips.`);
+      if (!ok) return;
+    }
+
+    const appearance = state.preferences?.appearance || "system";
+    let history = (state.tripHistory || []).filter(item => item.id !== id);
+
+    if (state.trip && state.trip.id !== id) {
+      const currentRecord = makeTripHistoryRecord("archived");
+      history = [
+        ...history.filter(item => item.id !== currentRecord.id),
+        currentRecord
+      ];
+    }
+
+    const loaded = normalizeState(record.data);
+    loaded.trip.historyStatus = record.status;
+    loaded.tripHistory = history;
+    loaded.preferences.appearance = normalizedAppearance(appearance);
+    state = loaded;
+
+    await persistStateImmediately(state);
+    applyAppearance(state.preferences.appearance);
+    render();
+    page("dashboard");
+    toast(`${state.trip.name} opened`);
+  }
+
+  async function deleteTripHistoryRecord(id) {
+    const record = (state.tripHistory || []).find(item => item.id === id);
+    if (!record) return;
+    const name = record.data?.trip?.name || "this trip";
+
+    if (!confirm(`Delete “${name}” from Past Trips? This cannot be undone from Trip History.`)) return;
+
+    if (storageMode === "indexeddb") {
+      await createBackupSnapshot("Before deleting a past trip", state, "before-delete");
+    }
+
+    state.tripHistory = state.tripHistory.filter(item => item.id !== id);
+    await persistStateImmediately(state);
+    renderTripsPage();
+    renderSetupTripHistory();
+    toast("Past trip deleted");
+  }
+
+  function renderTripHistoryCard(record, compact = false) {
+    const data = record.data || {};
+    const trip = data.trip || {};
+    const summary = record.summary && Object.keys(record.summary).length
+      ? record.summary
+      : tripSummaryFor(data);
+
+    const card = document.createElement("div");
+    card.className = `trip-history-card${compact ? " compact" : ""}`;
+
+    const head = document.createElement("div");
+    head.className = "trip-history-card-head";
+
+    const identity = document.createElement("div");
+    const flags = document.createElement("span");
+    flags.className = "trip-history-flags";
+    flags.textContent = tripFlagsFor(data);
+    const copy = document.createElement("div");
+    const strong = document.createElement("strong");
+    strong.textContent = trip.name || "Trip";
+    const dates = document.createElement("small");
+    dates.textContent = `${fmtDateWithYear(trip.startDate)} – ${fmtDateWithYear(trip.endDate)}`;
+    copy.append(strong, dates);
+    identity.append(flags, copy);
+
+    const status = document.createElement("span");
+    status.className = `trip-history-status ${record.status === "completed" ? "completed" : "archived"}`;
+    status.textContent = record.status === "completed" ? "COMPLETED" : "PAST";
+
+    head.append(identity, status);
+
+    const metrics = document.createElement("div");
+    metrics.className = "trip-history-metrics";
+    [
+      ["Spent", money(summary.spent || 0, trip.homeCurrency || summary.homeCurrency || "OMR")],
+      ["Budget", money(summary.budget || 0, trip.homeCurrency || summary.homeCurrency || "OMR")],
+      ["Expenses", String(summary.expenseCount || (data.expenses || []).length)]
+    ].forEach(([label, value]) => {
+      const item = document.createElement("div");
+      const small = document.createElement("small");
+      small.textContent = label;
+      const valueEl = document.createElement("strong");
+      valueEl.textContent = value;
+      item.append(small, valueEl);
+      metrics.append(item);
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "trip-history-card-actions";
+
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "primary compact-btn";
+    open.textContent = "Open Trip";
+    open.onclick = () => openTripFromHistory(record.id);
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "secondary compact-btn";
+    del.textContent = "Delete";
+    del.onclick = () => deleteTripHistoryRecord(record.id);
+
+    actions.append(open, del);
+    card.append(head, metrics, actions);
+    return card;
+  }
+
+  function renderSetupTripHistory() {
+    const section = $("setupHistorySection");
+    const list = $("setupHistoryList");
+    if (!section || !list) return;
+
+    const history = (state.tripHistory || []).slice().sort((a, b) => b.archivedAt - a.archivedAt);
+    section.classList.toggle("hidden", !history.length);
+    list.replaceChildren();
+
+    history.slice(0, 4).forEach(record => list.append(renderTripHistoryCard(record, true)));
+  }
+
+  function renderTripsPage() {
+    const currentHost = $("currentTripHistoryCard");
+    const currentSection = $("currentTripHistorySection");
+    const historyList = $("tripHistoryList");
+    if (!historyList) return;
+
+    if (currentSection) currentSection.classList.toggle("hidden", !state.trip);
+    if ($("finishTripBtn")) $("finishTripBtn").classList.toggle("hidden", !state.trip);
+    if ($("startNewTripBtn")) $("startNewTripBtn").textContent = state.trip ? "＋ Start New Trip" : "＋ New Trip";
+
+    if (currentHost) {
+      currentHost.replaceChildren();
+      if (state.trip) {
+        const data = snapshotTripData();
+        const summary = tripSummaryFor(data);
+        const card = document.createElement("div");
+        card.className = "trip-current-card";
+
+        const identity = document.createElement("div");
+        identity.className = "trip-current-identity";
+        const flags = document.createElement("span");
+        flags.textContent = tripFlagsFor(data);
+        const copy = document.createElement("div");
+        const strong = document.createElement("strong");
+        strong.textContent = state.trip.name;
+        const small = document.createElement("small");
+        small.textContent = `${fmtDateWithYear(state.trip.startDate)} – ${fmtDateWithYear(state.trip.endDate)}`;
+        copy.append(strong, small);
+        identity.append(flags, copy);
+
+        const metrics = document.createElement("div");
+        metrics.className = "trip-current-metrics";
+        [
+          ["Spent", money(summary.spent, state.trip.homeCurrency)],
+          ["Remaining", money(summary.difference, state.trip.homeCurrency)],
+          ["Settlement", money(summary.settlementOutstanding, state.trip.homeCurrency)]
+        ].forEach(([label, value]) => {
+          const item = document.createElement("div");
+          const s = document.createElement("small");
+          s.textContent = label;
+          const v = document.createElement("strong");
+          v.textContent = value;
+          item.append(s, v);
+          metrics.append(item);
+        });
+
+        card.append(identity, metrics);
+        currentHost.append(card);
+      }
+    }
+
+    historyList.replaceChildren();
+    const history = (state.tripHistory || []).slice().sort((a, b) => b.archivedAt - a.archivedAt);
+
+    if (!history.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty empty-premium compact";
+      empty.innerHTML = "<strong>No past trips yet</strong><span>Finished and archived trips will stay here.</span>";
+      historyList.append(empty);
+    } else {
+      history.forEach(record => historyList.append(renderTripHistoryCard(record)));
+    }
+  }
+
+  function showFinishTripSummary() {
+    if (!state.trip) return;
+
+    const data = snapshotTripData();
+    const summary = tripSummaryFor(data);
+    const diff = summary.difference;
+
+    $("finishTripFlags").textContent = tripFlagsFor(data);
+    $("finishTripName").textContent = state.trip.name;
+    $("finishTripDates").textContent = `${fmtDateWithYear(state.trip.startDate)} – ${fmtDateWithYear(state.trip.endDate)}`;
+    $("finishTripBudget").textContent = money(summary.budget, state.trip.homeCurrency);
+    $("finishTripSpent").textContent = money(summary.spent, state.trip.homeCurrency);
+    $("finishTripSavedLabel").textContent = diff >= 0 ? "Saved" : "Over budget";
+    $("finishTripSaved").textContent = money(Math.abs(diff), state.trip.homeCurrency);
+    $("finishTripSaved").classList.toggle("negative", diff < 0);
+    $("finishTripTopCategory").textContent = summary.topCategory ? `${icon(summary.topCategory)} ${summary.topCategory}` : "—";
+    $("finishTripCountries").textContent = String(summary.countries || 0);
+    $("finishTripSettlement").textContent = money(summary.settlementOutstanding, state.trip.homeCurrency);
+
+    $("finishTripModal").classList.remove("hidden");
+  }
+
+  function closeFinishTripSummary() {
+    $("finishTripModal")?.classList.add("hidden");
+  }
+
+  async function finishCurrentTrip() {
+    if (!state.trip) return;
+
+    try {
+      if (storageMode === "indexeddb") {
+        await createBackupSnapshot("Before finishing trip", state, "manual");
+      }
+
+      archiveCurrentTrip("completed");
+      const history = safeClone(state.tripHistory || []);
+      const appearance = state.preferences?.appearance || "system";
+
+      state = emptyActiveTripState(history, appearance);
+      await persistStateImmediately(state);
+
+      closeFinishTripSummary();
+      resetSetupForNewTrip();
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      toast("Trip finished and saved to Past Trips");
+    } catch {
+      alert("TripSpend could not finish the trip safely.");
+    }
   }
 
   function safeClone(value) {
@@ -213,7 +668,9 @@
       value?.expenses?.length ||
       value?.people?.length ||
       value?.stops?.length ||
-      value?.plans?.length
+      value?.plans?.length ||
+      value?.settlements?.length ||
+      value?.tripHistory?.length
     );
   }
 
@@ -1252,12 +1709,20 @@
   function filteredExpenses() {
     const q = $("searchExpense").value.trim().toLowerCase();
     const category = $("filterCategory").value;
+    const type = $("filterType")?.value || "";
+    const country = $("filterCountry")?.value || "";
     const payment = $("filterPayment").value;
     const person = $("filterPerson").value;
+    const dateFrom = $("filterDateFrom")?.value || "";
+    const dateTo = $("filterDateTo")?.value || "";
 
     return state.expenses
       .filter(e => !category || e.category === category)
+      .filter(e => !type || inferredExpenseType(e) === type)
+      .filter(e => !country || e.stopId === country)
       .filter(e => !payment || e.paymentMethod === payment)
+      .filter(e => !dateFrom || e.date >= dateFrom)
+      .filter(e => !dateTo || e.date <= dateTo)
       .filter(e => {
         if (!person) return true;
         if (person === "__unassigned__") return !(e.personShares || []).length;
@@ -1267,10 +1732,68 @@
         if (!q) return true;
         const stop = (state.stops || []).find(s => s.id === e.stopId);
         const payer = e.paidByPersonId ? personName(e.paidByPersonId) : "";
-        return `${e.category} ${e.note || ""} ${e.paymentMethod} ${expenseAssignmentText(e)} ${stop?.country || ""} ${payer}`.toLowerCase().includes(q);
+        const typeText = inferredExpenseType(e);
+        return `${e.category} ${e.note || ""} ${e.paymentMethod} ${expenseAssignmentText(e)} ${stop?.country || ""} ${payer} ${typeText}`.toLowerCase().includes(q);
       })
       .slice()
       .sort(sortNew);
+  }
+
+  function renderCountryFilter() {
+    const select = $("filterCountry");
+    if (!select) return;
+
+    const current = select.value;
+    select.replaceChildren();
+
+    const all = document.createElement("option");
+    all.value = "";
+    all.textContent = "All countries";
+    select.append(all);
+
+    (state.stops || []).forEach(stop => {
+      const option = document.createElement("option");
+      option.value = stop.id;
+      option.textContent = `${countryFlag(stop.country)} ${stop.country}`;
+      select.append(option);
+    });
+
+    if ([...select.options].some(option => option.value === current)) {
+      select.value = current;
+    }
+  }
+
+  function expenseFilterCount() {
+    return [
+      $("filterCategory")?.value,
+      $("filterType")?.value,
+      $("filterCountry")?.value,
+      $("filterPayment")?.value,
+      $("filterPerson")?.value,
+      $("filterDateFrom")?.value,
+      $("filterDateTo")?.value
+    ].filter(Boolean).length;
+  }
+
+  function renderExpenseFilterUI() {
+    const count = expenseFilterCount();
+    const badge = $("expenseFilterCount");
+    if (badge) {
+      badge.textContent = String(count);
+      badge.classList.toggle("hidden", !count);
+    }
+    $("expenseFiltersToggle")?.classList.toggle("active", count > 0);
+  }
+
+  function clearExpenseFilters() {
+    ["filterCategory","filterType","filterCountry","filterPayment","filterPerson","filterDateFrom","filterDateTo"].forEach(id => {
+      if (!$(id)) return;
+      $(id).value = "";
+      if (id === "filterDateFrom" || id === "filterDateTo") {
+        $(id).dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+    renderExpenseViews();
   }
 
   function filteredTotal(expenses) {
@@ -1574,6 +2097,8 @@
   function renderExpenseViews() {
     if (!state.trip) return;
     renderPersonFilter();
+    renderCountryFilter();
+    renderExpenseFilterUI();
     const filtered = filteredExpenses();
     renderExpenseList($("allList"), filtered, true);
 
@@ -1686,6 +2211,8 @@
     if (!hasTrip) {
       $("headerTitle").textContent = "TripSpend";
       $("headerSub").textContent = "Travel spending, made simple.";
+      renderSetupTripHistory();
+      renderTripsPage();
       return;
     }
 
@@ -1726,6 +2253,7 @@
       renderStoragePanel();
     }
 
+    if (activePage === "trips") renderTripsPage();
     if (activePage === "people") renderPeoplePage();
 
     window.dispatchEvent(new CustomEvent("tripspend:render", { detail: { activePage } }));
@@ -1733,7 +2261,8 @@
 
   function page(id) {
     document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === id));
-    document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === id));
+    const navPage = id === "trips" || id === "people" ? "settings" : id;
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === navPage));
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     const started = performance.now();
@@ -1747,6 +2276,7 @@
       renderRates();
       renderStoragePanel();
     }
+    if (id === "trips") renderTripsPage();
 
     lastRenderMs = performance.now() - started;
     window.dispatchEvent(new CustomEvent("tripspend:page", { detail: { id } }));
@@ -2032,8 +2562,12 @@
     const tripStart = allSetupStops.map(stop => stop.startDate).filter(Boolean).sort()[0] || primaryStart;
     const tripEnd = allSetupStops.map(stop => stop.endDate).filter(Boolean).sort().at(-1) || primaryEnd;
 
+    const preservedHistory = safeClone(state.tripHistory || []);
+    const preservedAppearance = normalizedAppearance(state.preferences?.appearance || "system");
+
     state = {
       trip: {
+        id: uid("trip"),
         name: $("tripName").value.trim(),
         destination,
         startDate: tripStart,
@@ -2052,13 +2586,15 @@
       ],
       stops: allSetupStops,
       plans: [],
+      settlements: [],
+      tripHistory: preservedHistory,
       preferences: {
         lastPaymentMethod: "Credit Card",
         lastCategory: "Food",
         recentCategories: [],
         lastStopId: "",
         lastPaidByPersonId: "",
-        appearance: "system"
+        appearance: preservedAppearance
       }
     };
 
@@ -2326,18 +2862,15 @@
           await createBackupSnapshot("Before deleting trip", state, "before-delete");
         }
 
-        state = blank();
+        const history = safeClone(state.tripHistory || []);
+        const appearance = state.preferences?.appearance || "system";
+        state = emptyActiveTripState(history, appearance);
         await persistStateImmediately(state, { maintainBackups: false });
         localStorage.removeItem(KEY);
 
+        resetSetupForNewTrip();
         render();
-        $("setupForm").reset();
-        initDates();
-        $("ownerName").value = "";
-        setDestinationValue("destination", "");
-        opts($("homeCurrency"), CURS, "OMR");
-        opts($("tripCurrency"), CURS, "THB");
-        toast("Trip deleted");
+        toast("Current trip deleted");
       } catch {
         alert("TripSpend could not delete the trip safely.");
       }
@@ -2364,14 +2897,33 @@
   };
 
   $("searchExpense").oninput = renderExpenseViews;
-  $("filterCategory").onchange = renderExpenseViews;
-  $("filterPayment").onchange = renderExpenseViews;
-  $("filterPerson").onchange = renderExpenseViews;
+  ["filterCategory","filterType","filterCountry","filterPayment","filterPerson","filterDateFrom","filterDateTo"].forEach(id => {
+    if ($(id)) $(id).onchange = renderExpenseViews;
+  });
+
+  $("expenseFiltersToggle")?.addEventListener("click", () => {
+    const panel = $("expenseAdvancedFilters");
+    if (!panel) return;
+    panel.classList.toggle("hidden");
+    $("expenseFiltersToggle").classList.toggle("open", !panel.classList.contains("hidden"));
+  });
+
+  $("clearExpenseFilters")?.addEventListener("click", clearExpenseFilters);
 
   $("seeAll").onclick = () => page("expenses");
   $("settingsShortcut").onclick = () => page("settings");
   $("managePeople").onclick = () => page("people");
   $("settingsPeople").onclick = () => page("people");
+  $("settingsTrips")?.addEventListener("click", () => page("trips"));
+  $("tripsDone")?.addEventListener("click", () => page("settings"));
+  $("finishTripBtn")?.addEventListener("click", showFinishTripSummary);
+  $("startNewTripBtn")?.addEventListener("click", startNewTripFlow);
+  $("closeFinishTrip")?.addEventListener("click", closeFinishTripSummary);
+  $("cancelFinishTrip")?.addEventListener("click", closeFinishTripSummary);
+  $("confirmFinishTrip")?.addEventListener("click", finishCurrentTrip);
+  $("finishTripModal")?.addEventListener("click", event => {
+    if (event.target === $("finishTripModal")) closeFinishTripSummary();
+  });
   $("peopleDone").onclick = () => page("dashboard");
 
   document.querySelectorAll(".nav-btn").forEach(button => {
@@ -2390,7 +2942,9 @@
   });
 
   document.onkeydown = e => {
-    if (e.key === "Escape" && !$("modal").classList.contains("hidden")) closeModal();
+    if (e.key !== "Escape") return;
+    if (!$("modal").classList.contains("hidden")) closeModal();
+    if (!$("finishTripModal")?.classList.contains("hidden")) closeFinishTripSummary();
   };
 
   function isStandaloneApp() {
@@ -2538,6 +3092,8 @@
     settingsDisplay("sStartDate", "sStartDateDisplay");
     settingsDisplay("sEndDate", "sEndDateDisplay");
     settingsDisplay("expenseDate", "expenseDateDisplay");
+    settingsDisplay("filterDateFrom", "filterDateFromDisplay");
+    settingsDisplay("filterDateTo", "filterDateToDisplay");
   }
 
   function initDates() {
@@ -2586,7 +3142,10 @@
     countryFlag,
     countryLabel,
     renderStoragePanel,
-    flushPendingSave
+    flushPendingSave,
+    settlementBalancesFor,
+    settlementOutstandingFor,
+    renderTripsPage
   };
   opts($("homeCurrency"), CURS, "OMR");
   opts($("tripCurrency"), CURS, "THB");
@@ -2667,7 +3226,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.4.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.5.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

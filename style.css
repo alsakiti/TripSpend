@@ -3523,3 +3523,405 @@ html[data-theme="dark"] .backup-item{
     transition:none!important;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.5 — Multiple trips, settlement history,
+   advanced expense search
+   ========================================================= */
+
+/* Trips & history */
+.setup-history-section{
+  margin:0 0 12px;
+}
+.setup-history-section .section-title{
+  margin-bottom:7px;
+}
+.setup-history-section .section-title small,
+.trip-past-section .section-title small{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:9px;
+}
+.trip-history-list{
+  display:grid;
+  gap:8px;
+}
+.trip-history-card,
+.trip-current-card{
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:var(--surface);
+  box-shadow:var(--shadow);
+}
+.trip-history-card.compact{
+  padding:10px;
+}
+.trip-history-card-head,
+.trip-current-identity{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.trip-history-card-head>div:first-child,
+.trip-current-identity{
+  min-width:0;
+}
+.trip-history-card-head>div:first-child{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.trip-history-flags,
+.trip-current-identity>span:first-child{
+  flex:0 0 auto;
+  font-size:19px;
+  letter-spacing:-3px;
+}
+.trip-history-card-head strong,
+.trip-history-card-head small,
+.trip-current-identity strong,
+.trip-current-identity small{
+  display:block;
+}
+.trip-history-card-head strong,
+.trip-current-identity strong{
+  font-size:12px;
+}
+.trip-history-card-head small,
+.trip-current-identity small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8.5px;
+}
+.trip-history-status{
+  flex:0 0 auto;
+  padding:4px 6px;
+  border-radius:999px;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+.trip-history-status.completed{
+  background:var(--okbg);
+  color:var(--ok);
+}
+.trip-history-status.archived{
+  background:var(--surface2);
+  color:var(--muted);
+}
+.trip-history-metrics,
+.trip-current-metrics{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  margin-top:10px;
+}
+.trip-history-metrics>div,
+.trip-current-metrics>div{
+  min-width:0;
+  padding:8px;
+  border-radius:10px;
+  background:var(--surface2);
+}
+.trip-history-metrics small,
+.trip-history-metrics strong,
+.trip-current-metrics small,
+.trip-current-metrics strong{
+  display:block;
+}
+.trip-history-metrics small,
+.trip-current-metrics small{
+  color:var(--muted);
+  font-size:7.5px;
+}
+.trip-history-metrics strong,
+.trip-current-metrics strong{
+  margin-top:2px;
+  overflow:hidden;
+  font-size:9px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.trip-history-card-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:9px;
+}
+.trip-history-card-actions .compact-btn{
+  min-height:34px!important;
+  width:auto!important;
+  padding:0 10px!important;
+  font-size:9px!important;
+}
+.trip-history-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin:8px 0 14px;
+}
+.trip-history-actions button{
+  min-height:44px;
+}
+.trips-action-card{
+  margin-top:12px;
+}
+
+/* Finish Trip */
+.finish-trip-sheet{
+  max-width:520px;
+}
+.finish-trip-identity{
+  display:grid;
+  justify-items:center;
+  gap:3px;
+  padding:8px 0 13px;
+  text-align:center;
+}
+.finish-trip-flags{
+  font-size:24px;
+  letter-spacing:-3px;
+}
+.finish-trip-identity strong{
+  margin-top:2px;
+  font-size:17px;
+}
+.finish-trip-identity span{
+  color:var(--muted);
+  font-size:9px;
+}
+.finish-trip-summary{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+}
+.finish-trip-summary>div{
+  padding:10px;
+  border-radius:12px;
+  background:var(--surface2);
+}
+.finish-trip-summary small,
+.finish-trip-summary strong{
+  display:block;
+}
+.finish-trip-summary small{
+  color:var(--muted);
+  font-size:8px;
+}
+.finish-trip-summary strong{
+  margin-top:3px;
+  font-size:11px;
+}
+.finish-trip-summary strong.negative{
+  color:var(--bad);
+}
+.finish-trip-help{
+  margin:11px 0;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.45;
+}
+.finish-trip-actions{
+  display:grid;
+  grid-template-columns:1fr 1.3fr;
+  gap:7px;
+}
+
+/* Expenses: search first, filters on demand */
+.expense-search-tools{
+  margin-bottom:8px;
+}
+.expense-search-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:7px;
+}
+.expense-search-row input{
+  width:100%;
+  min-height:44px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--surface);
+  color:var(--text);
+  font:inherit;
+  font-size:11px;
+}
+.expense-filter-button{
+  width:auto!important;
+  min-width:82px;
+  min-height:44px!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:0 10px!important;
+}
+.expense-filter-button.active{
+  border-color:rgba(22,119,255,.35)!important;
+  background:var(--brand-soft)!important;
+  color:var(--brand)!important;
+}
+.filter-count{
+  min-width:18px;
+  height:18px;
+  display:inline-grid;
+  place-items:center;
+  padding:0 4px;
+  border-radius:999px;
+  background:var(--brand);
+  color:#fff;
+  font-size:8px;
+  font-weight:900;
+}
+.expense-advanced-filters{
+  margin-top:7px;
+  padding:11px;
+  box-shadow:none!important;
+}
+.expense-filter-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+.expense-filter-grid label,
+.expense-date-filter-grid label{
+  color:var(--muted);
+  font-size:8.5px;
+  font-weight:750;
+}
+.expense-filter-grid select,
+.filter-date-input{
+  width:100%;
+  min-width:0;
+  min-height:40px;
+  margin-top:4px;
+  padding:0 9px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--surface2);
+  color:var(--text);
+  font:inherit;
+  font-size:10px;
+}
+.expense-date-filter-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:7px;
+}
+.expense-filter-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:8px;
+}
+.expense-filter-actions .compact-btn{
+  min-height:34px!important;
+  width:auto!important;
+  padding:0 10px!important;
+  font-size:9px!important;
+}
+
+/* Settlement repayment workflow */
+.settlement-payment-action{
+  flex:0 0 auto;
+  display:grid;
+  justify-items:end;
+  gap:5px;
+}
+.settlement-paid-btn{
+  min-height:28px;
+  padding:0 8px;
+  border:0;
+  border-radius:9px;
+  background:var(--okbg);
+  color:var(--ok);
+  font-size:8px;
+  font-weight:850;
+}
+.settlement-history-toggle{
+  width:100%;
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin-top:8px;
+  font-size:9px;
+}
+.settlement-history-count{
+  min-width:18px;
+  height:18px;
+  display:inline-grid;
+  place-items:center;
+  border-radius:999px;
+  background:var(--surface2);
+  color:var(--muted);
+  font-size:8px;
+}
+.settlement-history{
+  display:grid;
+  gap:6px;
+  margin-top:7px;
+}
+.settlement-history-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 9px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--surface2);
+}
+.settlement-history-row strong,
+.settlement-history-row small{
+  display:block;
+}
+.settlement-history-row strong{
+  font-size:9.5px;
+}
+.settlement-history-row small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8px;
+}
+
+@media(max-width:600px){
+  .trip-history-actions{
+    grid-template-columns:1fr;
+  }
+  .trip-history-metrics,
+  .trip-current-metrics{
+    gap:5px;
+  }
+  .expense-filter-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .settlement-payment-row{
+    align-items:flex-start!important;
+  }
+}
+
+@media(max-width:380px){
+  .expense-filter-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* v6.5 filter dates reuse the compact iPhone-safe date cards. */
+.expense-date-filter-grid .filter-date-card{
+  width:100%;
+  min-width:0;
+  height:40px;
+  min-height:40px;
+  margin-top:4px;
+  border-radius:10px;
+}
+.expense-date-filter-grid .filter-date-card .date-display{
+  font-size:10px;
+}
