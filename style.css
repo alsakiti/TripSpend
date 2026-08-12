@@ -6497,3 +6497,220 @@ html[data-theme="dark"] .home-trip-history-btn{
     display:none;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.6.7 — Daily Use Refinement
+   ========================================================= */
+
+.home-budget-details-toggle{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:10px;
+  padding:9px 0 0;
+  border:0;
+  border-top:1px solid rgba(255,255,255,.16);
+  background:transparent;
+  color:#fff;
+  text-align:left;
+}
+.home-budget-details-toggle>span:first-child{min-width:0}
+.home-budget-details-toggle small,
+.home-budget-details-toggle strong{display:block}
+.home-budget-details-toggle small{
+  color:rgba(255,255,255,.76);
+  font-size:9px!important;
+  font-weight:850;
+  letter-spacing:.08em;
+}
+.home-budget-details-toggle strong{
+  margin-top:2px;
+  overflow:hidden;
+  color:#fff;
+  font-size:11.5px!important;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#homeBudgetDetailsArrow{
+  flex:0 0 auto;
+  color:#fff;
+  font-size:15px;
+  font-weight:900;
+}
+.home-budget-details{padding-top:9px}
+.home-budget-details .smart-budget-reserve{
+  margin-top:0!important;
+  padding-top:0!important;
+  border-top:0!important;
+}
+
+.expense-quick-btn{
+  display:none;
+  width:30px;
+  height:24px;
+  margin:5px 0 0 auto;
+  padding:0;
+  border:0;
+  border-radius:8px;
+  background:var(--surface2);
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+@media(hover:none), (pointer:coarse){
+  .expense-quick-btn{
+    display:grid;
+    place-items:center;
+  }
+  .expense .expense-actions{
+    display:none!important;
+  }
+  .expense.quick-actions-open{
+    border-color:rgba(22,119,255,.26)!important;
+    box-shadow:0 4px 14px rgba(16,24,40,.055)!important;
+  }
+  .expense.quick-actions-open .expense-actions{
+    display:flex!important;
+    grid-column:2 / 4!important;
+    margin-top:1px;
+    animation:v667-actions-in .11s ease-out;
+  }
+}
+@keyframes v667-actions-in{
+  from{opacity:0;transform:translateY(-2px)}
+  to{opacity:1;transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .expense.quick-actions-open .expense-actions{animation:none}
+}
+
+.expense-detail-receipt{
+  grid-template-columns:70px minmax(0,1fr) auto auto auto!important;
+}
+.expense-detail-receipt img{
+  width:70px!important;
+  height:70px!important;
+  border-radius:11px!important;
+}
+
+.trip-history-card{
+  border-radius:16px!important;
+  box-shadow:none!important;
+}
+.trip-history-flags{font-size:22px!important}
+.trip-history-card-head strong{font-size:14px!important}
+.trip-history-card-head small{font-size:10px!important}
+.trip-history-metrics{gap:7px!important}
+.trip-history-metrics>div{
+  padding:10px!important;
+  border-radius:11px!important;
+  background:var(--surface2)!important;
+}
+.trip-history-metrics small{font-size:9px!important}
+.trip-history-metrics strong{font-size:11px!important}
+.trip-history-metrics .trip-result-good strong{color:var(--ok)}
+.trip-history-metrics .trip-result-over strong{color:var(--bad)}
+.trip-history-card-actions{
+  grid-template-columns:1.5fr 1fr 1fr!important;
+  gap:7px!important;
+}
+.trip-history-card-actions .primary{
+  box-shadow:0 5px 12px rgba(16,24,40,.10);
+}
+.trip-switcher-past-copy .trip-switcher-result-over{
+  color:var(--bad)!important;
+}
+
+.plan-v651 .planned-item{position:relative}
+.plan-v651 .planned-item.planned-recorded{
+  opacity:1!important;
+  background:color-mix(in srgb,var(--okbg) 38%,var(--surface))!important;
+}
+.plan-v651 .planned-status-pill{
+  display:inline-flex!important;
+  width:max-content;
+  margin-top:4px!important;
+  padding:3px 6px;
+  border-radius:999px;
+  font-size:8.5px!important;
+  font-weight:850!important;
+  line-height:1.2!important;
+}
+.plan-v651 .planned-status-pill.upcoming{
+  background:var(--brand-soft);
+  color:var(--brand);
+}
+.plan-v651 .planned-status-pill.recorded{
+  background:var(--okbg);
+  color:var(--ok);
+}
+
+.analytics-pace{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin:10px 0 0;
+  padding:8px 9px;
+  border-radius:10px;
+  background:rgba(255,255,255,.075);
+  color:#dbe7f5;
+}
+.analytics-pace span{
+  flex:0 0 auto;
+  font-size:12px;
+  font-weight:900;
+}
+.analytics-pace strong{
+  min-width:0;
+  font-size:10px;
+  line-height:1.3;
+}
+.analytics-pace.ahead{
+  background:rgba(117,224,167,.12);
+  color:#b7f7d0;
+}
+.analytics-pace.watch{
+  background:rgba(254,200,75,.12);
+  color:#ffe59a;
+}
+.analytics-pace.complete{
+  background:rgba(255,255,255,.09);
+}
+
+.trip-history-card-head>div:first-child,
+.trip-switcher-past-copy,
+.expense-main{min-width:0}
+.trip-history-card-head strong,
+.trip-switcher-past-copy strong,
+.expense-side strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+@media(max-width:600px){
+  .expense-detail-receipt{
+    grid-template-columns:58px minmax(0,1fr) auto!important;
+  }
+  .expense-detail-receipt img{
+    width:58px!important;
+    height:58px!important;
+  }
+  .trip-history-card-actions{
+    grid-template-columns:1.4fr 1fr 1fr!important;
+  }
+}
+@media(max-width:380px){
+  .trip-history-card-actions{
+    grid-template-columns:1fr 1fr!important;
+  }
+  .trip-history-card-actions .primary{
+    grid-column:1 / -1;
+  }
+  .home-budget-details-toggle strong{
+    max-width:220px;
+  }
+}

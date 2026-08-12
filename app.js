@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.6";
+  const APP_VERSION = "6.6.7";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -40,6 +40,7 @@
   let expensePersonFilterSignature = "";
   let expenseCountryFilterSignature = "";
   let expenseSearchTimer = 0;
+  let homeBudgetDetailsOpen = false;
 
 
   const KEY = "tripspend.v1";
@@ -494,6 +495,25 @@
     return flags.length ? flags.join(" ") : countryFlag(data?.trip?.destination || "");
   }
 
+  function resetExpenseFiltersForTripChange() {
+    if ($("searchExpense")) $("searchExpense").value = "";
+    [
+      "filterCategory",
+      "filterType",
+      "filterCountry",
+      "filterPayment",
+      "filterPerson",
+      "filterDateFrom",
+      "filterDateTo"
+    ].forEach(id => {
+      if ($(id)) $(id).value = "";
+    });
+
+    expensePersonFilterSignature = "";
+    expenseCountryFilterSignature = "";
+    resetExpenseRenderLimit();
+  }
+
   function resetSetupForNewTrip() {
     $("setupForm")?.reset();
     initDates();
@@ -520,6 +540,8 @@
     const appearance = state.preferences?.appearance || "system";
     state = emptyActiveTripState(history, appearance);
     await persistStateImmediately(state);
+    resetExpenseFiltersForTripChange();
+    homeBudgetDetailsOpen = false;
     resetSetupForNewTrip();
     render();
     window.scrollTo({
@@ -554,6 +576,8 @@
     loaded.tripHistory = history;
     loaded.preferences.appearance = normalizedAppearance(appearance);
     state = loaded;
+    resetExpenseFiltersForTripChange();
+    homeBudgetDetailsOpen = false;
 
     await persistStateImmediately(state);
     applyAppearance(state.preferences.appearance);
@@ -615,12 +639,19 @@
 
     const metrics = document.createElement("div");
     metrics.className = "trip-history-metrics";
+
+    const currency = trip.homeCurrency || summary.homeCurrency || "OMR";
+    const difference = Number(summary.difference || 0);
+    const resultLabel = difference >= 0 ? "Saved" : "Over";
+    const resultValue = money(Math.abs(difference), currency);
+
     [
-      ["Spent", money(summary.spent || 0, trip.homeCurrency || summary.homeCurrency || "OMR")],
-      ["Budget", money(summary.budget || 0, trip.homeCurrency || summary.homeCurrency || "OMR")],
-      ["Expenses", String(summary.expenseCount || (data.expenses || []).length)]
-    ].forEach(([label, value]) => {
+      ["Spent", money(summary.spent || 0, currency), ""],
+      [resultLabel, resultValue, difference >= 0 ? "trip-result-good" : "trip-result-over"],
+      ["Expenses", String(summary.expenseCount || (data.expenses || []).length), ""]
+    ].forEach(([label, value, cls]) => {
       const item = document.createElement("div");
+      if (cls) item.classList.add(cls);
       const small = document.createElement("small");
       small.textContent = label;
       const valueEl = document.createElement("strong");
@@ -759,7 +790,13 @@
     const dates = document.createElement("small");
     dates.textContent = `${fmtDateWithYear(trip.startDate)} – ${fmtDateWithYear(trip.endDate)}`;
     const spent = document.createElement("span");
-    spent.textContent = `${money(summary.spent || 0, trip.homeCurrency || "OMR")} spent`;
+    const currency = trip.homeCurrency || "OMR";
+    const difference = Number(summary.difference || 0);
+    const resultText = difference >= 0
+      ? `${money(Math.abs(difference), currency)} saved`
+      : `${money(Math.abs(difference), currency)} over`;
+    spent.textContent = `${money(summary.spent || 0, currency)} spent • ${resultText}`;
+    spent.classList.toggle("trip-switcher-result-over", difference < 0);
     copy.append(name, dates, spent);
 
     const side = document.createElement("span");
@@ -2676,6 +2713,19 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       return;
     }
 
+    const stopMap = new Map((state.stops || []).map(stop => [stop.id, stop]));
+    const personMap = new Map((state.people || []).map(person => [person.id, person.name || "Traveler"]));
+    const fragment = document.createDocumentFragment();
+
+    const assignmentTextFast = expense => {
+      const shares = Array.isArray(expense.personShares) ? expense.personShares : [];
+      if (!shares.length) return "Unassigned";
+      if (shares.length === 1) return personMap.get(shares[0].personId) || "Traveler";
+      const names = shares.map(share => personMap.get(share.personId) || "Traveler");
+      if (names.length <= 2) return `Shared • ${names.join(" & ")}`;
+      return `Shared • ${names.length} travelers`;
+    };
+
     expenses.forEach(expense => {
       const row = document.createElement("div");
       row.className = "expense expense-clickable";
@@ -2690,6 +2740,32 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         }
       };
 
+      let touchStartX = 0;
+      let touchStartY = 0;
+      row.addEventListener("touchstart", event => {
+        const touch = event.touches?.[0];
+        if (!touch) return;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      }, { passive: true });
+
+      row.addEventListener("touchend", event => {
+        const touch = event.changedTouches?.[0];
+        if (!touch) return;
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+        if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+
+        if (dx < 0) {
+          document.querySelectorAll(".expense.quick-actions-open").forEach(other => {
+            if (other !== row) other.classList.remove("quick-actions-open");
+          });
+          row.classList.add("quick-actions-open");
+        } else {
+          row.classList.remove("quick-actions-open");
+        }
+      }, { passive: true });
+
       const iconEl = document.createElement("div");
       iconEl.className = "expense-icon";
       iconEl.textContent = icon(expense.category);
@@ -2699,10 +2775,11 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       const title = document.createElement("strong");
       title.textContent = expense.note?.trim() || expense.category;
       const sub = document.createElement("span");
-      const expenseStop = (state.stops || []).find(s => s.id === expense.stopId);
-      const payerText = expense.paidByPersonId ? `Paid by ${personName(expense.paidByPersonId)}` : "Payer not tracked";
+      const expenseStop = stopMap.get(expense.stopId);
+      const payerName = expense.paidByPersonId ? personMap.get(expense.paidByPersonId) : "";
+      const payerText = payerName ? `Paid by ${payerName}` : "Payer not tracked";
       const stopText = expenseStop?.country ? `${expenseStop.country} • ` : "";
-      sub.textContent = `${stopText}${expense.category} • ${fmtDateLong(expense.date)} • ${payerText} • For ${expenseAssignmentText(expense)}`;
+      sub.textContent = `${stopText}${expense.category} • ${fmtDateLong(expense.date)} • ${payerText} • For ${assignmentTextFast(expense)}`;
       main.append(title, sub);
 
       if (expense.receiptId) {
@@ -2725,6 +2802,23 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         ? expense.currency
         : money(expense.amount, expense.currency);
       side.append(amount, original);
+
+      if (actions) {
+        const quick = document.createElement("button");
+        quick.type = "button";
+        quick.className = "expense-quick-btn";
+        quick.textContent = "•••";
+        quick.setAttribute("aria-label", "Show expense actions");
+        quick.onclick = event => {
+          event.stopPropagation();
+          const willOpen = !row.classList.contains("quick-actions-open");
+          document.querySelectorAll(".expense.quick-actions-open").forEach(other => {
+            if (other !== row) other.classList.remove("quick-actions-open");
+          });
+          row.classList.toggle("quick-actions-open", willOpen);
+        };
+        side.append(quick);
+      }
 
       row.append(iconEl, main, side);
 
@@ -2754,8 +2848,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         row.append(act);
       }
 
-      el.append(row);
+      fragment.append(row);
     });
+
+    el.append(fragment);
   }
 
   function renderPersonFilter() {
@@ -3100,6 +3196,40 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if ($("analyticsExpenseCount")) {
       $("analyticsExpenseCount").textContent = String(state.expenses.length);
     }
+
+    const pace = $("analyticsPace");
+    if (pace) {
+      const tripDays = Math.max(1, totalTripDays());
+      const elapsedDays = elapsed();
+      const budgetUsedPct = budget > 0 ? total / budget * 100 : 0;
+      const timeUsedPct = elapsedDays > 0 ? Math.min(100, elapsedDays / tripDays * 100) : 0;
+
+      pace.classList.remove("ahead", "watch", "complete");
+
+      if (today() < state.trip.startDate) {
+        pace.querySelector("span").textContent = "◎";
+        pace.querySelector("strong").textContent = budget > 0
+          ? `Before trip • ${money(budget / tripDays, state.trip.homeCurrency)} starting daily budget`
+          : "Before trip • add a budget to track your pace";
+      } else if (today() > state.trip.endDate) {
+        pace.classList.add("complete");
+        pace.querySelector("span").textContent = remaining >= 0 ? "✓" : "!";
+        pace.querySelector("strong").textContent = remaining >= 0
+          ? `Trip complete • ${money(remaining, state.trip.homeCurrency)} under budget`
+          : `Trip complete • ${money(Math.abs(remaining), state.trip.homeCurrency)} over budget`;
+      } else if (budget <= 0) {
+        pace.querySelector("span").textContent = "◎";
+        pace.querySelector("strong").textContent = "Add a trip budget to compare your spending pace";
+      } else if (budgetUsedPct <= timeUsedPct + 5) {
+        pace.classList.add("ahead");
+        pace.querySelector("span").textContent = "✓";
+        pace.querySelector("strong").textContent = `On pace • ${Math.round(budgetUsedPct)}% budget used vs ${Math.round(timeUsedPct)}% of trip`;
+      } else {
+        pace.classList.add("watch");
+        pace.querySelector("span").textContent = "↗";
+        pace.querySelector("strong").textContent = `Spending faster • ${Math.round(budgetUsedPct)}% budget used vs ${Math.round(timeUsedPct)}% of trip`;
+      }
+    }
   }
 
   function renderAnalyticsPage() {
@@ -3213,6 +3343,11 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const safeTodayAfterPlans = daysLeft > 0 ? Math.max(0, availableAfterPlans) / daysLeft : 0;
 
     if ($("plannedReserveValue")) $("plannedReserveValue").textContent = money(plannedReserve, t.homeCurrency);
+    if ($("homeBudgetDetailsHint")) {
+      $("homeBudgetDetailsHint").textContent = plannedReserve > 0
+        ? `${money(plannedReserve, t.homeCurrency)} reserved`
+        : "No upcoming costs reserved";
+    }
     if ($("availableAfterPlansValue")) {
       $("availableAfterPlansValue").textContent = availableAfterPlans >= 0
         ? money(availableAfterPlans, t.homeCurrency)
@@ -4221,6 +4356,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   };
 
   ["quickAdd", "pageAdd", "navAdd"].forEach(id => $(id).onclick = () => openModal());
+
+  $("homeBudgetDetailsToggle")?.addEventListener("click", () => {
+    homeBudgetDetailsOpen = !homeBudgetDetailsOpen;
+    $("homeBudgetDetails")?.classList.toggle("hidden", !homeBudgetDetailsOpen);
+    $("homeBudgetDetailsToggle")?.setAttribute("aria-expanded", String(homeBudgetDetailsOpen));
+    if ($("homeBudgetDetailsArrow")) $("homeBudgetDetailsArrow").textContent = homeBudgetDetailsOpen ? "⌃" : "⌄";
+  });
+
   $("closeModal").onclick = closeModal;
   $("modal").onclick = e => { if (e.target === $("modal")) closeModal(); };
 
@@ -4831,7 +4974,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.6", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.7", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

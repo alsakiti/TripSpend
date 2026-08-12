@@ -870,7 +870,7 @@
       }
 
       const row = document.createElement("div");
-      row.className = `planned-item ${paid ? "paid" : ""}`;
+      row.className = `planned-item ${paid ? "paid planned-recorded" : "planned-upcoming"}`;
       const icon = document.createElement("div");
       icon.className = "planned-icon";
       icon.textContent = paid ? "✓" : "📅";
@@ -889,7 +889,8 @@
       const amount = document.createElement("strong");
       amount.textContent = core.money(p.homeAmount, state().trip.homeCurrency);
       const status = document.createElement("small");
-      status.textContent = paid ? "Recorded" : "Upcoming";
+      status.className = `planned-status-pill ${paid ? "recorded" : "upcoming"}`;
+      status.textContent = paid ? "Added to expenses" : "Planned";
       side.append(amount, status);
 
       const actions = document.createElement("div");

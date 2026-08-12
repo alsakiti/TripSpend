@@ -865,3 +865,42 @@ Settings → Trips & history still contains Finish Trip, Trip Report, Start New 
 - No new bottom navigation item.
 - No data-model or IndexedDB migration.
 - Existing trips, receipts, settlements, reports, Past Trips and backups are preserved.
+
+
+## v6.6.7 — Daily Use Refinement
+
+### Home
+- Reserved/Available budget information now sits behind a compact **Budget Details** row.
+- Safe Today continues to include planned costs automatically.
+- The main Home budget card is easier to scan.
+
+### Expenses
+- On touch devices, use **•••** or swipe left to reveal **Repeat / Edit / Delete**.
+- Swipe right to close quick actions.
+- Tapping the expense itself still opens Expense Details.
+- Desktop action buttons remain visible.
+- Expense list rendering now reuses country/traveler maps and appends rows in one DOM fragment.
+
+### Past Trips
+- Past Trip cards emphasize **Spent**, **Saved / Over**, and **Expenses**.
+- Open Trip remains the strongest action.
+- Trip Switcher also shows saved/over-budget result.
+
+### Plan
+- Planned costs now clearly say **Planned** or **Added to expenses**.
+
+### Analytics
+- Added one compact budget-pace line: Before trip, On pace, Spending faster, or Trip complete.
+- No extra chart was added.
+
+### Filters
+- Search/filters remain while using the same trip.
+- They automatically reset when switching trips or starting a new one.
+
+### Receipts
+- Receipt preview in Expense Details is larger.
+- Receipt images still load only when opened.
+
+### Compatibility
+- No data-model or IndexedDB migration.
+- Existing data remains compatible.
