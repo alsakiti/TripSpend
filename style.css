@@ -1205,3 +1205,192 @@ input[type="date"]::-webkit-calendar-picker-indicator{
     width:100%;
   }
 }
+
+
+/* TripSpend v5.5 — simplified New Trip setup */
+.setup-simple-section{
+  margin:2px 0 13px;
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--surface2);
+}
+.setup-simple-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.setup-simple-heading strong,
+.setup-simple-heading span{
+  display:block;
+}
+.setup-simple-heading strong{
+  font-size:13px;
+}
+.setup-simple-heading span{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+.setup-primary-country{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr);
+  gap:9px;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--surface);
+}
+.setup-country-number{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#eaf2ff;
+  color:#175cd3;
+  font-size:11px;
+  font-weight:900;
+}
+.setup-country-content{
+  min-width:0;
+}
+.setup-country-content>label:last-child{
+  margin-bottom:0!important;
+}
+.setup-simple-add{
+  width:100%;
+  min-height:40px;
+  margin-top:8px;
+  border-style:dashed!important;
+}
+.setup-add-panel{
+  margin-top:9px;
+  padding:10px;
+  border:1px solid #b2ccff;
+  border-radius:12px;
+  background:#f8faff;
+}
+.setup-add-panel-title{
+  margin-bottom:9px;
+  font-size:12px;
+  font-weight:900;
+}
+.setup-panel-actions{
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  gap:8px;
+  margin-top:3px;
+}
+.setup-panel-actions .primary,
+.setup-panel-actions .secondary{
+  width:100%;
+  min-height:40px;
+}
+.setup-summary-hint{
+  margin:8px 1px 0;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.35;
+}
+.setup-country-list,
+.setup-people-list{
+  margin-top:8px;
+}
+.setup-country-list .setup-route-item,
+.setup-people-list .setup-traveler-item{
+  background:var(--surface);
+}
+.setup-form>label{
+  margin-bottom:12px;
+}
+.setup-form>label>small.field-hint{
+  margin-top:5px;
+}
+.setup-primary-country .date-picker-card,
+.setup-add-panel .date-picker-card{
+  height:40px;
+  min-height:40px;
+}
+.setup-primary-country .date-display,
+.setup-add-panel .date-display{
+  font-size:11.5px;
+}
+.setup-primary-country select,
+.setup-add-panel select{
+  min-height:40px;
+  height:40px;
+}
+
+@media(max-width:600px){
+  .setup-simple-section{
+    margin-bottom:9px;
+    padding:9px;
+    border-radius:12px;
+  }
+  .setup-simple-heading{
+    margin-bottom:8px;
+  }
+  .setup-simple-heading strong{
+    font-size:12px;
+  }
+  .setup-simple-heading span{
+    font-size:9px;
+  }
+  .setup-primary-country{
+    grid-template-columns:27px minmax(0,1fr);
+    gap:7px;
+    padding:8px;
+    border-radius:11px;
+  }
+  .setup-country-number{
+    width:27px;
+    height:27px;
+    border-radius:9px;
+    font-size:10px;
+  }
+  .setup-country-content label{
+    margin-bottom:8px!important;
+  }
+  .setup-country-content .grid2,
+  .setup-add-panel .grid2{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+  .setup-primary-country .date-picker-card,
+  .setup-add-panel .date-picker-card{
+    width:100%;
+    height:38px;
+    min-height:38px;
+    padding:0 8px;
+  }
+  .setup-primary-country .date-display,
+  .setup-add-panel .date-display{
+    font-size:10.5px;
+  }
+  .setup-simple-add{
+    min-height:38px;
+    margin-top:7px;
+    font-size:11px;
+  }
+  .setup-add-panel{
+    padding:9px;
+  }
+  .setup-panel-actions{
+    gap:7px;
+  }
+
+  /* Old v5.2/v5.4 large setup wrappers are no longer used, but keep them
+     from affecting any cached fragments. */
+  .setup-route-box,
+  .setup-travelers-box{
+    padding:0;
+    margin:0;
+    border:0;
+    background:transparent;
+  }
+}

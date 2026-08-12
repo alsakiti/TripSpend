@@ -190,3 +190,20 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - The first traveler's name and additional travelers are all saved when **Create Trip** is tapped.
 - Travelers remain available immediately for individual spending, expense splitting, Paid By / Expense For, and Settle Up.
 - Home dashboard **+ Add traveler** from v5.3 remains available for adding people later.
+
+
+## v5.5 — Simpler New Trip setup
+
+The New Trip screen was redesigned after mobile usability feedback.
+
+- Removed visible **route** terminology.
+- First country, its dates, and its local currency are now grouped together as **Country 1**.
+- Removed the separate Start/End date row that previously appeared below additional countries.
+- **+ Add another country** stays compact until tapped.
+- Additional countries appear as Country 2, Country 3, etc.
+- The next country starts by default the day after the previous country ends.
+- Overall trip dates are calculated automatically from all country dates.
+- The first country's local currency automatically follows the chosen country when known.
+- Travelers are grouped into one simple Travelers section.
+- **+ Add traveler** stays compact until tapped.
+- Only **Home currency** remains as a trip-level currency; local currencies live with each country.

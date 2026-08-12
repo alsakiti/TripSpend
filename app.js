@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "5.4.0";
+  const APP_VERSION = "5.5.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -1307,8 +1307,8 @@
 
   $("setupForm").onsubmit = e => {
     e.preventDefault();
-    const start = $("startDate").value, end = $("endDate").value;
-    if (!validDates(start, end)) return toast("End date must be after start date");
+    const primaryStart = $("startDate").value, primaryEnd = $("endDate").value;
+    if (!validDates(primaryStart, primaryEnd)) return toast("The first country's end date must be after its start date");
     const destination = canonicalDestination("destination");
     if (!destination) return;
 
@@ -1324,19 +1324,23 @@
     const primaryStop = {
       id: "stop-primary",
       country: destination,
-      startDate: start,
-      endDate: end,
+      startDate: primaryStart,
+      endDate: primaryEnd,
       currency: $("tripCurrency").value,
       budget: setupExtraStops.length ? 0 : num($("budget").value),
       createdAt: Date.now()
     };
 
+    const allSetupStops = [primaryStop, ...setupExtraStops];
+    const tripStart = allSetupStops.map(stop => stop.startDate).filter(Boolean).sort()[0] || primaryStart;
+    const tripEnd = allSetupStops.map(stop => stop.endDate).filter(Boolean).sort().at(-1) || primaryEnd;
+
     state = {
       trip: {
         name: $("tripName").value.trim(),
         destination,
-        startDate: start,
-        endDate: end,
+        startDate: tripStart,
+        endDate: tripEnd,
         budget: num($("budget").value),
         homeCurrency: $("homeCurrency").value,
         tripCurrency: $("tripCurrency").value,
@@ -1349,7 +1353,7 @@
         makePerson(ownerName),
         ...(window.TripSpendV5?.setupPeople?.() || []).map(person => makePerson(person.name))
       ],
-      stops: [primaryStop, ...setupExtraStops],
+      stops: allSetupStops,
       plans: []
     };
 
@@ -1852,7 +1856,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=5.4.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.5.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

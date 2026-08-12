@@ -73,9 +73,9 @@
 
       const body = document.createElement("div");
       const strong = document.createElement("strong");
-      strong.textContent = stop.country;
+      strong.textContent = `Country ${index + 2}: ${stop.country}`;
       const small = document.createElement("small");
-      small.textContent = `${core.fmtDate(stop.startDate)} – ${core.fmtDate(stop.endDate)} • ${stop.currency}`;
+      small.textContent = `${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)} • ${stop.currency}`;
       body.append(strong, small);
 
       const remove = document.createElement("button");
@@ -92,15 +92,34 @@
     });
 
     const toggle = $("setupToggleCountries");
-    if (toggle) toggle.textContent = setupDraftStops.length ? "＋ Add another" : "＋ Add another country";
+    if (toggle) toggle.textContent = "＋ Add another country";
+
+    const hint = $("setupTripDatesHint");
+    if (hint) {
+      const primaryStart = $("startDate")?.value;
+      const primaryEnd = $("endDate")?.value;
+      const all = [
+        ...(primaryStart && primaryEnd ? [{ startDate: primaryStart, endDate: primaryEnd }] : []),
+        ...setupDraftStops
+      ];
+      if (all.length) {
+        const starts = all.map(x => x.startDate).filter(Boolean).sort();
+        const ends = all.map(x => x.endDate).filter(Boolean).sort();
+        hint.textContent = starts.length && ends.length
+          ? `Overall trip: ${core.fmtDateWithYear(starts[0])} – ${core.fmtDateWithYear(ends.at(-1))}`
+          : "Trip dates will follow your country dates automatically.";
+      } else {
+        hint.textContent = "Trip dates will follow your country dates automatically.";
+      }
+    }
   }
 
   function setSetupExtraDefaults() {
     const lastEnd = setupDraftStops.at(-1)?.endDate || $("endDate")?.value || $("startDate")?.value || core.today();
-    const start = daysAfter(lastEnd, setupDraftStops.length ? 1 : 0);
-    const tripEnd = $("endDate")?.value || start;
+    const start = daysAfter(lastEnd, 1);
+    const end = daysAfter(start, 2);
     $("setupExtraStart").value = start;
-    $("setupExtraEnd").value = tripEnd >= start ? tripEnd : start;
+    $("setupExtraEnd").value = end;
     $("setupExtraStart").dispatchEvent(new Event("input", { bubbles: true }));
     $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
   }
@@ -114,7 +133,7 @@
     if (!core.validDates(startDate, endDate)) return core.toast("Country end date must be after its start date");
 
     if (setupDraftStops.some(s => s.country === country && s.startDate === startDate)) {
-      return core.toast("That country is already in your route");
+      return core.toast("That country is already added");
     }
 
     setupDraftStops.push({
@@ -131,7 +150,7 @@
     core.setDestinationValue("setupExtraCountry", "");
     renderSetupRoute();
     setSetupExtraDefaults();
-    core.toast(`${country} added to route`);
+    core.toast(`${country} added`);
   }
 
   function setupStops() {
@@ -750,8 +769,11 @@
     addSetupTraveler();
   });
 
-  // Optional multi-country route during initial trip setup.
+  // Optional additional countries during initial trip setup.
   core.opts($("setupExtraCurrency"), core.CURS, "USD");
+
+  $("startDate")?.addEventListener("change", renderSetupRoute);
+  $("endDate")?.addEventListener("change", renderSetupRoute);
   core.initDestinationAutocomplete("setupExtraCountry", "setupExtraCountryOptions", "");
 
   bindDateDisplay("setupExtraStart", "setupExtraStartDisplay", true);
@@ -768,6 +790,11 @@
       setSetupExtraDefaults();
       setTimeout(() => $("setupExtraCountry")?.focus(), 80);
     }
+  });
+
+  $("destination")?.addEventListener("change", () => {
+    const exact = core.DESTS.find(c => c.toLowerCase() === $("destination").value.trim().toLowerCase());
+    if (exact && $("tripCurrency")) $("tripCurrency").value = setupRouteCurrency(exact);
   });
 
   $("setupExtraCountry")?.addEventListener("change", () => {
@@ -791,6 +818,17 @@
   $("dashboardTravelerForm")?.addEventListener("submit", e => {
     e.preventDefault();
     addDashboardTraveler($("dashboardTravelerName")?.value);
+  });
+
+
+  $("setupCancelCountry")?.addEventListener("click", () => {
+    $("setupMultiCountryPanel")?.classList.add("hidden");
+    core.setDestinationValue("setupExtraCountry", "");
+  });
+
+  $("setupCancelTraveler")?.addEventListener("click", () => {
+    $("setupTravelersPanel")?.classList.add("hidden");
+    if ($("setupTravelerName")) $("setupTravelerName").value = "";
   });
 
   // Planner navigation

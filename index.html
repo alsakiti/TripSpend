@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=5.4.0">
-  <link rel="icon" href="icons/icon-192.png?v=5.4.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.4.0">
-  <link rel="stylesheet" href="style.css?v=5.4.0">
+  <link rel="manifest" href="manifest.webmanifest?v=5.5.0">
+  <link rel="icon" href="icons/icon-192.png?v=5.5.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=5.5.0">
+  <link rel="stylesheet" href="style.css?v=5.5.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.4</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v5.5</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,34 +35,67 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=5.4.0" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v5.4</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=5.5.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v5.5</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
       </div>
       <form id="setupForm" class="card form setup-form">
-        <label>Trip name<input id="tripName" required maxlength="60" placeholder="Enter trip name"></label>
-        <label>Destination
-          <div class="country-combobox">
-            <input id="destination" type="text" required autocomplete="off" spellcheck="false"
-                   role="combobox" aria-autocomplete="list" aria-expanded="false"
-                   aria-controls="destinationOptions" placeholder="Search for a country…">
-            <div id="destinationOptions" class="country-options hidden" role="listbox"></div>
-          </div>
-          <small class="field-hint">Start typing, then choose a country.</small>
+        <label>Trip name
+          <input id="tripName" required maxlength="60" placeholder="Enter trip name">
         </label>
-        <div class="setup-route-box">
-          <div class="setup-route-head">
+
+        <section class="setup-simple-section">
+          <div class="setup-simple-heading">
             <div>
-              <strong>Visiting more than one country?</strong>
-              <span>Build the route now, or add countries later.</span>
+              <strong>Countries</strong>
+              <span>Add the countries you will visit and the dates for each one.</span>
             </div>
-            <button id="setupToggleCountries" class="secondary setup-add-country-btn" type="button">＋ Add another country</button>
           </div>
 
-          <div id="setupMultiCountryPanel" class="setup-multi-country-panel hidden">
-            <label>Next country
+          <div class="setup-primary-country">
+            <div class="setup-country-number">1</div>
+            <div class="setup-country-content">
+              <label>Country
+                <div class="country-combobox">
+                  <input id="destination" type="text" required autocomplete="off" spellcheck="false"
+                         role="combobox" aria-autocomplete="list" aria-expanded="false"
+                         aria-controls="destinationOptions" placeholder="Search for a country…">
+                  <div id="destinationOptions" class="country-options hidden" role="listbox"></div>
+                </div>
+              </label>
+
+              <div class="grid2 date-grid primary-country-dates">
+                <label class="date-field-label"><span>From</span>
+                  <div class="date-picker-card">
+                    <span id="startDateDisplay" class="date-display">Select date</span>
+                    <span class="date-calendar" aria-hidden="true">▣</span>
+                    <input id="startDate" class="native-date-input" type="date" required aria-label="First country start date">
+                  </div>
+                </label>
+                <label class="date-field-label"><span>To</span>
+                  <div class="date-picker-card">
+                    <span id="endDateDisplay" class="date-display">Select date</span>
+                    <span class="date-calendar" aria-hidden="true">▣</span>
+                    <input id="endDate" class="native-date-input" type="date" required aria-label="First country end date">
+                  </div>
+                </label>
+              </div>
+
+              <label>Local currency
+                <select id="tripCurrency"></select>
+              </label>
+            </div>
+          </div>
+
+          <div id="setupRouteList" class="setup-route-list setup-country-list"></div>
+
+          <button id="setupToggleCountries" class="secondary setup-simple-add" type="button">＋ Add another country</button>
+
+          <div id="setupMultiCountryPanel" class="setup-add-panel hidden">
+            <div class="setup-add-panel-title">Add another country</div>
+            <label>Country
               <div class="country-combobox">
                 <input id="setupExtraCountry" type="text" autocomplete="off" spellcheck="false"
                        role="combobox" aria-autocomplete="list" aria-expanded="false"
@@ -76,65 +109,68 @@
                 <div class="date-picker-card">
                   <span id="setupExtraStartDisplay" class="date-display">Select date</span>
                   <span class="date-calendar" aria-hidden="true">▣</span>
-                  <input id="setupExtraStart" class="native-date-input" type="date" aria-label="Next country start date">
+                  <input id="setupExtraStart" class="native-date-input" type="date" aria-label="Additional country start date">
                 </div>
               </label>
               <label class="date-field-label"><span>To</span>
                 <div class="date-picker-card">
                   <span id="setupExtraEndDisplay" class="date-display">Select date</span>
                   <span class="date-calendar" aria-hidden="true">▣</span>
-                  <input id="setupExtraEnd" class="native-date-input" type="date" aria-label="Next country end date">
+                  <input id="setupExtraEnd" class="native-date-input" type="date" aria-label="Additional country end date">
                 </div>
               </label>
             </div>
 
-            <label>Local currency<select id="setupExtraCurrency"></select></label>
-            <button id="setupAddCountry" class="secondary" type="button">Add to route</button>
+            <label>Local currency
+              <select id="setupExtraCurrency"></select>
+            </label>
+
+            <div class="setup-panel-actions">
+              <button id="setupCancelCountry" class="secondary" type="button">Cancel</button>
+              <button id="setupAddCountry" class="primary" type="button">Add Country</button>
+            </div>
           </div>
 
-          <div id="setupRouteList" class="setup-route-list"></div>
-        </div>
-        <div class="grid2 date-grid">
-          <label class="date-field-label"><span>Start date</span>
-            <div class="date-picker-card">
-              <span id="startDateDisplay" class="date-display">Select date</span>
-              <span class="date-calendar" aria-hidden="true">▣</span>
-              <input id="startDate" class="native-date-input" type="date" required aria-label="Start date">
-            </div>
-          </label>
-          <label class="date-field-label"><span>End date</span>
-            <div class="date-picker-card">
-              <span id="endDateDisplay" class="date-display">Select date</span>
-              <span class="date-calendar" aria-hidden="true">▣</span>
-              <input id="endDate" class="native-date-input" type="date" required aria-label="End date">
-            </div>
-          </label>
-        </div>
-        <label>Total budget<input id="budget" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="Enter budget"></label>
-        <label>Your name <small>(first traveler)</small><input id="ownerName" maxlength="50" required placeholder="Enter your name"></label>
+          <p id="setupTripDatesHint" class="setup-summary-hint">Trip dates will follow your country dates automatically.</p>
+        </section>
 
-        <div class="setup-travelers-box">
-          <div class="setup-travelers-head">
+        <label>Total trip budget
+          <input id="budget" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="Enter budget">
+        </label>
+
+        <section class="setup-simple-section">
+          <div class="setup-simple-heading">
             <div>
-              <strong>Traveling with others?</strong>
-              <span>Add everyone now, or add more travelers later.</span>
+              <strong>Travelers</strong>
+              <span>Add the people whose spending you want to track.</span>
             </div>
-            <button id="setupToggleTravelers" class="secondary setup-add-traveler-btn" type="button">＋ Add traveler</button>
           </div>
 
-          <div id="setupTravelersPanel" class="setup-travelers-panel hidden">
+          <label>Your name <small>(first traveler)</small>
+            <input id="ownerName" maxlength="50" required placeholder="Enter your name">
+          </label>
+
+          <div id="setupTravelerList" class="setup-traveler-list setup-people-list"></div>
+
+          <button id="setupToggleTravelers" class="secondary setup-simple-add" type="button">＋ Add traveler</button>
+
+          <div id="setupTravelersPanel" class="setup-add-panel hidden">
+            <div class="setup-add-panel-title">Add traveler</div>
             <label>Traveler name
               <input id="setupTravelerName" type="text" maxlength="50" autocomplete="off" placeholder="Enter traveler name">
             </label>
-            <button id="setupAddTraveler" class="secondary" type="button">Add Traveler</button>
+            <div class="setup-panel-actions">
+              <button id="setupCancelTraveler" class="secondary" type="button">Cancel</button>
+              <button id="setupAddTraveler" class="primary" type="button">Add Traveler</button>
+            </div>
           </div>
+        </section>
 
-          <div id="setupTravelerList" class="setup-traveler-list"></div>
-        </div>
-        <div class="grid2">
-          <label>Home currency<select id="homeCurrency"></select></label>
-          <label>Trip currency<select id="tripCurrency"></select></label>
-        </div>
+        <label>Home currency
+          <select id="homeCurrency"></select>
+          <small class="field-hint">Your total budget and reports use this currency.</small>
+        </label>
+
         <button class="primary" type="submit">Create Trip</button>
       </form>
     </section>
@@ -577,8 +613,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=5.4.0"></script>
-<script src="fx.js?v=5.4.0"></script>
-<script src="v5.js?v=5.4.0"></script>
+<script src="app.js?v=5.5.0"></script>
+<script src="fx.js?v=5.5.0"></script>
+<script src="v5.js?v=5.5.0"></script>
 </body>
 </html>
