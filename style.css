@@ -4848,3 +4848,185 @@ html[data-theme="dark"] .analytics-main-card{
     font-size:11px!important;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.6 — Receipts, smarter budget, reports,
+   large-trip performance
+   ========================================================= */
+
+.smart-budget-reserve{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:11px;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.13);
+}
+.smart-budget-reserve span{
+  min-width:0;
+}
+.smart-budget-reserve small,
+.smart-budget-reserve strong{
+  display:block;
+}
+.smart-budget-reserve small{
+  color:#94a3b8;
+  font-size:9px;
+}
+.smart-budget-reserve strong{
+  margin-top:3px;
+  overflow:hidden;
+  font-size:12px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.smart-budget-reserve strong.negative{
+  color:#fecaca;
+}
+
+/* Receipt attachment */
+.receipt-field{
+  margin:3px 0 10px;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+}
+.receipt-field-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.receipt-field-head strong,
+.receipt-field-head small{
+  display:block;
+}
+.receipt-field-head strong{
+  font-size:12px;
+}
+.receipt-field-head small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:9px;
+}
+.receipt-add-btn{
+  flex:0 0 auto;
+  width:auto!important;
+  min-height:36px!important;
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  padding:0 10px!important;
+  font-size:10px!important;
+  cursor:pointer;
+}
+.receipt-add-btn input{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  opacity:0!important;
+  pointer-events:none;
+}
+.receipt-preview{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  margin-top:9px;
+  padding:8px;
+  border-radius:10px;
+  background:var(--surface2);
+}
+.receipt-preview img{
+  width:54px;
+  height:54px;
+  object-fit:cover;
+  border-radius:9px;
+}
+.receipt-preview strong,
+.receipt-preview small{
+  display:block;
+}
+.receipt-preview strong{
+  font-size:10px;
+}
+.receipt-preview small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8px;
+}
+.expense-receipt-badge{
+  display:inline-flex;
+  width:max-content;
+  margin-top:4px;
+  padding:3px 6px;
+  border-radius:999px;
+  background:var(--brand-soft);
+  color:var(--brand);
+  font-size:8px;
+  font-weight:800;
+}
+
+/* Large expense histories render in chunks. */
+.expense-load-more{
+  display:flex;
+  justify-content:center;
+  margin:9px 0 4px;
+}
+.expense-load-more-btn{
+  width:auto!important;
+  min-height:40px!important;
+  padding:0 14px!important;
+  font-size:11px!important;
+}
+
+/* Trip reports */
+.finish-report-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-bottom:8px;
+}
+.finish-report-actions button{
+  min-height:42px!important;
+  font-size:11px!important;
+}
+.trip-history-actions-v66{
+  grid-template-columns:1fr 1fr 1fr!important;
+}
+.trip-history-card-actions{
+  flex-wrap:wrap;
+}
+
+/* Keep Repeat quick and visually recognizable. */
+.expense-actions .mini:first-child{
+  color:var(--brand);
+  background:var(--brand-soft);
+}
+
+@media(max-width:600px){
+  .smart-budget-reserve small{
+    font-size:8px;
+  }
+  .smart-budget-reserve strong{
+    font-size:11px;
+  }
+  .receipt-field-head{
+    align-items:flex-start;
+  }
+  .receipt-preview{
+    grid-template-columns:48px minmax(0,1fr) auto;
+  }
+  .receipt-preview img{
+    width:48px;
+    height:48px;
+  }
+  .trip-history-actions-v66{
+    grid-template-columns:1fr 1fr!important;
+  }
+  .trip-history-actions-v66 #startNewTripBtn{
+    grid-column:1 / -1;
+  }
+}

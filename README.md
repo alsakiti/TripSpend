@@ -628,3 +628,59 @@ What changed:
 - Improved readability on iPhone
 
 No feature logic was changed in this release.
+
+
+## v6.6 — Receipts, Smart Budget, Reports & Performance
+
+### Receipt photos
+- Add/Edit Expense → More options → **Add receipt**
+- iPhone can open the camera directly or choose an existing image.
+- Images are resized/compressed before storage.
+- Receipt images are stored in a separate IndexedDB `receipts` store so normal expense state and automatic snapshots stay lightweight.
+- Expenses with a receipt show a **Receipt** badge.
+- Editing an expense shows the existing receipt.
+- Repeating an expense intentionally does **not** copy the old receipt.
+- Deleting an expense also deletes its stored receipt image.
+
+### Smarter daily budget
+Home now reserves upcoming planned costs before calculating Safe Today:
+- Remaining trip budget
+- Reserved for plans
+- Available after plans
+- Safe to spend today
+
+Safe Today is based on **Available after plans**, not just raw remaining budget.
+
+### Repeat Expense
+- Existing one-tap Repeat is retained and highlighted.
+- Repeat continues to prefill amount, category, payment, country, payer and other smart defaults.
+- Receipts are excluded from repeats because each transaction should have its own receipt.
+
+### Trip report
+Trips & History now has **Trip Report**.
+Finish Trip also has:
+- **Share Report** → creates a polished PNG report and uses the iPhone Share Sheet when available.
+- **Print / PDF** → opens a print-friendly report that can be printed or saved as PDF.
+
+Reports include:
+- total spent
+- budget / saved or over budget
+- country count
+- expense count
+- Personal vs Shared
+- top categories
+- settlement remaining
+
+Past-trip cards also include **Report**.
+
+### Large-trip performance
+- Analytics calculations for spent/category/daily data are memoized and invalidated only when trip data changes.
+- Expenses renders the first 100 transactions, then **Show 100 more**.
+- Search/filter summaries still use the full matching dataset.
+- Search/filter changes reset back to the first 100.
+- Existing v6.4 lazy page rendering remains active.
+
+### Storage upgrade
+- IndexedDB schema moves from v1 to v2.
+- A dedicated receipt store is created automatically.
+- Existing expenses, trips, history and backups are unchanged.

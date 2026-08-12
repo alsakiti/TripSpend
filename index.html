@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.5.2">
-  <link rel="icon" href="icons/icon-192.png?v=6.5.2">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.5.2">
-  <link rel="stylesheet" href="style.css?v=6.5.2">
+  <link rel="manifest" href="manifest.webmanifest?v=6.6.0">
+  <link rel="icon" href="icons/icon-192.png?v=6.6.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.0">
+  <link rel="stylesheet" href="style.css?v=6.6.0">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,7 +32,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.5.2</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -43,8 +43,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.5.2" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.5.2</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.6.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.6</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -240,6 +240,17 @@
               <span><small>Budget</small><strong id="budgetValue">0 OMR</strong></span>
               <span><small>Spent</small><strong id="spentValue">0 OMR</strong></span>
             </div>
+
+            <div class="smart-budget-reserve">
+              <span>
+                <small>Reserved for plans</small>
+                <strong id="plannedReserveValue">0 OMR</strong>
+              </span>
+              <span>
+                <small>Available after plans</small>
+                <strong id="availableAfterPlansValue">0 OMR</strong>
+              </span>
+            </div>
           </div>
 
           <div class="metrics v6-today-metrics">
@@ -362,6 +373,7 @@
         </div>
         <div id="expenseSummary" class="mini-summary"></div>
         <div id="allList" class="list"></div>
+        <div id="expenseLoadMore" class="expense-load-more"></div>
       </section>
 
       <section id="analytics" class="page analytics-v651">
@@ -718,8 +730,9 @@
           <div id="currentTripHistoryCard"></div>
         </section>
 
-        <div class="trip-history-actions">
+        <div class="trip-history-actions trip-history-actions-v66">
           <button id="finishTripBtn" class="primary" type="button">Finish Trip</button>
+          <button id="currentTripReportBtn" class="secondary" type="button">Trip Report</button>
           <button id="startNewTripBtn" class="secondary" type="button">＋ Start New Trip</button>
         </div>
 
@@ -951,6 +964,11 @@
 
     <p class="finish-trip-help">Finishing moves this trip into Past Trips. You can reopen it later with all expenses and analytics intact.</p>
 
+    <div class="finish-report-actions">
+      <button id="shareTripReportBtn" class="secondary" type="button">↗ Share Report</button>
+      <button id="printTripReportBtn" class="secondary" type="button">▤ Print / PDF</button>
+    </div>
+
     <div class="finish-trip-actions">
       <button id="cancelFinishTrip" class="secondary" type="button">Cancel</button>
       <button id="confirmFinishTrip" class="primary" type="button">Finish & Archive</button>
@@ -1060,6 +1078,28 @@
           <input id="expenseNote" maxlength="120" placeholder="Dinner, taxi, hotel...">
         </label>
 
+        <div class="receipt-field">
+          <div class="receipt-field-head">
+            <div>
+              <strong>Receipt</strong>
+              <small>Optional photo stored locally with this expense.</small>
+            </div>
+            <label class="secondary receipt-add-btn">
+              📷 Add receipt
+              <input id="receiptInput" type="file" accept="image/*" capture="environment">
+            </label>
+          </div>
+
+          <div id="receiptPreview" class="receipt-preview hidden">
+            <img id="receiptPreviewImage" alt="Receipt preview">
+            <div>
+              <strong id="receiptPreviewName">Receipt attached</strong>
+              <small id="receiptPreviewSize">Saved locally</small>
+            </div>
+            <button id="removeReceiptBtn" class="mini-btn delete" type="button">Remove</button>
+          </div>
+        </div>
+
         <div id="rateDetailsBlock" class="smart-rate-details">
           <label id="rateWrap">Exchange rate
             <input id="exchangeRate" type="number" min="0.000001" step="0.000001" inputmode="decimal">
@@ -1078,8 +1118,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.5.2"></script>
-<script src="fx.js?v=6.5.2"></script>
-<script src="v5.js?v=6.5.2"></script>
+<script src="app.js?v=6.6.0"></script>
+<script src="fx.js?v=6.6.0"></script>
+<script src="v5.js?v=6.6.0"></script>
 </body>
 </html>

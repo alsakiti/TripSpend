@@ -1,13 +1,14 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.5.2";
+  const APP_VERSION = "6.6.0";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   const DB_STATE_STORE = "state";
   const DB_BACKUP_STORE = "backups";
   const DB_META_STORE = "meta";
+  const DB_RECEIPT_STORE = "receipts";
   const STORAGE_SAVE_DELAY = 140;
   const MAX_DAILY_BACKUPS = 7;
 
@@ -19,6 +20,13 @@
   let lastStorageWriteAt = 0;
   let appStartupMs = 0;
   let lastRenderMs = 0;
+  let expenseRenderLimit = 100;
+  let pendingReceiptBlob = null;
+  let pendingReceiptName = "";
+  let removeExistingReceipt = false;
+  let receiptPreviewURL = "";
+  let analyticsCacheRevision = 0;
+  const analyticsCache = new Map();
 
 
   const KEY = "tripspend.v1";
@@ -121,6 +129,7 @@
     e.paidByPersonId = e.paidByPersonId ? String(e.paidByPersonId) : "";
     e.stopId = e.stopId ? String(e.stopId) : "";
     e.planId = e.planId ? String(e.planId) : "";
+    e.receiptId = e.receiptId ? String(e.receiptId) : "";
     e.expenseType = e.expenseType === "shared" || e.expenseType === "personal"
       ? e.expenseType
       : (e.personShares.length <= 1 ? "personal" : "shared");
@@ -522,7 +531,13 @@
     del.textContent = "Delete";
     del.onclick = () => deleteTripHistoryRecord(record.id);
 
-    actions.append(open, del);
+    const report = document.createElement("button");
+    report.type = "button";
+    report.className = "secondary compact-btn";
+    report.textContent = "Report";
+    report.onclick = () => shareTripReport(data);
+
+    actions.append(open, report, del);
     card.append(head, metrics, actions);
     return card;
   }
@@ -601,6 +616,235 @@
     } else {
       history.forEach(record => historyList.append(renderTripHistoryCard(record)));
     }
+  }
+
+  function reportDataFor(source = snapshotTripData()) {
+    const summary = tripSummaryFor(source);
+    const categories = new Map();
+
+    (source.expenses || []).forEach(expense => {
+      const label = expense.category || "Other";
+      categories.set(label, (categories.get(label) || 0) + num(expense.homeAmount));
+    });
+
+    const topCategories = [...categories.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([label, amount]) => ({ label, amount }));
+
+    let personal = 0;
+    let shared = 0;
+    (source.expenses || []).forEach(expense => {
+      if (inferredExpenseType(expense) === "shared") shared += num(expense.homeAmount);
+      else personal += num(expense.homeAmount);
+    });
+
+    return { source, summary, topCategories, personal, shared };
+  }
+
+  function drawReportRoundedRect(ctx, x, y, width, height, radius) {
+    const r = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + width, y, x + width, y + height, r);
+    ctx.arcTo(x + width, y + height, x, y + height, r);
+    ctx.arcTo(x, y + height, x, y, r);
+    ctx.arcTo(x, y, x + width, y, r);
+    ctx.closePath();
+  }
+
+  async function buildTripReportPNG(source = snapshotTripData()) {
+    const { summary, topCategories, personal, shared } = reportDataFor(source);
+    const trip = source.trip;
+    if (!trip) throw new Error("No trip");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1500;
+    const ctx = canvas.getContext("2d");
+
+    const bg = "#f4f7fb";
+    const ink = "#101828";
+    const muted = "#667085";
+    const blue = "#1677ff";
+    const navy = "#142033";
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = muted;
+    ctx.font = "700 30px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("TRIPSPEND • TRIP REPORT", 80, 90);
+
+    ctx.fillStyle = ink;
+    ctx.font = "800 62px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(trip.name || "Trip", 80, 165);
+
+    ctx.fillStyle = muted;
+    ctx.font = "400 28px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(`${tripFlagsFor(source)}   ${fmtDateWithYear(trip.startDate)} – ${fmtDateWithYear(trip.endDate)}`, 80, 215);
+
+    // Hero card.
+    ctx.fillStyle = navy;
+    drawReportRoundedRect(ctx, 60, 270, 960, 330, 34);
+    ctx.fill();
+
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "700 24px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("TOTAL SPENT", 100, 335);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 74px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(money(summary.spent, trip.homeCurrency), 100, 430);
+
+    ctx.fillStyle = "#cbd5e1";
+    ctx.font = "500 24px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(`Budget  ${money(summary.budget, trip.homeCurrency)}`, 100, 500);
+    ctx.fillText(
+      summary.difference >= 0
+        ? `Saved  ${money(summary.difference, trip.homeCurrency)}`
+        : `Over budget  ${money(Math.abs(summary.difference), trip.homeCurrency)}`,
+      100, 550
+    );
+
+    const metrics = [
+      ["Countries", String(summary.countries || 0)],
+      ["Expenses", String(summary.expenseCount || 0)],
+      ["Personal", money(personal, trip.homeCurrency)],
+      ["Shared", money(shared, trip.homeCurrency)]
+    ];
+
+    let mx = 70, my = 640;
+    metrics.forEach((metric, i) => {
+      const x = mx + (i % 2) * 490;
+      const y = my + Math.floor(i / 2) * 145;
+      ctx.fillStyle = "#ffffff";
+      drawReportRoundedRect(ctx, x, y, 450, 120, 24);
+      ctx.fill();
+
+      ctx.fillStyle = muted;
+      ctx.font = "600 22px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(metric[0], x + 30, y + 42);
+
+      ctx.fillStyle = ink;
+      ctx.font = "800 34px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(metric[1], x + 30, y + 86);
+    });
+
+    ctx.fillStyle = ink;
+    ctx.font = "800 38px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText("Where your money went", 80, 970);
+
+    const maxCategory = Math.max(1, ...topCategories.map(item => item.amount));
+    let cy = 1025;
+    topCategories.forEach(item => {
+      ctx.fillStyle = ink;
+      ctx.font = "700 28px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillText(`${icon(item.label)} ${item.label}`, 80, cy);
+
+      ctx.textAlign = "right";
+      ctx.fillText(money(item.amount, trip.homeCurrency), 1000, cy);
+      ctx.textAlign = "left";
+
+      ctx.fillStyle = "#e2e8f0";
+      drawReportRoundedRect(ctx, 80, cy + 18, 920, 14, 7);
+      ctx.fill();
+
+      ctx.fillStyle = blue;
+      drawReportRoundedRect(ctx, 80, cy + 18, 920 * (item.amount / maxCategory), 14, 7);
+      ctx.fill();
+
+      cy += 90;
+    });
+
+    ctx.fillStyle = muted;
+    ctx.font = "500 23px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(
+      summary.settlementOutstanding > 0
+        ? `Settlement remaining: ${money(summary.settlementOutstanding, trip.homeCurrency)}`
+        : "Everyone is settled ✓",
+      80, 1430
+    );
+
+    ctx.textAlign = "right";
+    ctx.fillText("Made with TripSpend", 1000, 1430);
+    ctx.textAlign = "left";
+
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Could not create report")), "image/png");
+    });
+  }
+
+  async function shareTripReport(source = snapshotTripData()) {
+    try {
+      const blob = await buildTripReportPNG(source);
+      const safeName = (source.trip?.name || "Trip")
+        .replace(/[^a-z0-9]+/gi, "-")
+        .replace(/^-|-$/g, "") || "Trip";
+      const file = new File([blob], `${safeName}-TripSpend-report.png`, { type: "image/png" });
+
+      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+        await navigator.share({
+          title: `${source.trip?.name || "Trip"} • TripSpend`,
+          text: "Trip spending report from TripSpend",
+          files: [file]
+        });
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast("Trip report saved as image");
+    } catch (error) {
+      if (error?.name !== "AbortError") toast("Could not create trip report");
+    }
+  }
+
+  function printTripReport(source = snapshotTripData()) {
+    const { summary, topCategories, personal, shared } = reportDataFor(source);
+    const trip = source.trip;
+    if (!trip) return;
+
+    const rows = topCategories.map(item =>
+      `<tr><td>${icon(item.label)} ${item.label}</td><td>${money(item.amount, trip.homeCurrency)}</td></tr>`
+    ).join("");
+
+    const popup = window.open("", "_blank");
+    if (!popup) return toast("Allow pop-ups to print the report");
+
+    popup.document.write(`<!doctype html>
+<html><head><meta charset="utf-8"><title>${trip.name} • TripSpend Report</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:40px;color:#101828}
+h1{font-size:34px;margin:8px 0}.muted{color:#667085}
+.hero{background:#142033;color:white;border-radius:18px;padding:24px;margin:24px 0}
+.hero strong{font-size:38px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{background:#f2f5f8;border-radius:12px;padding:14px}.card small{color:#667085;display:block}
+table{width:100%;border-collapse:collapse;margin-top:12px}td{padding:10px 0;border-bottom:1px solid #e8ecf1}
+td:last-child{text-align:right;font-weight:700}
+@media print{body{margin:20mm}.no-print{display:none}}
+</style></head><body>
+<div class="muted">TRIPSPEND • TRIP REPORT</div>
+<h1>${tripFlagsFor(source)} ${trip.name}</h1>
+<div class="muted">${fmtDateWithYear(trip.startDate)} – ${fmtDateWithYear(trip.endDate)}</div>
+<div class="hero"><small>TOTAL SPENT</small><br><strong>${money(summary.spent, trip.homeCurrency)}</strong><br>
+Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0 ? `Saved ${money(summary.difference, trip.homeCurrency)}` : `Over ${money(Math.abs(summary.difference), trip.homeCurrency)}`}</div>
+<div class="grid">
+<div class="card"><small>Countries</small><strong>${summary.countries}</strong></div>
+<div class="card"><small>Expenses</small><strong>${summary.expenseCount}</strong></div>
+<div class="card"><small>Personal</small><strong>${money(personal, trip.homeCurrency)}</strong></div>
+<div class="card"><small>Shared</small><strong>${money(shared, trip.homeCurrency)}</strong></div>
+</div>
+<h2>Where your money went</h2><table>${rows}</table>
+<p><strong>${summary.settlementOutstanding > 0 ? `Settlement remaining: ${money(summary.settlementOutstanding, trip.homeCurrency)}` : "Everyone is settled ✓"}</strong></p>
+<button class="no-print" onclick="window.print()">Print / Save as PDF</button>
+</body></html>`);
+    popup.document.close();
+    popup.focus();
   }
 
   function showFinishTripSummary() {
@@ -707,6 +951,10 @@
         if (!db.objectStoreNames.contains(DB_META_STORE)) {
           db.createObjectStore(DB_META_STORE, { keyPath: "key" });
         }
+
+        if (!db.objectStoreNames.contains(DB_RECEIPT_STORE)) {
+          db.createObjectStore(DB_RECEIPT_STORE, { keyPath: "id" });
+        }
       };
 
       request.onsuccess = () => resolve(request.result);
@@ -728,6 +976,113 @@
       tx.onerror = () => reject(tx.error || new Error("Storage transaction failed"));
       tx.onabort = () => reject(tx.error || new Error("Storage transaction aborted"));
     });
+  }
+
+  async function idbPutReceipt(record) {
+    if (!storageDB || storageMode !== "indexeddb") return false;
+    const tx = storageDB.transaction(DB_RECEIPT_STORE, "readwrite");
+    tx.objectStore(DB_RECEIPT_STORE).put(record);
+    await txComplete(tx);
+    return true;
+  }
+
+  async function idbGetReceipt(id) {
+    if (!id || !storageDB || storageMode !== "indexeddb") return null;
+    const tx = storageDB.transaction(DB_RECEIPT_STORE, "readonly");
+    const result = await idbRequest(tx.objectStore(DB_RECEIPT_STORE).get(id));
+    await txComplete(tx);
+    return result || null;
+  }
+
+  async function idbDeleteReceipt(id) {
+    if (!id || !storageDB || storageMode !== "indexeddb") return;
+    const tx = storageDB.transaction(DB_RECEIPT_STORE, "readwrite");
+    tx.objectStore(DB_RECEIPT_STORE).delete(id);
+    await txComplete(tx);
+  }
+
+  function humanBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
+    return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  async function compressReceiptImage(file) {
+    if (!file || !file.type?.startsWith("image/")) throw new Error("Choose an image");
+
+    const maxBytes = 10 * 1024 * 1024;
+    if (file.size > maxBytes) throw new Error("Receipt image is too large");
+
+    const url = URL.createObjectURL(file);
+
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
+      });
+
+      const maxDimension = 1600;
+      const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+      const width = Math.max(1, Math.round(image.naturalWidth * scale));
+      const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d", { alpha: false });
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(image, 0, 0, width, height);
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.82));
+      return blob || file;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function clearReceiptPreviewURL() {
+    if (receiptPreviewURL) {
+      URL.revokeObjectURL(receiptPreviewURL);
+      receiptPreviewURL = "";
+    }
+  }
+
+  function showReceiptPreview(blob, name = "Receipt attached") {
+    const preview = $("receiptPreview");
+    const image = $("receiptPreviewImage");
+    if (!preview || !image || !blob) return;
+
+    clearReceiptPreviewURL();
+    receiptPreviewURL = URL.createObjectURL(blob);
+    image.src = receiptPreviewURL;
+    $("receiptPreviewName").textContent = name || "Receipt attached";
+    $("receiptPreviewSize").textContent = `${humanBytes(blob.size)} • stored locally`;
+    preview.classList.remove("hidden");
+  }
+
+  function clearReceiptEditor() {
+    pendingReceiptBlob = null;
+    pendingReceiptName = "";
+    removeExistingReceipt = false;
+    clearReceiptPreviewURL();
+
+    if ($("receiptInput")) $("receiptInput").value = "";
+    if ($("receiptPreview")) $("receiptPreview").classList.add("hidden");
+    if ($("receiptPreviewImage")) $("receiptPreviewImage").removeAttribute("src");
+  }
+
+  async function loadExpenseReceipt(expense) {
+    clearReceiptEditor();
+    if (!expense?.receiptId) return;
+
+    try {
+      const record = await idbGetReceipt(expense.receiptId);
+      if (record?.blob) showReceiptPreview(record.blob, record.name || "Receipt attached");
+    } catch {}
   }
 
   async function idbReadState() {
@@ -829,6 +1184,7 @@
   }
 
   async function persistStateImmediately(snapshot = state, { maintainBackups = true } = {}) {
+    invalidateAnalyticsCache();
     const cleanSnapshot = safeClone(snapshot);
 
     if (storageMode !== "indexeddb" || !storageDB) {
@@ -889,6 +1245,7 @@
   }
 
   function save(options = {}) {
+    invalidateAnalyticsCache();
     const immediate = !!options.immediate;
     pendingStorageSnapshot = safeClone(state);
 
@@ -1382,8 +1739,23 @@
     return personById(id)?.name || "Former traveler";
   }
 
+  function invalidateAnalyticsCache() {
+    analyticsCacheRevision += 1;
+    analyticsCache.clear();
+  }
+
+  function cachedAnalytics(key, calculate) {
+    const cacheKey = `${analyticsCacheRevision}:${key}`;
+    if (analyticsCache.has(cacheKey)) return analyticsCache.get(cacheKey);
+    const value = calculate();
+    analyticsCache.set(cacheKey, value);
+    return value;
+  }
+
   function spent() {
-    return state.expenses.reduce((sum, e) => sum + num(e.homeAmount), 0);
+    return cachedAnalytics("spent", () =>
+      state.expenses.reduce((sum, e) => sum + num(e.homeAmount), 0)
+    );
   }
 
   function totalTripDays() {
@@ -1435,18 +1807,22 @@
   }
 
   function aggregate(field) {
-    const map = new Map();
-    state.expenses.forEach(e => {
-      const key = e[field] || "Other";
-      map.set(key, (map.get(key) || 0) + num(e.homeAmount));
+    return cachedAnalytics(`aggregate:${field}`, () => {
+      const map = new Map();
+      state.expenses.forEach(e => {
+        const key = e[field] || "Other";
+        map.set(key, (map.get(key) || 0) + num(e.homeAmount));
+      });
+      return [...map].map(([label, amount]) => ({ label, amount })).sort((a, b) => b.amount - a.amount);
     });
-    return [...map].map(([label, amount]) => ({ label, amount })).sort((a, b) => b.amount - a.amount);
   }
 
   function dailyRows() {
-    const map = new Map();
-    state.expenses.forEach(e => map.set(e.date, (map.get(e.date) || 0) + num(e.homeAmount)));
-    return [...map].map(([date, amount]) => ({ date, amount })).sort((a, b) => a.date.localeCompare(b.date));
+    return cachedAnalytics("dailyRows", () => {
+      const map = new Map();
+      state.expenses.forEach(e => map.set(e.date, (map.get(e.date) || 0) + num(e.homeAmount)));
+      return [...map].map(([date, amount]) => ({ date, amount })).sort((a, b) => a.date.localeCompare(b.date));
+    });
   }
 
   function personRows(includeZero = true) {
@@ -1852,6 +2228,13 @@
       sub.textContent = `${stopText}${expense.category} • ${fmtDateLong(expense.date)} • ${payerText} • For ${expenseAssignmentText(expense)}`;
       main.append(title, sub);
 
+      if (expense.receiptId) {
+        const receiptBadge = document.createElement("span");
+        receiptBadge.className = "expense-receipt-badge";
+        receiptBadge.textContent = "📎 Receipt";
+        main.append(receiptBadge);
+      }
+
       const side = document.createElement("div");
       side.className = "expense-side";
       const amount = document.createElement("strong");
@@ -1871,7 +2254,7 @@
         const repeat = document.createElement("button");
         repeat.className = "mini";
         repeat.type = "button";
-        repeat.textContent = "Repeat";
+        repeat.textContent = "↻ Repeat";
         repeat.onclick = () => openModal("", expense);
 
         const edit = document.createElement("button");
@@ -2099,12 +2482,36 @@
     renderPersonFilter();
     renderCountryFilter();
     renderExpenseFilterUI();
+
     const filtered = filteredExpenses();
-    renderExpenseList($("allList"), filtered, true);
+    const visible = filtered.slice(0, expenseRenderLimit);
+    renderExpenseList($("allList"), visible, true);
+
+    const loadHost = $("expenseLoadMore");
+    if (loadHost) {
+      loadHost.replaceChildren();
+
+      if (visible.length < filtered.length) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "secondary expense-load-more-btn";
+        button.textContent = `Show 100 more • ${filtered.length - visible.length} remaining`;
+        button.onclick = () => {
+          expenseRenderLimit += 100;
+          renderExpenseViews();
+        };
+        loadHost.append(button);
+      }
+    }
 
     const summaryTotal = filteredTotal(filtered);
     const suffix = $("filterPerson").value && $("filterPerson").value !== "__unassigned__" ? " assigned share" : "";
-    $("expenseSummary").textContent = `${filtered.length} expense${filtered.length === 1 ? "" : "s"} • ${money(summaryTotal, state.trip.homeCurrency)}${suffix}`;
+    const shownText = filtered.length > visible.length ? ` • showing ${visible.length}` : "";
+    $("expenseSummary").textContent = `${filtered.length} expense${filtered.length === 1 ? "" : "s"}${shownText} • ${money(summaryTotal, state.trip.homeCurrency)}${suffix}`;
+  }
+
+  function resetExpenseRenderLimit() {
+    expenseRenderLimit = 100;
   }
 
 
@@ -2235,7 +2642,22 @@
     $("progressBar").classList.toggle("budget-over", rawBudgetPct > 100);
     $("budgetValue").textContent = money(t.budget, t.homeCurrency);
     $("spentValue").textContent = money(s, t.homeCurrency);
-    $("safeToday").textContent = money(daysLeft > 0 ? Math.max(0, remaining) / daysLeft : 0, t.homeCurrency);
+
+    const plannedReserve = (state.plans || [])
+      .filter(plan => plan.status !== "paid" && !state.expenses.some(expense => expense.planId === plan.id))
+      .reduce((sum, plan) => sum + num(plan.homeAmount), 0);
+    const availableAfterPlans = remaining - plannedReserve;
+    const safeTodayAfterPlans = daysLeft > 0 ? Math.max(0, availableAfterPlans) / daysLeft : 0;
+
+    if ($("plannedReserveValue")) $("plannedReserveValue").textContent = money(plannedReserve, t.homeCurrency);
+    if ($("availableAfterPlansValue")) {
+      $("availableAfterPlansValue").textContent = availableAfterPlans >= 0
+        ? money(availableAfterPlans, t.homeCurrency)
+        : `${money(Math.abs(availableAfterPlans), t.homeCurrency)} short`;
+      $("availableAfterPlansValue").classList.toggle("negative", availableAfterPlans < 0);
+    }
+
+    $("safeToday").textContent = money(safeTodayAfterPlans, t.homeCurrency);
     $("spentToday").textContent = money(todaySpent(), t.homeCurrency);
     $("projectedTotal").textContent = forecast > 0 ? money(forecast, t.homeCurrency) : "—";
     $("daysLeft").textContent = String(daysLeft);
@@ -2333,6 +2755,9 @@
     $("expenseNote").value = source?.note || "";
     $("liveRateStatus").textContent = "";
 
+    // Repeated expenses intentionally do not copy the previous receipt.
+    loadExpenseReceipt(existing || null);
+
     suggestedCategory = "";
     $("categorySuggestion").classList.add("hidden");
     rateUI(true);
@@ -2357,6 +2782,7 @@
     document.body.style.overflow = "";
     $("expenseForm").reset();
     $("editId").value = "";
+    clearReceiptEditor();
   }
 
   function rateUI(autofill = false) {
@@ -2374,6 +2800,10 @@
     } else {
       mem.classList.add("hidden");
     }
+  }
+
+  function coreReceiptId(expenseId) {
+    return `receipt:${state.trip?.id || "trip"}:${expenseId}`;
   }
 
   function preview() {
@@ -2427,10 +2857,13 @@
     $("duplicateWarning").classList.toggle("hidden", !dup);
   }
 
-  function removeExpense(id) {
+  async function removeExpense(id) {
     const expense = state.expenses.find(x => x.id === id);
     if (expense && confirm(`Delete ${expense.note || expense.category}?`)) {
       state.expenses = state.expenses.filter(x => x.id !== id);
+      if (expense.receiptId) {
+        try { await idbDeleteReceipt(expense.receiptId); } catch {}
+      }
       save();
       render();
       toast("Expense deleted");
@@ -2653,7 +3086,7 @@
     toast("Trip updated");
   };
 
-  $("expenseForm").onsubmit = e => {
+  $("expenseForm").onsubmit = async e => {
     e.preventDefault();
 
     const amount = num($("expenseAmount").value);
@@ -2678,6 +3111,7 @@
       date: $("expenseDate").value,
       note: $("expenseNote").value.trim(),
       personShares: makePersonShares(selection, homeAmount),
+      receiptId: "",
       createdAt: Date.now()
     };
 
@@ -2689,11 +3123,43 @@
     }
 
     const index = state.expenses.findIndex(y => y.id === x.id);
+    const previousExpense = index >= 0 ? state.expenses[index] : null;
+
+    if (previousExpense?.receiptId && !removeExistingReceipt && !pendingReceiptBlob) {
+      x.receiptId = previousExpense.receiptId;
+    }
+
+    if (pendingReceiptBlob) {
+      x.receiptId = previousExpense?.receiptId || coreReceiptId(x.id);
+    }
+
     if (index >= 0) {
       x.createdAt = state.expenses[index].createdAt;
       state.expenses[index] = x;
     } else {
       state.expenses.push(x);
+    }
+
+    try {
+      if (removeExistingReceipt && previousExpense?.receiptId) {
+        await idbDeleteReceipt(previousExpense.receiptId);
+        if (x.receiptId === previousExpense.receiptId && !pendingReceiptBlob) x.receiptId = "";
+      }
+
+      if (pendingReceiptBlob && storageMode === "indexeddb") {
+        await idbPutReceipt({
+          id: x.receiptId,
+          tripId: state.trip.id,
+          expenseId: x.id,
+          name: pendingReceiptName || "Receipt.jpg",
+          type: pendingReceiptBlob.type || "image/jpeg",
+          size: pendingReceiptBlob.size || 0,
+          blob: pendingReceiptBlob,
+          createdAt: Date.now()
+        });
+      }
+    } catch {
+      toast("Expense saved, but receipt could not be stored");
     }
 
     if (currency !== state.trip.homeCurrency) state.rates[rateKey(currency)] = rate;
@@ -2896,9 +3362,42 @@
     }
   };
 
-  $("searchExpense").oninput = renderExpenseViews;
+  $("receiptInput")?.addEventListener("change", async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const blob = await compressReceiptImage(file);
+      pendingReceiptBlob = blob;
+      pendingReceiptName = file.name || "Receipt.jpg";
+      removeExistingReceipt = false;
+      showReceiptPreview(blob, pendingReceiptName);
+      toast("Receipt attached");
+    } catch (error) {
+      event.target.value = "";
+      toast(error?.message || "Could not attach receipt");
+    }
+  });
+
+  $("removeReceiptBtn")?.addEventListener("click", () => {
+    const editing = state.expenses.find(expense => expense.id === $("editId")?.value);
+    removeExistingReceipt = !!editing?.receiptId;
+    pendingReceiptBlob = null;
+    pendingReceiptName = "";
+    clearReceiptPreviewURL();
+    $("receiptPreview")?.classList.add("hidden");
+    if ($("receiptInput")) $("receiptInput").value = "";
+  });
+
+  $("searchExpense").oninput = () => {
+    resetExpenseRenderLimit();
+    renderExpenseViews();
+  };
   ["filterCategory","filterType","filterCountry","filterPayment","filterPerson","filterDateFrom","filterDateTo"].forEach(id => {
-    if ($(id)) $(id).onchange = renderExpenseViews;
+    if ($(id)) $(id).onchange = () => {
+      resetExpenseRenderLimit();
+      renderExpenseViews();
+    };
   });
 
   $("expenseFiltersToggle")?.addEventListener("click", () => {
@@ -2917,6 +3416,9 @@
   $("settingsTrips")?.addEventListener("click", () => page("trips"));
   $("tripsDone")?.addEventListener("click", () => page("settings"));
   $("finishTripBtn")?.addEventListener("click", showFinishTripSummary);
+  $("currentTripReportBtn")?.addEventListener("click", () => shareTripReport(snapshotTripData()));
+  $("shareTripReportBtn")?.addEventListener("click", () => shareTripReport(snapshotTripData()));
+  $("printTripReportBtn")?.addEventListener("click", () => printTripReport(snapshotTripData()));
   $("startNewTripBtn")?.addEventListener("click", startNewTripFlow);
   $("closeFinishTrip")?.addEventListener("click", closeFinishTripSummary);
   $("cancelFinishTrip")?.addEventListener("click", closeFinishTripSummary);
@@ -3226,7 +3728,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.5.2", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
