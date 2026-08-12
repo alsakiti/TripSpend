@@ -474,6 +474,15 @@
     renderPlanStopOptions();
     renderPlannedCosts();
     renderSettlement();
+
+    const countrySummary = $("settingsCountrySummary");
+    if (countrySummary) {
+      const count = stops().length;
+      const names = stops().map(s => s.country).filter(Boolean);
+      countrySummary.textContent = count === 1
+        ? `1 country • ${names[0] || ""}`
+        : `${count} countries • ${names.slice(0, 3).join(" → ")}${count > 3 ? ` → +${count - 3} more` : ""}`;
+    }
   }
 
   window.TripSpendV5 = { prepareExpense, expenseData };
@@ -481,6 +490,13 @@
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));
   $("settingsPlan")?.addEventListener("click", () => core.page("plan"));
+  $("settingsAddCountry")?.addEventListener("click", () => {
+    core.page("plan");
+    setTimeout(() => {
+      $("newStopCountry")?.focus();
+      $("addStopForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+  });
   $("planDone")?.addEventListener("click", () => core.page("dashboard"));
 
   // New country form

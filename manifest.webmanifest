@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v5.0",
+  "name": "TripSpend v5.1",
   "short_name": "TripSpend",
-  "description": "Multi-country offline-first trip spending, planning and group settlement app.",
+  "description": "Multi-country offline-first travel spending, planning and group settlement app.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

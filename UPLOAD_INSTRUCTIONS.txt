@@ -1,22 +1,15 @@
-TripSpend v5.0 update
+TripSpend v5.1 update
 
-1. Extract TripSpend-v5-update.zip.
-2. Upload EVERYTHING inside to the ROOT of your existing TripSpend GitHub repository.
-3. Replace files with the same names.
-4. Commit the changes.
-5. Wait 1–2 minutes for GitHub Pages.
-6. Completely close the TripSpend Home Screen app.
-7. Reopen it while online.
-8. Confirm that the visible badge says v5.0.
+1. Extract TripSpend-v5.1-update.zip.
+2. Upload EVERYTHING inside to the root of the existing TripSpend GitHub repository.
+3. Replace existing files and commit.
+4. Wait 1–2 minutes for GitHub Pages.
+5. Completely close TripSpend and reopen it while online.
+6. Confirm the version badge says v5.1.
 
-New in v5.0:
-- Multiple countries with dates, currency and destination budgets
-- Trip planner with planned/upcoming costs
-- Actual + upcoming = committed trip cost
-- Paid By and Expense For on expenses
-- Multi-person expense splitting
-- Automatic group settlement (who owes whom)
-- Expenses can be assigned to a country
-- Existing v4 data remains compatible
+How to add multiple countries after this update:
+Settings → + Add another country
+or
+Home → Trip plan → Open planner
 
-If the old version appears, open the GitHub Pages URL in Safari, refresh once, then reopen the Home Screen app.
+Then choose the country, dates, local currency and optional country budget, and tap Add Country.

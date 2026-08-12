@@ -146,3 +146,14 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - Existing v4 expenses remain compatible.
 - Historical expenses without a payer remain valid but are excluded from settlement until edited.
 - Offline mode, live currency conversion, traveler tracking, searchable destination fields, backup/export, PWA install, and the TripSpend logo are preserved.
+
+
+## v5.1
+
+- Settings Start/End dates now use the same custom iPhone date-card design as New Trip.
+- Settings date values include the year and stay centered inside the controls.
+- Settings now labels the first country as **Primary destination**.
+- A prominent **+ Add another country** button appears directly below the primary destination.
+- Settings shows how many countries are currently in the trip.
+- **Manage Countries & Plans** is clearer than the old Trip Planner wording.
+- Tapping **+ Add another country** opens the planner directly at the country form.

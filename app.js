@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "5.0.0";
+  const APP_VERSION = "5.1.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -156,6 +156,11 @@
   function fmtDate(s) {
     const d = dlocal(s);
     return d ? new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" }).format(d) : "";
+  }
+
+  function fmtDateWithYear(s) {
+    const d = dlocal(s);
+    return d ? new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric" }).format(d) : "";
   }
 
   function fmtDateLong(s) {
@@ -1211,6 +1216,8 @@
     setDestinationValue("sDestination", t.destination);
     $("sStartDate").value = t.startDate;
     $("sEndDate").value = t.endDate;
+    if ($("sStartDateDisplay")) $("sStartDateDisplay").textContent = fmtDateWithYear(t.startDate);
+    if ($("sEndDateDisplay")) $("sEndDateDisplay").textContent = fmtDateWithYear(t.endDate);
     $("sBudget").value = t.budget;
     opts($("sHomeCurrency"), CURS, t.homeCurrency);
     opts($("sTripCurrency"), CURS, t.tripCurrency);
@@ -1705,6 +1712,20 @@
     };
     display("startDate", "startDateDisplay");
     display("endDate", "endDateDisplay");
+
+    const settingsDisplay = (inputId, displayId) => {
+      const input = $(inputId);
+      const target = $(displayId);
+      if (!input || !target) return;
+      const refresh = () => {
+        target.textContent = input.value ? fmtDateWithYear(input.value) : "Select date";
+      };
+      input.addEventListener("change", refresh);
+      input.addEventListener("input", refresh);
+      refresh();
+    };
+    settingsDisplay("sStartDate", "sStartDateDisplay");
+    settingsDisplay("sEndDate", "sEndDateDisplay");
   }
 
   function initDates() {
@@ -1731,6 +1752,7 @@
     uid,
     money,
     fmtDate,
+    fmtDateWithYear,
     fmtDateLong,
     num,
     today,
@@ -1813,7 +1835,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=5.0.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=5.1.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
