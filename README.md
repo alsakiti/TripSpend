@@ -95,3 +95,17 @@ Destination selection now uses a live autocomplete field on both Trip Setup and 
 - Supported browsers use their native install prompt when available
 - iPhone/iPad shows clear Safari Add to Home Screen instructions instead of a non-working button
 - Service-worker cache bumped to v4.2 so the layout update replaces older cached files
+
+
+## v4.3 update
+
+- Visible **v4.3** badge in the setup screen and beside the TripSpend brand
+- Setup page scaled down substantially for iPhone
+- Smaller logo, title, labels, input fields, margins, and cards
+- Start/End dates use a compact two-column layout on normal iPhones
+- Home/Trip currencies remain side-by-side
+- Stronger iOS date-input width constraints
+- Versioned CSS/JS URLs to prevent stale asset caching
+- `version.json` added for future update detection
+- Service worker now checks navigation/version files from the network when available
+- New versions can surface an **Update now** banner

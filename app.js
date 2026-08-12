@@ -1,6 +1,8 @@
 (() => {
   "use strict";
 
+  const APP_VERSION = "4.3.0";
+
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
   const DESTS = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of the Congo", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe", "Multiple countries / Other"];
@@ -1644,7 +1646,59 @@
   initDates();
   render();
 
+  async function checkAppVersion() {
+    try {
+      const response = await fetch(`./version.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) return;
+      const latest = await response.json();
+      if (!latest?.version || latest.version === APP_VERSION) return;
+
+      const banner = $("updateBanner");
+      const versionText = $("updateVersionText");
+      if (versionText) versionText.textContent = `v${latest.version} is ready`;
+      if (banner) banner.classList.remove("hidden");
+    } catch {
+      // Offline is fine; the installed app continues using the current cached version.
+    }
+  }
+
+  async function forceAppUpdate() {
+    try {
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.update().catch(() => {});
+        }
+      }
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.filter(key => key.startsWith("tripspend-")).map(key => caches.delete(key))
+      );
+    } catch {
+      // Ignore cache-management failures and still reload.
+    }
+    location.reload();
+  }
+
+  $("applyUpdateBtn")?.addEventListener("click", forceAppUpdate);
+
   if ("serviceWorker" in navigator) {
-    addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+    addEventListener("load", async () => {
+      try {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=4.3.0", {
+          updateViaCache: "none"
+        });
+        await reg.update().catch(() => {});
+      } catch {}
+
+      checkAppVersion();
+    });
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      // The new worker is active. A manual or next launch refresh will use it.
+      checkAppVersion();
+    });
+  } else {
+    addEventListener("load", checkAppVersion);
   }
 })();

@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend \u2014 Smart Group Travel Budget",
+  "name": "TripSpend v4.3",
   "short_name": "TripSpend",
-  "description": "Offline-first group travel spending tracker with live exchange rates and per-traveler spending.",
+  "description": "TripSpend v4.3 \u2014 offline-first group travel spending tracker.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

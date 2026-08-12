@@ -1,10 +1,15 @@
-TripSpend v4.2 update
+TripSpend v4.3 update
 
-1. Extract TripSpend-v4.2-update.zip.
-2. Upload every file/folder inside it to the ROOT of your existing TripSpend GitHub repository.
-3. Replace files with the same names.
-4. Commit the changes.
-5. Wait about 1–2 minutes for GitHub Pages.
-6. Open TripSpend and refresh twice if the old cached version appears.
+1. Extract TripSpend-v4.3-update.zip.
+2. Upload EVERYTHING inside it to the ROOT of your existing TripSpend GitHub repository.
+3. Replace the existing files and commit.
+4. Wait about 1–2 minutes for GitHub Pages.
+5. Completely close the TripSpend Home Screen app.
+6. Reopen it while connected to the internet.
+7. You should immediately see "v4.3" under the logo on the New Trip screen.
 
-v4.2 fixes the oversized iPhone setup layout, date-field overflow, and Install App behavior.
+If you do not see v4.3:
+- Open the GitHub Pages URL once in Safari and refresh it.
+- Then close and reopen the Home Screen app.
+
+Future releases after v4.3 include a built-in version check/update banner.
