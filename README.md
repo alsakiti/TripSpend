@@ -352,3 +352,39 @@ No spending, traveler, country, planned-cost, FX, or settlement data was removed
   - New Trip country search suggestions
   - added-country setup cards
 - Country input values remain plain country names internally, so search/editing remains reliable.
+
+
+## v6.1 — Smart Expense Entry
+
+### Automatic country switching
+- TripSpend chooses the active country from the expense date automatically.
+- On a transition date shared by two countries, the country starting that day is selected.
+- Home labels the current country as **AUTO BY DATE**.
+- If TripSpend stays open overnight, or is resumed on a new day, it refreshes the current country automatically.
+- A stale previously-used country can no longer override the date-driven selection for a new expense.
+
+### Faster Add Expense
+A normal expense is now designed around:
+**Amount → Personal/Shared → Save Expense**
+
+TripSpend automatically fills:
+- current country
+- local currency
+- payer
+- personal beneficiary
+- recent payment method
+- recent category
+- date
+- remembered/live exchange rate
+
+The compact **AUTO-FILLED** row shows what TripSpend selected. Tap it or **More options** to change country, payer, beneficiary, category, payment, date, note or exchange rate.
+
+- Editing an existing expense opens the details automatically.
+- If an exchange rate is still required, details open automatically.
+- Shared expenses keep the traveler selection visible because those choices directly affect settlement.
+
+### Simpler Who Owes Whom
+- Final settlement payments are shown first.
+- Example: **Hu → Mohammed — 15.000 OMR**
+- Paid/share accounting is hidden behind **Show calculation details**.
+- Self-paid personal expenses remain excluded from debt while still counting toward trip spending.

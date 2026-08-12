@@ -523,7 +523,11 @@
     const budgetText = $("currentCountryBudgetText");
     const bar = $("currentCountryBudgetBar");
 
-    if (status) status.textContent = beforeTrip ? "FIRST COUNTRY" : afterTrip ? "LAST COUNTRY" : "CURRENT COUNTRY";
+    if (status) status.textContent = beforeTrip
+      ? "FIRST COUNTRY • AUTO BY DATE"
+      : afterTrip
+        ? "LAST COUNTRY • AUTO BY DATE"
+        : "CURRENT COUNTRY • AUTO BY DATE";
     if (name) name.textContent = `${core.countryFlag(stop.country)} ${stop.country}`;
     if (dates) dates.textContent = `${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)}`;
     if (currency) currency.textContent = stop.currency;
@@ -1066,13 +1070,24 @@
           const to = personById(settlement.to)?.name || "Traveler";
 
           const text = document.createElement("div");
+          text.className = "settlement-payment-copy";
+
           const strongFrom = document.createElement("strong");
           strongFrom.textContent = from;
-          const middle = document.createElement("span");
-          middle.textContent = " owes ";
+
+          const arrow = document.createElement("span");
+          arrow.className = "settlement-transfer-arrow";
+          arrow.textContent = "→";
+
           const strongTo = document.createElement("strong");
           strongTo.textContent = to;
-          text.append(strongFrom, middle, strongTo);
+
+          const label = document.createElement("small");
+          label.textContent = `${from} pays ${to}`;
+
+          const names = document.createElement("div");
+          names.append(strongFrom, arrow, strongTo);
+          text.append(names, label);
 
           const amount = document.createElement("strong");
           amount.className = "settlement-payment-amount";
@@ -1232,6 +1247,70 @@
     return [...document.querySelectorAll("#expenseForPeople input[type=checkbox]:checked")].map(x => x.value);
   }
 
+
+  function setSmartExpenseAdvanced(open, { scroll = false } = {}) {
+    const fields = $("expenseAdvancedFields");
+    const button = $("expenseMoreOptions");
+    const arrow = $("expenseMoreOptionsArrow");
+    if (!fields || !button) return;
+
+    fields.classList.toggle("hidden", !open);
+    button.classList.toggle("open", open);
+    button.childNodes[0].nodeValue = open ? "Fewer options " : "More options ";
+    if (arrow) arrow.textContent = open ? "⌃" : "⌄";
+
+    if (open && scroll) {
+      setTimeout(() => fields.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+    }
+  }
+
+  function smartExpenseAdvancedOpen() {
+    return !$("expenseAdvancedFields")?.classList.contains("hidden");
+  }
+
+  function updateSmartExpenseSummary() {
+    const stop = stopById($("expenseStop")?.value) || stopForDate($("expenseDate")?.value);
+    const payer = personById($("expensePaidBy")?.value);
+    const summary = $("expenseAutoSummaryText");
+    if (!summary) return;
+
+    if (currentExpenseType === "personal") {
+      const beneficiary = personById($("personalExpenseFor")?.value);
+      const payerName = payer?.name || "No payer";
+      const beneficiaryName = beneficiary?.name || "Traveler";
+      const debtText = payer && beneficiary && payer.id !== beneficiary.id
+        ? `${beneficiaryName} will owe ${payerName}`
+        : "No group debt";
+      summary.textContent = `${stop ? `${core.countryFlag(stop.country)} ${stop.country}` : "Country"} • ${payerName} paid • for ${beneficiaryName} • ${debtText}`;
+    } else {
+      const ids = selectedExpenseForIds();
+      const names = ids.map(id => personById(id)?.name).filter(Boolean);
+      const peopleText = names.length
+        ? (names.length <= 2 ? names.join(" + ") : `${names.slice(0,2).join(" + ")} +${names.length - 2}`)
+        : "Nobody selected";
+      summary.textContent = `${stop ? `${core.countryFlag(stop.country)} ${stop.country}` : "Country"} • ${payer?.name || "No payer"} paid • shared with ${peopleText}`;
+    }
+  }
+
+  function prepareSmartExpenseUI({ existing = false, isRepeat = false } = {}) {
+    // Editing should expose all details. New and repeated expenses stay fast.
+    setSmartExpenseAdvanced(existing);
+
+    // If a fresh rate could not be loaded, reveal details automatically so the
+    // user immediately sees what is required to save.
+    const currency = $("expenseCurrency")?.value;
+    const rate = Number($("exchangeRate")?.value || 0);
+    if (!existing && currency && currency !== state().trip.homeCurrency && !(rate > 0)) {
+      setSmartExpenseAdvanced(true);
+    }
+
+    updateSmartExpenseSummary();
+  }
+
+  window.TripSpendV61 = {
+    prepareSmartExpenseUI
+  };
+
   async function prepareExpense(source) {
     preparedSource = source || null;
     const prefs = state().preferences || {};
@@ -1254,12 +1333,9 @@
     setExpenseType(inferredType, { preserveSelection: true });
 
     const datedStop = stopForDate($("expenseDate")?.value);
-    const preferredStop = !source && prefs.lastStopId && stopById(prefs.lastStopId)
-      ? stopById(prefs.lastStopId)
-      : null;
     const selectedStop = source?.stopId
       ? stopById(source.stopId)
-      : (datedStop || preferredStop || stops()[0] || null);
+      : (datedStop || stops()[0] || null);
 
     fillExpenseStop(selectedStop?.id || "");
 
@@ -1294,6 +1370,7 @@
     }
 
     updateQuickExpenseContext();
+    updateSmartExpenseSummary();
   }
 
   function updateQuickExpenseContext() {
@@ -1310,6 +1387,7 @@
         : rate > 0 ? "✓ Rate ready" : "↻ Rate needed";
       $("quickRateText").classList.toggle("needs-rate", currency !== state().trip.homeCurrency && !(rate > 0));
     }
+    updateSmartExpenseSummary();
   }
 
   function expenseData(homeAmount) {
@@ -1519,9 +1597,58 @@
 
 
 
+
+  // v6.1 smart expense details.
+  $("expenseMoreOptions")?.addEventListener("click", () => {
+    setSmartExpenseAdvanced(!smartExpenseAdvancedOpen(), { scroll: true });
+  });
+
+  $("expenseAutoSummary")?.addEventListener("click", () => {
+    setSmartExpenseAdvanced(true, { scroll: true });
+  });
+
+  $("personalExpenseFor")?.addEventListener("change", updateSmartExpenseSummary);
+  $("expenseForPeople")?.addEventListener("change", updateSmartExpenseSummary);
+
+  // Simpler settlement: final payments first, accounting details on demand.
+  $("settlementDetailsToggle")?.addEventListener("click", () => {
+    const details = $("settlementDetails");
+    const button = $("settlementDetailsToggle");
+    const arrow = $("settlementDetailsArrow");
+    if (!details || !button) return;
+
+    const open = details.classList.contains("hidden");
+    details.classList.toggle("hidden", !open);
+    button.childNodes[0].nodeValue = open ? "Hide calculation details " : "Show calculation details ";
+    if (arrow) arrow.textContent = open ? "⌃" : "⌄";
+  });
+
+  // If the app stays open across midnight, or resumes on a new day, refresh
+  // the current country automatically.
+  let lastAutomaticCountryDay = core.today();
+  function refreshAutomaticCountryIfNeeded() {
+    const day = core.today();
+    if (day !== lastAutomaticCountryDay) {
+      lastAutomaticCountryDay = day;
+      core.render();
+    }
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshAutomaticCountryIfNeeded();
+  });
+  window.addEventListener("focus", refreshAutomaticCountryIfNeeded);
+  setInterval(refreshAutomaticCountryIfNeeded, 60000);
+
   // Personal vs Shared expense behavior.
-  $("expenseTypePersonal")?.addEventListener("click", () => setExpenseType("personal"));
-  $("expenseTypeShared")?.addEventListener("click", () => setExpenseType("shared"));
+  $("expenseTypePersonal")?.addEventListener("click", () => {
+    setExpenseType("personal");
+    updateSmartExpenseSummary();
+  });
+  $("expenseTypeShared")?.addEventListener("click", () => {
+    setExpenseType("shared");
+    updateSmartExpenseSummary();
+  });
 
   $("expensePaidBy")?.addEventListener("change", () => {
     if (currentExpenseType === "personal") {
@@ -1536,6 +1663,7 @@
       if ($("personalExpenseFor")) $("personalExpenseFor").dataset.lastPayer = newPayer;
     }
     updateQuickExpenseContext();
+    updateSmartExpenseSummary();
   });
 
   // Quick traveler management from Home dashboard.

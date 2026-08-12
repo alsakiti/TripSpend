@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.0.1">
-  <link rel="icon" href="icons/icon-192.png?v=6.0.1">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.0.1">
-  <link rel="stylesheet" href="style.css?v=6.0.1">
+  <link rel="manifest" href="manifest.webmanifest?v=6.1.0">
+  <link rel="icon" href="icons/icon-192.png?v=6.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.1.0">
+  <link rel="stylesheet" href="style.css?v=6.1.0">
 </head>
 <body>
 <div id="updateBanner" class="update-banner hidden" role="status">
@@ -24,7 +24,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.0.1</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.1</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -35,8 +35,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.0.1" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.0.1</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.1.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.1</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -190,7 +190,7 @@
 
         <div id="currentCountryCard" class="current-country-card v6-current-country">
           <div class="current-country-main">
-            <span id="currentCountryStatus" class="current-country-status">CURRENT COUNTRY</span>
+            <span id="currentCountryStatus" class="current-country-status">CURRENT COUNTRY • AUTO BY DATE</span>
             <strong id="currentCountryName">—</strong>
             <small id="currentCountryDates">—</small>
           </div>
@@ -319,18 +319,25 @@
             <span class="smart-badge">SETTLE UP</span>
           </div>
 
-          <div class="card settlement-card settlement-card-v58">
-            <p class="settlement-help">Only expenses that create a debt are included. Personal expenses paid by the same traveler are excluded automatically.</p>
+          <div class="card settlement-card settlement-card-v61">
+            <p class="settlement-help">This is the simplest way to settle the trip. Personal expenses paid by the same traveler do not appear here.</p>
 
-            <div id="settlementPeopleSummary" class="settlement-people-summary"></div>
+            <div id="settlementList" class="settlement-list settlement-list-primary"></div>
 
-            <div class="settlement-divider">
-              <span>Payments to settle the group</span>
-            </div>
+            <button id="settlementDetailsToggle" type="button" class="secondary settlement-details-toggle">
+              Show calculation details
+              <span id="settlementDetailsArrow">⌄</span>
+            </button>
 
-            <div id="settlementList" class="settlement-list"></div>
-            <div id="settlementPersonalInfo" class="settlement-personal-info hidden"></div>
             <div id="settlementWarning" class="settlement-warning hidden"></div>
+
+            <div id="settlementDetails" class="settlement-details hidden">
+              <div class="settlement-divider">
+                <span>Paid vs share</span>
+              </div>
+              <div id="settlementPeopleSummary" class="settlement-people-summary"></div>
+              <div id="settlementPersonalInfo" class="settlement-personal-info hidden"></div>
+            </div>
           </div>
         </section>
         <div class="card chart"><h3>By category</h3><div id="categoryAnalytics" class="bars"></div></div>
@@ -605,24 +612,25 @@
   <div class="sheet">
     <div class="handle"></div>
     <div class="modal-head"><div><div class="eyebrow">TRANSACTION</div><h2 id="modalTitle">Add Expense</h2></div><button id="closeModal" class="icon-btn">✕</button></div>
-    <form id="expenseForm" class="form modal-form">
+    <form id="expenseForm" class="form modal-form smart-expense-form">
       <input id="editId" type="hidden">
+
       <div id="expenseQuickContext" class="expense-quick-context">
         <span id="quickCountryText">Current country</span>
         <span id="quickPaymentText">Payment</span>
         <span id="quickRateText">Rate ready</span>
       </div>
-      <label>Amount<div class="amount-row"><input id="expenseAmount" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="0.00"><select id="expenseCurrency"></select></div></label>
-      <label id="rateWrap">Exchange rate
-        <input id="exchangeRate" type="number" min="0.000001" step="0.000001" inputmode="decimal">
-        <small id="rateHelp">Enter the exchange rate.</small>
-        <button id="useLiveRate" type="button" class="secondary live-rate-btn">Use Latest Rate</button>
-        <small id="liveRateStatus" class="live-rate-status"></small>
-      </label>
-      <div id="rateMemory" class="rate-memory hidden"></div>
-      <div id="conversion" class="conversion">≈ 0 OMR</div>
 
-      <fieldset class="expense-type-fieldset">
+      <label class="smart-amount-label">Amount
+        <div class="amount-row">
+          <input id="expenseAmount" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="0.00">
+          <select id="expenseCurrency"></select>
+        </div>
+      </label>
+
+      <div id="conversion" class="conversion smart-conversion">≈ 0 OMR</div>
+
+      <fieldset class="expense-type-fieldset smart-type-fieldset">
         <legend>Expense type</legend>
         <div class="expense-type-toggle">
           <button id="expenseTypePersonal" type="button" class="expense-type-btn active">
@@ -637,52 +645,91 @@
         <small id="expenseTypeHelp" class="expense-type-help">Counts toward trip and country budgets. If the same traveler pays for themselves, it creates no debt.</small>
       </fieldset>
 
-      <div class="grid2">
-        <label>Country<select id="expenseStop"></select></label>
-        <label>Paid by<select id="expensePaidBy"></select></label>
-      </div>
+      <button id="expenseAutoSummary" type="button" class="smart-expense-summary">
+        <span>
+          <small>AUTO-FILLED</small>
+          <strong id="expenseAutoSummaryText">Personal • payer and country selected automatically</strong>
+        </span>
+        <span class="smart-summary-arrow">›</span>
+      </button>
 
-      <div id="personalExpenseForWrap">
-        <label>For
-          <select id="personalExpenseFor"></select>
-          <small>Choose whose personal expense this is.</small>
-        </label>
-      </div>
-
-      <select id="expensePerson" class="hidden" aria-hidden="true" tabindex="-1"></select>
-      <fieldset id="sharedExpenseForWrap" class="expense-for-fieldset hidden">
-        <legend>Expense for</legend>
+      <fieldset id="sharedExpenseForWrap" class="expense-for-fieldset hidden smart-shared-people">
+        <legend>Shared with</legend>
         <div class="expense-for-actions">
           <button id="expenseForEveryone" type="button" class="mini-btn">Everyone</button>
           <button id="expenseForClear" type="button" class="mini-btn">Clear</button>
         </div>
         <div id="expenseForPeople" class="expense-for-people"></div>
-        <small>Select one or more travelers. TripSpend splits the cost equally between those selected.</small>
+        <small>Select the travelers who shared this expense. TripSpend divides it equally.</small>
       </fieldset>
-      <label>Category<select id="expenseCategory"></select></label>
-      <div id="recentCategoryChips" class="recent-category-chips hidden"></div>
-      <div id="categorySuggestion" class="suggestion hidden"><span id="suggestionText"></span><button id="applySuggestion" type="button">Use suggestion</button></div>
 
-      <div class="grid2">
-        <label>Payment<select id="paymentMethod"></select></label>
-        <label class="date-field-label expense-date-label"><span>Date</span>
-          <div class="date-picker-card expense-date-card">
-            <span id="expenseDateDisplay" class="date-display">Select date</span>
-            <span class="date-calendar" aria-hidden="true">▣</span>
-            <input id="expenseDate" class="native-date-input" type="date" required aria-label="Expense date">
-          </div>
+      <button id="expenseMoreOptions" type="button" class="secondary smart-more-options">
+        More options
+        <span id="expenseMoreOptionsArrow">⌄</span>
+      </button>
+
+      <div id="expenseAdvancedFields" class="smart-advanced-fields hidden">
+        <div class="smart-advanced-heading">
+          <strong>Expense details</strong>
+          <small>TripSpend has already filled these using your trip and recent choices.</small>
+        </div>
+
+        <div class="grid2">
+          <label>Country<select id="expenseStop"></select></label>
+          <label>Paid by<select id="expensePaidBy"></select></label>
+        </div>
+
+        <div id="personalExpenseForWrap">
+          <label>Personal expense for
+            <select id="personalExpenseFor"></select>
+            <small>Choose whose personal expense this is.</small>
+          </label>
+        </div>
+
+        <select id="expensePerson" class="hidden" aria-hidden="true" tabindex="-1"></select>
+
+        <label>Category<select id="expenseCategory"></select></label>
+        <div id="recentCategoryChips" class="recent-category-chips hidden"></div>
+        <div id="categorySuggestion" class="suggestion hidden">
+          <span id="suggestionText"></span>
+          <button id="applySuggestion" type="button">Use suggestion</button>
+        </div>
+
+        <div class="grid2">
+          <label>Payment<select id="paymentMethod"></select></label>
+          <label class="date-field-label expense-date-label"><span>Date</span>
+            <div class="date-picker-card expense-date-card">
+              <span id="expenseDateDisplay" class="date-display">Select date</span>
+              <span class="date-calendar" aria-hidden="true">▣</span>
+              <input id="expenseDate" class="native-date-input" type="date" required aria-label="Expense date">
+            </div>
+          </label>
+        </div>
+
+        <label>Note <small>(optional)</small>
+          <input id="expenseNote" maxlength="120" placeholder="Dinner, taxi, hotel...">
         </label>
+
+        <div id="rateDetailsBlock" class="smart-rate-details">
+          <label id="rateWrap">Exchange rate
+            <input id="exchangeRate" type="number" min="0.000001" step="0.000001" inputmode="decimal">
+            <small id="rateHelp">Enter the exchange rate.</small>
+            <button id="useLiveRate" type="button" class="secondary live-rate-btn">Use Latest Rate</button>
+            <small id="liveRateStatus" class="live-rate-status"></small>
+          </label>
+          <div id="rateMemory" class="rate-memory hidden"></div>
+        </div>
       </div>
-      <label>Note <small>(optional)</small><input id="expenseNote" maxlength="120" placeholder="Dinner, taxi, hotel..."></label>
+
       <div id="duplicateWarning" class="warning hidden">⚠️ This looks similar to an expense you already saved.</div>
-      <button class="primary" type="submit">Save Expense</button>
+      <button class="primary smart-save-expense" type="submit">Save Expense</button>
     </form>
   </div>
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.0.1"></script>
-<script src="fx.js?v=6.0.1"></script>
-<script src="v5.js?v=6.0.1"></script>
+<script src="app.js?v=6.1.0"></script>
+<script src="fx.js?v=6.1.0"></script>
+<script src="v5.js?v=6.1.0"></script>
 </body>
 </html>

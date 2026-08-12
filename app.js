@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.0.1";
+  const APP_VERSION = "6.1.0";
 
   const KEY = "tripspend.v1";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
@@ -1177,7 +1177,12 @@
     duplicateCheck();
     renderRecentCategoryChips();
 
-    window.TripSpendV5?.prepareExpense?.(source, existing, isRepeat);
+    const smartPrep = window.TripSpendV5?.prepareExpense?.(source, existing, isRepeat);
+    Promise.resolve(smartPrep)
+      .catch(() => {})
+      .finally(() => {
+        window.TripSpendV61?.prepareSmartExpenseUI?.({ existing: !!existing, isRepeat: !!isRepeat });
+      });
 
     $("modal").classList.remove("hidden");
     document.body.style.overflow = "hidden";
@@ -1944,7 +1949,7 @@
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.0.1", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.1.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

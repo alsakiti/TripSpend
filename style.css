@@ -2246,3 +2246,198 @@ input[type="date"]::-webkit-calendar-picker-indicator{
 .v6-plan-copy strong{
   line-height:1.25;
 }
+
+
+/* =========================================================
+   TripSpend v6.1 — Smart Expense Entry + Simple Settlement
+   ========================================================= */
+
+.smart-expense-form{
+  padding-top:2px;
+}
+.smart-expense-form .expense-quick-context{
+  margin-bottom:9px;
+}
+.smart-amount-label{
+  margin-bottom:7px!important;
+}
+.smart-amount-label .amount-row input{
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:-.02em;
+}
+.smart-conversion{
+  margin:0 0 10px!important;
+  padding:7px 9px!important;
+  border-radius:10px!important;
+  font-size:10px!important;
+}
+.smart-type-fieldset{
+  margin-bottom:9px!important;
+}
+.smart-expense-summary{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 9px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface2);
+  color:var(--text);
+  text-align:left;
+}
+.smart-expense-summary>span:first-child{
+  min-width:0;
+}
+.smart-expense-summary small,
+.smart-expense-summary strong{
+  display:block;
+}
+.smart-expense-summary small{
+  color:var(--muted);
+  font-size:7.5px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.smart-expense-summary strong{
+  margin-top:2px;
+  overflow:hidden;
+  font-size:9.5px;
+  font-weight:800;
+  line-height:1.35;
+  text-overflow:ellipsis;
+}
+.smart-summary-arrow{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:21px;
+}
+.smart-shared-people{
+  margin-bottom:9px!important;
+}
+.smart-more-options{
+  width:100%;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin:0 0 9px;
+  border-style:dashed!important;
+  font-size:10.5px;
+}
+.smart-more-options span{
+  font-size:11px;
+}
+.smart-advanced-fields{
+  margin-bottom:10px;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--surface2);
+}
+.smart-advanced-heading{
+  margin-bottom:9px;
+}
+.smart-advanced-heading strong,
+.smart-advanced-heading small{
+  display:block;
+}
+.smart-advanced-heading strong{
+  font-size:11px;
+}
+.smart-advanced-heading small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8.5px;
+  line-height:1.35;
+}
+.smart-advanced-fields label{
+  margin-bottom:9px!important;
+}
+.smart-rate-details{
+  margin-top:2px;
+}
+.smart-save-expense{
+  min-height:48px!important;
+  border-radius:14px!important;
+  font-size:15px!important;
+}
+
+/* Shared people stay visible because they affect settlement directly. */
+.smart-shared-people .expense-for-people{
+  margin-top:4px;
+}
+
+/* Settlement now leads with the only thing most users need: final payments. */
+.settlement-card-v61{
+  padding:12px;
+}
+.settlement-list-primary{
+  display:grid;
+  gap:7px;
+  margin-top:8px;
+}
+.settlement-list-primary .settlement-payment-row{
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface2);
+}
+.settlement-payment-copy{
+  min-width:0;
+}
+.settlement-payment-copy>div{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.settlement-payment-copy strong{
+  font-size:11px;
+}
+.settlement-payment-copy small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:8px;
+}
+.settlement-transfer-arrow{
+  color:#175cd3!important;
+  font-size:13px;
+  font-weight:900;
+}
+.settlement-payment-amount{
+  flex:0 0 auto;
+  font-size:12px!important;
+}
+.settlement-details-toggle{
+  width:100%;
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin-top:9px;
+  font-size:9.5px;
+}
+.settlement-details{
+  margin-top:8px;
+}
+
+@media(max-width:600px){
+  .smart-expense-form{
+    padding-bottom:2px;
+  }
+  .smart-amount-label .amount-row input{
+    font-size:22px;
+  }
+  .smart-advanced-fields{
+    padding:9px;
+  }
+  .settlement-list-primary .settlement-payment-row{
+    padding:10px;
+  }
+}
