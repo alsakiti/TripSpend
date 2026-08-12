@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v6.6.2",
+  "name": "TripSpend v6.6.3",
   "short_name": "TripSpend",
-  "description": "Offline-first multi-trip travel spending with receipt photos, smarter planned-cost budgeting, trip reports and optimized large expense histories.",
+  "description": "Reliable offline-first travel spending with receipt backup/viewing, expense details, update controls and protected local storage.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

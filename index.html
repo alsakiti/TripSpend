@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.6.2">
-  <link rel="icon" href="icons/icon-192.png?v=6.6.2">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.2">
-  <link rel="stylesheet" href="style.css?v=6.6.2">
+  <link rel="manifest" href="manifest.webmanifest?v=6.6.3">
+  <link rel="icon" href="icons/icon-192.png?v=6.6.3">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.3">
+  <link rel="stylesheet" href="style.css?v=6.6.3">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,7 +32,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6.2</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6.3</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -43,8 +43,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.6.2" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.6.2</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.6.3" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.6.3</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -852,6 +852,36 @@
           <div id="backupList" class="backup-list">
             <div class="backup-empty">Restore points will appear here automatically.</div>
           </div>
+
+          <div class="storage-usage-grid">
+            <div>
+              <small>Local storage used</small>
+              <strong id="storageUsageText">—</strong>
+            </div>
+            <div>
+              <small>Receipt photos</small>
+              <strong id="receiptUsageText">—</strong>
+            </div>
+          </div>
+          <button id="cleanReceiptStorageBtn" class="secondary data-cleanup-btn" type="button">Clean unused receipt files</button>
+        </div>
+
+        <div class="card app-update-card">
+          <div class="app-update-head">
+            <div>
+              <strong>App update</strong>
+              <p>Check the GitHub Pages version and refresh the installed app when needed.</p>
+            </div>
+            <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
+          </div>
+          <div class="app-update-versions">
+            <span><small>Current</small><strong id="currentVersionText">v6.6.3</strong></span>
+            <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
+          </div>
+          <div class="app-update-actions">
+            <button id="checkUpdateBtn" class="secondary" type="button">Check for Update</button>
+            <button id="refreshAppBtn" class="secondary" type="button">Refresh App</button>
+          </div>
         </div>
 
 
@@ -906,7 +936,7 @@
         </div>
 
         <div class="card action-card">
-          <div><strong>Portable backup</strong><p>Export a JSON copy for safekeeping elsewhere. CSV opens in Excel.</p></div>
+          <div><strong>Portable backup</strong><p>JSON includes trip data and receipt photos. CSV opens in Excel.</p></div>
           <button id="exportBtn" class="secondary">Export Backup</button>
           <button id="csvBtn" class="secondary">Export CSV</button>
           <label class="secondary file-btn">Import Backup<input id="importFile" type="file" accept="application/json,.json" hidden></label>
@@ -976,6 +1006,70 @@
   </div>
 </div>
 
+<div id="expenseDetailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="expenseDetailTitle">
+  <div class="sheet expense-detail-sheet">
+    <div class="handle"></div>
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">EXPENSE</div>
+        <h2 id="expenseDetailTitle">Expense details</h2>
+      </div>
+      <button id="closeExpenseDetail" class="icon-btn" type="button">✕</button>
+    </div>
+
+    <div class="expense-detail-amount">
+      <strong id="expenseDetailAmount">0 OMR</strong>
+      <span id="expenseDetailOriginal">—</span>
+    </div>
+
+    <div id="expenseDetailGrid" class="expense-detail-grid"></div>
+    <div id="expenseDetailShares" class="expense-detail-shares hidden"></div>
+
+    <div id="expenseDetailReceipt" class="expense-detail-receipt hidden">
+      <img id="expenseDetailReceiptThumb" alt="Receipt thumbnail">
+      <div>
+        <strong>Receipt attached</strong>
+        <small id="expenseDetailReceiptMeta">Stored locally</small>
+      </div>
+      <button id="viewDetailReceiptBtn" class="secondary compact-btn" type="button">View</button>
+      <label class="secondary compact-btn expense-detail-replace">
+        Replace
+        <input id="detailReceiptReplaceInput" type="file" accept="image/*" capture="environment">
+      </label>
+      <button id="removeDetailReceiptBtn" class="mini-btn delete" type="button">Remove</button>
+    </div>
+    <div id="expenseDetailNoReceipt" class="expense-detail-no-receipt">No receipt attached</div>
+
+    <div class="expense-detail-actions">
+      <button id="detailRepeatExpenseBtn" class="secondary" type="button">↻ Repeat</button>
+      <button id="detailEditExpenseBtn" class="primary" type="button">Edit Expense</button>
+      <button id="detailDeleteExpenseBtn" class="danger-btn" type="button">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="receiptViewerModal" class="modal hidden receipt-viewer-modal" role="dialog" aria-modal="true" aria-labelledby="receiptViewerTitle">
+  <div class="sheet receipt-viewer-sheet">
+    <div class="handle"></div>
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">RECEIPT</div>
+        <h2 id="receiptViewerTitle">Receipt</h2>
+      </div>
+      <button id="closeReceiptViewer" class="icon-btn" type="button">✕</button>
+    </div>
+    <div class="receipt-viewer-toolbar">
+      <button id="receiptZoomOut" class="secondary compact-btn" type="button">−</button>
+      <span id="receiptZoomLabel">100%</span>
+      <button id="receiptZoomIn" class="secondary compact-btn" type="button">＋</button>
+    </div>
+    <div id="receiptViewerStage" class="receipt-viewer-stage">
+      <img id="receiptViewerImage" alt="Receipt">
+    </div>
+    <small class="receipt-viewer-help">Pinch to zoom on iPhone, or use the − / + controls.</small>
+  </div>
+</div>
+
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <div class="handle"></div>
@@ -1029,6 +1123,7 @@
         </div>
         <div id="expenseForPeople" class="expense-for-people"></div>
         <small>Select the travelers who shared this expense. TripSpend divides it equally.</small>
+        <div id="sharedSplitPreview" class="shared-split-preview hidden"></div>
       </fieldset>
 
       <div class="receipt-field">
@@ -1118,8 +1213,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.6.2"></script>
-<script src="fx.js?v=6.6.2"></script>
-<script src="v5.js?v=6.6.2"></script>
+<script src="app.js?v=6.6.3"></script>
+<script src="fx.js?v=6.6.3"></script>
+<script src="v5.js?v=6.6.3"></script>
 </body>
 </html>

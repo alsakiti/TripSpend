@@ -5111,3 +5111,336 @@ html[data-theme="dark"] .analytics-main-card{
     font-size:11px!important;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.6.3 — Reliability & Receipt Fixes
+   ========================================================= */
+
+.shared-split-preview{
+  margin-top:9px;
+  padding:9px 10px;
+  border-radius:10px;
+  background:var(--brand-soft);
+  color:var(--brand);
+  font-size:10.5px;
+  font-weight:800;
+  line-height:1.35;
+}
+
+.expense-clickable{
+  cursor:pointer;
+}
+.expense-clickable:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--brand) 35%,transparent);
+  outline-offset:2px;
+}
+.expense-receipt-badge{
+  cursor:pointer;
+}
+
+/* Expense details */
+.expense-detail-sheet{
+  max-width:560px;
+}
+.expense-detail-amount{
+  margin:4px 0 13px;
+  padding:14px;
+  border-radius:15px;
+  background:linear-gradient(145deg,#101828,#233044);
+  color:#fff;
+}
+.expense-detail-amount strong,
+.expense-detail-amount span{
+  display:block;
+}
+.expense-detail-amount strong{
+  font-size:28px;
+  line-height:1;
+  letter-spacing:-.035em;
+}
+.expense-detail-amount span{
+  margin-top:5px;
+  color:#cbd5e1;
+  font-size:10px;
+}
+.expense-detail-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+.expense-detail-item{
+  min-width:0;
+  padding:9px 10px;
+  border-radius:11px;
+  background:var(--surface2);
+}
+.expense-detail-item small,
+.expense-detail-item strong{
+  display:block;
+}
+.expense-detail-item small{
+  color:var(--muted);
+  font-size:8px;
+}
+.expense-detail-item strong{
+  margin-top:3px;
+  overflow:hidden;
+  font-size:10.5px;
+  line-height:1.3;
+  text-overflow:ellipsis;
+}
+.expense-detail-shares{
+  margin-top:8px;
+  padding:10px;
+  border-radius:12px;
+  background:var(--surface2);
+}
+.expense-detail-shares>strong{
+  display:block;
+  margin-bottom:5px;
+  font-size:10px;
+}
+.expense-detail-shares>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:5px 0;
+  border-top:1px solid var(--line);
+  font-size:9.5px;
+}
+.expense-detail-receipt{
+  display:grid;
+  grid-template-columns:58px minmax(0,1fr) auto auto auto;
+  align-items:center;
+  gap:7px;
+  margin-top:9px;
+  padding:9px;
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.expense-detail-receipt img{
+  width:58px;
+  height:58px;
+  object-fit:cover;
+  border-radius:9px;
+}
+.expense-detail-receipt>div strong,
+.expense-detail-receipt>div small{
+  display:block;
+}
+.expense-detail-receipt>div strong{
+  font-size:10px;
+}
+.expense-detail-receipt>div small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:8px;
+}
+.expense-detail-replace{
+  position:relative;
+}
+.expense-detail-replace input{
+  position:absolute;
+  width:1px;
+  height:1px;
+  opacity:0;
+  pointer-events:none;
+}
+.expense-detail-no-receipt{
+  margin-top:9px;
+  padding:10px;
+  border:1px dashed var(--line);
+  border-radius:11px;
+  color:var(--muted);
+  font-size:9px;
+  text-align:center;
+}
+.expense-detail-actions{
+  display:grid;
+  grid-template-columns:1fr 1.35fr .8fr;
+  gap:7px;
+  margin-top:12px;
+}
+.expense-detail-actions button{
+  min-height:42px;
+  padding:0 10px;
+  font-size:10px;
+}
+
+/* Receipt viewer */
+.receipt-viewer-sheet{
+  height:min(92vh,820px);
+  display:flex;
+  flex-direction:column;
+}
+.receipt-viewer-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+.receipt-viewer-toolbar button{
+  width:42px!important;
+  min-height:34px!important;
+}
+.receipt-viewer-toolbar span{
+  min-width:54px;
+  text-align:center;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+}
+.receipt-viewer-stage{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  display:grid;
+  place-items:center;
+  padding:8px;
+  border-radius:13px;
+  background:#111827;
+  -webkit-overflow-scrolling:touch;
+}
+.receipt-viewer-stage img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  transform-origin:center center;
+  touch-action:pinch-zoom;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.receipt-viewer-help{
+  display:block;
+  margin-top:7px;
+  color:var(--muted);
+  font-size:8.5px;
+  text-align:center;
+}
+
+/* Storage cleanup */
+.storage-usage-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:10px;
+}
+.storage-usage-grid>div{
+  padding:9px 10px;
+  border-radius:11px;
+  background:var(--surface2);
+}
+.storage-usage-grid small,
+.storage-usage-grid strong{
+  display:block;
+}
+.storage-usage-grid small{
+  color:var(--muted);
+  font-size:8px;
+}
+.storage-usage-grid strong{
+  margin-top:2px;
+  font-size:10px;
+}
+.data-cleanup-btn{
+  width:100%;
+  min-height:38px!important;
+  margin-top:7px;
+  font-size:9.5px!important;
+}
+
+/* Update controls */
+.app-update-card{
+  margin-top:12px;
+  padding:14px;
+}
+.app-update-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.app-update-head strong{
+  display:block;
+  font-size:13px;
+}
+.app-update-head p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.4;
+}
+.app-update-versions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:10px;
+}
+.app-update-versions span{
+  padding:9px 10px;
+  border-radius:11px;
+  background:var(--surface2);
+}
+.app-update-versions small,
+.app-update-versions strong{
+  display:block;
+}
+.app-update-versions small{
+  color:var(--muted);
+  font-size:8px;
+}
+.app-update-versions strong{
+  margin-top:2px;
+  font-size:10px;
+}
+.app-update-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:8px;
+}
+.app-update-actions button{
+  min-height:38px!important;
+  font-size:9.5px!important;
+}
+.update-current{
+  background:var(--okbg)!important;
+  color:var(--ok)!important;
+}
+.update-ready{
+  background:var(--brand-soft)!important;
+  color:var(--brand)!important;
+}
+.update-offline{
+  background:var(--warnbg)!important;
+  color:var(--warn)!important;
+}
+
+@media(max-width:600px){
+  .shared-split-preview{
+    font-size:10px;
+  }
+  .expense-detail-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .expense-detail-receipt{
+    grid-template-columns:48px minmax(0,1fr) auto;
+  }
+  .expense-detail-receipt img{
+    width:48px;
+    height:48px;
+  }
+  .expense-detail-receipt .expense-detail-replace,
+  .expense-detail-receipt #removeDetailReceiptBtn{
+    grid-column:auto;
+  }
+  .expense-detail-actions{
+    grid-template-columns:1fr 1fr;
+  }
+  .expense-detail-actions #detailDeleteExpenseBtn{
+    grid-column:1 / -1;
+  }
+}

@@ -1378,6 +1378,46 @@
     return !$("expenseAdvancedFields")?.classList.contains("hidden");
   }
 
+  function updateSharedSplitPreview() {
+    const preview = $("sharedSplitPreview");
+    if (!preview) return;
+
+    if (currentExpenseType !== "shared") {
+      preview.classList.add("hidden");
+      preview.textContent = "";
+      return;
+    }
+
+    const ids = selectedExpenseForIds();
+    const amount = Number($("expenseAmount")?.value || 0);
+    const currency = $("expenseCurrency")?.value || state().trip.homeCurrency;
+    const rate = currency === state().trip.homeCurrency ? 1 : Number($("exchangeRate")?.value || 0);
+
+    if (!ids.length) {
+      preview.textContent = "Select who shared this expense to see the split.";
+      preview.classList.remove("hidden");
+      return;
+    }
+
+    if (!(amount > 0)) {
+      preview.textContent = `${ids.length} traveler${ids.length === 1 ? "" : "s"} selected • enter the amount to preview each share.`;
+      preview.classList.remove("hidden");
+      return;
+    }
+
+    const eachOriginal = amount / ids.length;
+    const homeAmount = core.toHome(amount, currency, rate);
+    const eachHome = homeAmount / ids.length;
+
+    if (currency === state().trip.homeCurrency || !(rate > 0)) {
+      preview.textContent = `${core.money(amount, currency)} ÷ ${ids.length} = ${core.money(eachOriginal, currency)} each`;
+    } else {
+      preview.textContent = `${core.money(amount, currency)} ÷ ${ids.length} = ${core.money(eachOriginal, currency)} each • ≈ ${core.money(eachHome, state().trip.homeCurrency)} each`;
+    }
+
+    preview.classList.remove("hidden");
+  }
+
   function updateSmartExpenseSummary() {
     const stop = stopById($("expenseStop")?.value) || stopForDate($("expenseDate")?.value);
     const payer = personById($("expensePaidBy")?.value);
@@ -1400,6 +1440,8 @@
         : "Nobody selected";
       summary.textContent = `${stop ? `${core.countryFlag(stop.country)} ${stop.country}` : "Country"} • ${payer?.name || "No payer"} paid • shared with ${peopleText}`;
     }
+
+    updateSharedSplitPreview();
   }
 
   function prepareSmartExpenseUI({ existing = false, isRepeat = false } = {}) {
@@ -1901,6 +1943,7 @@
   $("setupCancelTraveler")?.addEventListener("click", cancelSetupTravelerEdit);
 
 
+  $("expenseAmount")?.addEventListener("input", updateSmartExpenseSummary);
   $("paymentMethod")?.addEventListener("change", updateQuickExpenseContext);
   $("exchangeRate")?.addEventListener("input", updateQuickExpenseContext);
   $("expenseCurrency")?.addEventListener("change", updateQuickExpenseContext);
@@ -2020,9 +2063,11 @@
     document.querySelectorAll("#expenseForPeople input[type=checkbox]").forEach(x => {
       if (!x.disabled) x.checked = true;
     });
+    updateSmartExpenseSummary();
   });
   $("expenseForClear")?.addEventListener("click", () => {
     document.querySelectorAll("#expenseForPeople input[type=checkbox]").forEach(x => x.checked = false);
+    updateSmartExpenseSummary();
   });
 
   $("expenseStop")?.addEventListener("change", () => {

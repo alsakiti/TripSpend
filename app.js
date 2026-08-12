@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.2";
+  const APP_VERSION = "6.6.3";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -27,6 +27,11 @@
   let receiptPreviewURL = "";
   let analyticsCacheRevision = 0;
   const analyticsCache = new Map();
+  let activeExpenseDetailId = "";
+  let expenseDetailReceiptURL = "";
+  let receiptViewerURL = "";
+  let receiptViewerScale = 1;
+  let latestVersionKnown = "";
 
 
   const KEY = "tripspend.v1";
@@ -466,6 +471,7 @@
     await persistStateImmediately(state);
     renderTripsPage();
     renderSetupTripHistory();
+    cleanupUnusedReceipts({ silent: true }).catch(() => {});
     toast("Past trip deleted");
   }
 
@@ -1001,6 +1007,111 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     await txComplete(tx);
   }
 
+  async function idbListReceipts() {
+    if (!storageDB || storageMode !== "indexeddb") return [];
+    const tx = storageDB.transaction(DB_RECEIPT_STORE, "readonly");
+    const rows = await idbRequest(tx.objectStore(DB_RECEIPT_STORE).getAll());
+    await txComplete(tx);
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  function blobToDataURL(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error || new Error("Could not read receipt"));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function dataURLToBlob(dataURL) {
+    const [header, encoded] = String(dataURL || "").split(",", 2);
+    if (!header || !encoded) throw new Error("Invalid receipt data");
+    const mime = header.match(/data:([^;]+)/)?.[1] || "image/jpeg";
+    const binary = atob(encoded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  function collectReceiptIds(data, out = new Set()) {
+    if (!data || typeof data !== "object") return out;
+
+    (data.expenses || []).forEach(expense => {
+      if (expense?.receiptId) out.add(String(expense.receiptId));
+    });
+
+    (data.tripHistory || []).forEach(record => collectReceiptIds(record?.data, out));
+    return out;
+  }
+
+  async function protectedReceiptIds() {
+    const ids = collectReceiptIds(state, new Set());
+
+    if (storageMode === "indexeddb" && storageDB) {
+      try {
+        const backups = await idbListBackups();
+        backups.forEach(backup => collectReceiptIds(backup?.data, ids));
+      } catch {}
+    }
+    return ids;
+  }
+
+  async function receiptStorageStats() {
+    if (storageMode !== "indexeddb" || !storageDB) return { count: 0, bytes: 0 };
+    const rows = await idbListReceipts();
+    return {
+      count: rows.length,
+      bytes: rows.reduce((sum, row) => sum + Number(row.size || row.blob?.size || 0), 0)
+    };
+  }
+
+  async function renderReceiptStorageStats() {
+    const usageEl = $("storageUsageText");
+    const receiptEl = $("receiptUsageText");
+    if (!usageEl || !receiptEl) return;
+
+    try {
+      const estimate = await navigator.storage?.estimate?.();
+      usageEl.textContent = estimate?.usage != null ? humanBytes(estimate.usage) : "Unavailable";
+
+      const receiptStats = await receiptStorageStats();
+      receiptEl.textContent = `${humanBytes(receiptStats.bytes)} • ${receiptStats.count} photo${receiptStats.count === 1 ? "" : "s"}`;
+    } catch {
+      usageEl.textContent = "Unavailable";
+      receiptEl.textContent = "Unavailable";
+    }
+  }
+
+  async function cleanupUnusedReceipts({ silent = false } = {}) {
+    if (storageMode !== "indexeddb" || !storageDB) {
+      if (!silent) toast("Receipt cleanup needs IndexedDB");
+      return { removed: 0, bytes: 0 };
+    }
+
+    const keep = await protectedReceiptIds();
+    const rows = await idbListReceipts();
+    const unused = rows.filter(row => !keep.has(String(row.id)));
+
+    if (unused.length) {
+      const tx = storageDB.transaction(DB_RECEIPT_STORE, "readwrite");
+      const store = tx.objectStore(DB_RECEIPT_STORE);
+      unused.forEach(row => store.delete(row.id));
+      await txComplete(tx);
+    }
+
+    const bytes = unused.reduce((sum, row) => sum + Number(row.size || row.blob?.size || 0), 0);
+    await renderReceiptStorageStats();
+
+    if (!silent) {
+      toast(unused.length
+        ? `Cleaned ${unused.length} unused receipt${unused.length === 1 ? "" : "s"} • ${humanBytes(bytes)}`
+        : "No unused receipt files");
+    }
+
+    return { removed: unused.length, bytes };
+  }
+
   function humanBytes(bytes) {
     const n = Number(bytes || 0);
     if (n < 1024) return `${n} B`;
@@ -1440,6 +1551,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       empty.textContent = "Restore points are temporarily unavailable.";
       list.append(empty);
     }
+
+    renderReceiptStorageStats();
   }
 
   async function restoreBackup(id) {
@@ -2211,7 +2324,17 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
     expenses.forEach(expense => {
       const row = document.createElement("div");
-      row.className = "expense";
+      row.className = "expense expense-clickable";
+      row.tabIndex = 0;
+      row.setAttribute("role", "button");
+      row.setAttribute("aria-label", `Open ${expense.note?.trim() || expense.category} expense details`);
+      row.onclick = () => openExpenseDetails(expense.id);
+      row.onkeydown = event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openExpenseDetails(expense.id);
+        }
+      };
 
       const iconEl = document.createElement("div");
       iconEl.className = "expense-icon";
@@ -2232,6 +2355,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         const receiptBadge = document.createElement("span");
         receiptBadge.className = "expense-receipt-badge";
         receiptBadge.textContent = "📎 Receipt";
+        receiptBadge.onclick = event => {
+          event.stopPropagation();
+          openReceiptViewer(expense.receiptId);
+        };
         main.append(receiptBadge);
       }
 
@@ -2255,19 +2382,19 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         repeat.className = "mini";
         repeat.type = "button";
         repeat.textContent = "↻ Repeat";
-        repeat.onclick = () => openModal("", expense);
+        repeat.onclick = event => { event.stopPropagation(); openModal("", expense); };
 
         const edit = document.createElement("button");
         edit.className = "mini";
         edit.type = "button";
         edit.textContent = "Edit";
-        edit.onclick = () => openModal(expense.id);
+        edit.onclick = event => { event.stopPropagation(); openModal(expense.id); };
 
         const del = document.createElement("button");
         del.className = "mini delete";
         del.type = "button";
         del.textContent = "Delete";
-        del.onclick = () => removeExpense(expense.id);
+        del.onclick = event => { event.stopPropagation(); removeExpense(expense.id); };
 
         act.append(repeat, edit, del);
         row.append(act);
@@ -2673,6 +2800,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       renderAppearanceControls();
       renderRates();
       renderStoragePanel();
+      renderUpdateSettings(latestVersionKnown ? "online" : "checking");
     }
 
     if (activePage === "trips") renderTripsPage();
@@ -2697,6 +2825,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       renderAppearanceControls();
       renderRates();
       renderStoragePanel();
+      renderUpdateSettings(latestVersionKnown ? "online" : "checking");
     }
     if (id === "trips") renderTripsPage();
 
@@ -2728,6 +2857,202 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       };
       el.append(button);
     });
+  }
+
+  function clearExpenseDetailReceiptURL() {
+    if (expenseDetailReceiptURL) {
+      URL.revokeObjectURL(expenseDetailReceiptURL);
+      expenseDetailReceiptURL = "";
+    }
+  }
+
+  function clearReceiptViewerURL() {
+    if (receiptViewerURL) {
+      URL.revokeObjectURL(receiptViewerURL);
+      receiptViewerURL = "";
+    }
+  }
+
+  function expenseDetailItem(label, value) {
+    const item = document.createElement("div");
+    item.className = "expense-detail-item";
+    const small = document.createElement("small");
+    small.textContent = label;
+    const strong = document.createElement("strong");
+    strong.textContent = value || "—";
+    item.append(small, strong);
+    return item;
+  }
+
+  async function openExpenseDetails(id) {
+    const expense = state.expenses.find(item => item.id === id);
+    if (!expense) return;
+
+    activeExpenseDetailId = expense.id;
+    const stop = (state.stops || []).find(item => item.id === expense.stopId);
+    const payer = expense.paidByPersonId ? personName(expense.paidByPersonId) : "Not tracked";
+    const type = inferredExpenseType(expense) === "shared" ? "Shared" : "Personal";
+
+    $("expenseDetailTitle").textContent = expense.note?.trim() || expense.category;
+    $("expenseDetailAmount").textContent = money(expense.homeAmount, state.trip.homeCurrency);
+    $("expenseDetailOriginal").textContent = expense.currency === state.trip.homeCurrency
+      ? `${num(expense.amount).toFixed(3)} ${expense.currency}`
+      : `${num(expense.amount).toFixed(3)} ${expense.currency} • rate ${Number(expense.rate || 0).toPrecision(6).replace(/0+$/,"").replace(/\.$/,"")}`;
+
+    const grid = $("expenseDetailGrid");
+    grid.replaceChildren(
+      expenseDetailItem("Country", stop ? `${countryFlag(stop.country)} ${stop.country}` : "—"),
+      expenseDetailItem("Date", fmtDateWithYear(expense.date)),
+      expenseDetailItem("Type", type),
+      expenseDetailItem("Paid by", payer),
+      expenseDetailItem("For", expenseAssignmentText(expense)),
+      expenseDetailItem("Category", `${icon(expense.category)} ${expense.category}`),
+      expenseDetailItem("Payment", expense.paymentMethod || "—"),
+      expenseDetailItem("Exchange rate", expense.currency === state.trip.homeCurrency ? "No conversion" : `1 ${state.trip.homeCurrency} = ${expense.rate} ${expense.currency}`)
+    );
+
+    const sharesEl = $("expenseDetailShares");
+    sharesEl.replaceChildren();
+    const shares = expense.personShares || [];
+    if (shares.length > 1) {
+      const title = document.createElement("strong");
+      title.textContent = "Shared split";
+      sharesEl.append(title);
+      shares.forEach(share => {
+        const row = document.createElement("div");
+        const name = document.createElement("span");
+        name.textContent = personName(share.personId);
+        const amount = document.createElement("strong");
+        amount.textContent = money(share.amount, state.trip.homeCurrency);
+        row.append(name, amount);
+        sharesEl.append(row);
+      });
+      sharesEl.classList.remove("hidden");
+    } else {
+      sharesEl.classList.add("hidden");
+    }
+
+    clearExpenseDetailReceiptURL();
+    const receiptBox = $("expenseDetailReceipt");
+    const noReceipt = $("expenseDetailNoReceipt");
+    receiptBox.classList.add("hidden");
+    noReceipt.classList.remove("hidden");
+
+    if (expense.receiptId) {
+      try {
+        const record = await idbGetReceipt(expense.receiptId);
+        if (record?.blob) {
+          expenseDetailReceiptURL = URL.createObjectURL(record.blob);
+          $("expenseDetailReceiptThumb").src = expenseDetailReceiptURL;
+          $("expenseDetailReceiptMeta").textContent = `${humanBytes(record.size || record.blob.size)} • ${record.name || "Receipt"}`;
+          receiptBox.classList.remove("hidden");
+          noReceipt.classList.add("hidden");
+        } else {
+          noReceipt.textContent = "Receipt record exists, but the photo file is unavailable.";
+        }
+      } catch {
+        noReceipt.textContent = "Receipt photo could not be opened.";
+      }
+    } else {
+      noReceipt.textContent = "No receipt attached";
+    }
+
+    $("expenseDetailModal").classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeExpenseDetails() {
+    $("expenseDetailModal")?.classList.add("hidden");
+    clearExpenseDetailReceiptURL();
+    activeExpenseDetailId = "";
+    if ($("receiptViewerModal")?.classList.contains("hidden")) document.body.style.overflow = "";
+  }
+
+  function applyReceiptViewerScale() {
+    const image = $("receiptViewerImage");
+    if (!image) return;
+    image.style.transform = `scale(${receiptViewerScale})`;
+    $("receiptZoomLabel").textContent = `${Math.round(receiptViewerScale * 100)}%`;
+  }
+
+  async function openReceiptViewer(receiptId) {
+    if (!receiptId) return toast("No receipt attached");
+
+    try {
+      const record = await idbGetReceipt(receiptId);
+      if (!record?.blob) return toast("Receipt photo is unavailable");
+
+      clearReceiptViewerURL();
+      receiptViewerURL = URL.createObjectURL(record.blob);
+      receiptViewerScale = 1;
+
+      $("receiptViewerTitle").textContent = record.name || "Receipt";
+      $("receiptViewerImage").src = receiptViewerURL;
+      applyReceiptViewerScale();
+
+      $("receiptViewerModal").classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    } catch {
+      toast("Could not open receipt");
+    }
+  }
+
+  function closeReceiptViewer() {
+    $("receiptViewerModal")?.classList.add("hidden");
+    clearReceiptViewerURL();
+    receiptViewerScale = 1;
+    if ($("expenseDetailModal")?.classList.contains("hidden") && $("modal")?.classList.contains("hidden")) {
+      document.body.style.overflow = "";
+    }
+  }
+
+  async function replaceDetailReceipt(file) {
+    const expense = state.expenses.find(item => item.id === activeExpenseDetailId);
+    if (!expense || !file) return;
+
+    if (storageMode !== "indexeddb") return toast("Receipt storage needs IndexedDB");
+
+    try {
+      const blob = await compressReceiptImage(file);
+      const receiptId = coreReceiptId(expense.id);
+
+      await idbPutReceipt({
+        id: receiptId,
+        tripId: state.trip.id,
+        expenseId: expense.id,
+        name: file.name || "Receipt.jpg",
+        type: blob.type || "image/jpeg",
+        size: blob.size || 0,
+        blob,
+        createdAt: Date.now()
+      });
+
+      expense.receiptId = receiptId;
+      save({ immediate: true });
+      await openExpenseDetails(expense.id);
+      renderExpenseViews();
+      renderReceiptStorageStats();
+      cleanupUnusedReceipts({ silent: true }).catch(() => {});
+      toast("Receipt replaced");
+    } catch {
+      toast("Could not replace receipt");
+    } finally {
+      if ($("detailReceiptReplaceInput")) $("detailReceiptReplaceInput").value = "";
+    }
+  }
+
+  async function removeDetailReceipt() {
+    const expense = state.expenses.find(item => item.id === activeExpenseDetailId);
+    if (!expense?.receiptId) return;
+
+    if (!confirm("Remove this receipt from the expense?")) return;
+
+    expense.receiptId = "";
+    save({ immediate: true });
+    await openExpenseDetails(expense.id);
+    renderExpenseViews();
+    cleanupUnusedReceipts({ silent: true }).catch(() => {});
+    toast("Receipt removed");
   }
 
   function openModal(id = "", template = null) {
@@ -2803,7 +3128,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   }
 
   function coreReceiptId(expenseId) {
-    return `receipt:${state.trip?.id || "trip"}:${expenseId}`;
+    return `receipt:${state.trip?.id || "trip"}:${expenseId}:${uid("img")}`;
   }
 
   function preview() {
@@ -2861,11 +3186,9 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const expense = state.expenses.find(x => x.id === id);
     if (expense && confirm(`Delete ${expense.note || expense.category}?`)) {
       state.expenses = state.expenses.filter(x => x.id !== id);
-      if (expense.receiptId) {
-        try { await idbDeleteReceipt(expense.receiptId); } catch {}
-      }
       save();
       render();
+      cleanupUnusedReceipts({ silent: true }).catch(() => {});
       toast("Expense deleted");
     }
   }
@@ -3130,7 +3453,11 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     }
 
     if (pendingReceiptBlob) {
-      x.receiptId = previousExpense?.receiptId || coreReceiptId(x.id);
+      x.receiptId = coreReceiptId(x.id);
+    }
+
+    if (removeExistingReceipt && !pendingReceiptBlob) {
+      x.receiptId = "";
     }
 
     if (index >= 0) {
@@ -3141,11 +3468,6 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     }
 
     try {
-      if (removeExistingReceipt && previousExpense?.receiptId) {
-        await idbDeleteReceipt(previousExpense.receiptId);
-        if (x.receiptId === previousExpense.receiptId && !pendingReceiptBlob) x.receiptId = "";
-      }
-
       if (pendingReceiptBlob && storageMode === "indexeddb") {
         await idbPutReceipt({
           id: x.receiptId,
@@ -3175,6 +3497,9 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     ].filter(category => CATS.includes(category)).slice(0, 5);
 
     save();
+    if (pendingReceiptBlob || removeExistingReceipt) {
+      cleanupUnusedReceipts({ silent: true }).catch(() => {});
+    }
 
     const saveButton = e.submitter || $("expenseForm")?.querySelector('button[type="submit"]');
     const originalLabel = saveButton?.textContent || "Save Expense";
@@ -3225,14 +3550,58 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     URL.revokeObjectURL(url);
   }
 
-  function exportBackup() {
+  async function exportBackup() {
     const name = (state.trip?.name || "tripspend").replace(/[^a-z0-9]+/gi, "-");
-    download(
-      `${name}-backup.json`,
-      JSON.stringify({ app: "TripSpend", version: 6, appVersion: APP_VERSION, exportedAt: new Date().toISOString(), data: state }, null, 2),
-      "application/json"
-    );
-    toast("Backup exported");
+    const button = $("exportBtn");
+    const oldText = button?.textContent || "Export Backup";
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Preparing backup…";
+    }
+
+    try {
+      const ids = collectReceiptIds(state, new Set());
+      const receipts = [];
+
+      if (storageMode === "indexeddb" && storageDB && ids.size) {
+        for (const id of ids) {
+          const record = await idbGetReceipt(id);
+          if (!record?.blob) continue;
+          receipts.push({
+            id: record.id,
+            tripId: record.tripId || "",
+            expenseId: record.expenseId || "",
+            name: record.name || "Receipt.jpg",
+            type: record.type || record.blob.type || "image/jpeg",
+            size: record.size || record.blob.size || 0,
+            createdAt: record.createdAt || Date.now(),
+            dataURL: await blobToDataURL(record.blob)
+          });
+        }
+      }
+
+      download(
+        `${name}-backup.json`,
+        JSON.stringify({
+          app: "TripSpend",
+          version: 7,
+          appVersion: APP_VERSION,
+          exportedAt: new Date().toISOString(),
+          data: state,
+          receipts
+        }, null, 2),
+        "application/json"
+      );
+      toast(receipts.length ? `Backup exported with ${receipts.length} receipt${receipts.length === 1 ? "" : "s"}` : "Backup exported");
+    } catch {
+      alert("TripSpend could not create the portable backup.");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = oldText;
+      }
+    }
   }
 
   function csvCell(v) {
@@ -3275,8 +3644,9 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     try {
       const parsed = JSON.parse(await file.text());
       const data = parsed.data || parsed;
-      if (!data?.trip || !Array.isArray(data.expenses)) throw new Error("invalid");
-      if (!confirm("Import this backup? It will replace the current trip in this browser.")) return;
+      const hasTripData = !!data?.trip || (Array.isArray(data?.tripHistory) && data.tripHistory.length > 0);
+      if (!data || !Array.isArray(data.expenses || []) || !hasTripData) throw new Error("invalid");
+      if (!confirm("Import this backup? It will replace the current TripSpend data in this browser.")) return;
 
       if (meaningfulState(state) && storageMode === "indexeddb") {
         await createBackupSnapshot("Before import", state, "before-import");
@@ -3284,10 +3654,31 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
       state = normalizeState(data);
       await persistStateImmediately(state);
+
+      const receiptRows = Array.isArray(parsed.receipts) ? parsed.receipts : [];
+      if (receiptRows.length && storageMode === "indexeddb") {
+        for (const receipt of receiptRows) {
+          if (!receipt?.id || !receipt?.dataURL) continue;
+          const blob = dataURLToBlob(receipt.dataURL);
+          await idbPutReceipt({
+            id: String(receipt.id),
+            tripId: String(receipt.tripId || ""),
+            expenseId: String(receipt.expenseId || ""),
+            name: String(receipt.name || "Receipt.jpg"),
+            type: String(receipt.type || blob.type || "image/jpeg"),
+            size: Number(receipt.size || blob.size || 0),
+            blob,
+            createdAt: Number(receipt.createdAt || Date.now())
+          });
+        }
+      }
+
       applyAppearance(state.preferences?.appearance || "system");
       render();
-      page("dashboard");
-      toast("Backup imported");
+      page(state.trip ? "dashboard" : "settings");
+      await renderReceiptStorageStats();
+      cleanupUnusedReceipts({ silent: true }).catch(() => {});
+      toast(receiptRows.length ? `Backup imported with ${receiptRows.length} receipt${receiptRows.length === 1 ? "" : "s"}` : "Backup imported");
     } catch {
       alert("That file is not a valid TripSpend backup.");
     } finally {
@@ -3336,6 +3727,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
         resetSetupForNewTrip();
         render();
+        cleanupUnusedReceipts({ silent: true }).catch(() => {});
         toast("Current trip deleted");
       } catch {
         alert("TripSpend could not delete the trip safely.");
@@ -3367,6 +3759,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if (!file) return;
 
     try {
+      if (storageMode !== "indexeddb") throw new Error("Receipt storage needs IndexedDB");
       const blob = await compressReceiptImage(file);
       pendingReceiptBlob = blob;
       pendingReceiptName = file.name || "Receipt.jpg";
@@ -3387,6 +3780,57 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     clearReceiptPreviewURL();
     $("receiptPreview")?.classList.add("hidden");
     if ($("receiptInput")) $("receiptInput").value = "";
+  });
+
+  $("cleanReceiptStorageBtn")?.addEventListener("click", () => cleanupUnusedReceipts());
+
+  $("checkUpdateBtn")?.addEventListener("click", () => checkAppVersion({ announce: true }));
+  $("refreshAppBtn")?.addEventListener("click", forceAppUpdate);
+
+  $("closeExpenseDetail")?.addEventListener("click", closeExpenseDetails);
+  $("expenseDetailModal")?.addEventListener("click", event => {
+    if (event.target === $("expenseDetailModal")) closeExpenseDetails();
+  });
+
+  $("viewDetailReceiptBtn")?.addEventListener("click", () => {
+    const expense = state.expenses.find(item => item.id === activeExpenseDetailId);
+    if (expense?.receiptId) openReceiptViewer(expense.receiptId);
+  });
+
+  $("detailReceiptReplaceInput")?.addEventListener("change", event => {
+    replaceDetailReceipt(event.target.files?.[0]);
+  });
+  $("removeDetailReceiptBtn")?.addEventListener("click", removeDetailReceipt);
+
+  $("detailEditExpenseBtn")?.addEventListener("click", () => {
+    const id = activeExpenseDetailId;
+    closeExpenseDetails();
+    if (id) openModal(id);
+  });
+
+  $("detailRepeatExpenseBtn")?.addEventListener("click", () => {
+    const expense = state.expenses.find(item => item.id === activeExpenseDetailId);
+    closeExpenseDetails();
+    if (expense) openModal("", expense);
+  });
+
+  $("detailDeleteExpenseBtn")?.addEventListener("click", async () => {
+    const id = activeExpenseDetailId;
+    closeExpenseDetails();
+    if (id) await removeExpense(id);
+  });
+
+  $("closeReceiptViewer")?.addEventListener("click", closeReceiptViewer);
+  $("receiptViewerModal")?.addEventListener("click", event => {
+    if (event.target === $("receiptViewerModal")) closeReceiptViewer();
+  });
+  $("receiptZoomIn")?.addEventListener("click", () => {
+    receiptViewerScale = Math.min(3, receiptViewerScale + 0.25);
+    applyReceiptViewerScale();
+  });
+  $("receiptZoomOut")?.addEventListener("click", () => {
+    receiptViewerScale = Math.max(0.5, receiptViewerScale - 0.25);
+    applyReceiptViewerScale();
   });
 
   $("searchExpense").oninput = () => {
@@ -3647,7 +4091,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     flushPendingSave,
     settlementBalancesFor,
     settlementOutstandingFor,
-    renderTripsPage
+    renderTripsPage,
+    toHome
   };
   opts($("homeCurrency"), CURS, "OMR");
   opts($("tripCurrency"), CURS, "THB");
@@ -3689,19 +4134,61 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     }
   });
 
-  async function checkAppVersion() {
+  function renderUpdateSettings(status = "checking") {
+    if ($("currentVersionText")) $("currentVersionText").textContent = `v${APP_VERSION}`;
+    if ($("latestVersionText")) {
+      $("latestVersionText").textContent =
+        status === "offline" ? "Offline"
+        : latestVersionKnown ? `v${latestVersionKnown}`
+        : "Checking…";
+    }
+
+    const badge = $("updateSettingsBadge");
+    if (!badge) return;
+
+    if (status === "offline") {
+      badge.textContent = "OFFLINE";
+      badge.className = "smart-badge update-offline";
+    } else if (latestVersionKnown && latestVersionKnown !== APP_VERSION) {
+      badge.textContent = "UPDATE";
+      badge.className = "smart-badge update-ready";
+    } else if (latestVersionKnown === APP_VERSION) {
+      badge.textContent = "UP TO DATE";
+      badge.className = "smart-badge update-current";
+    } else {
+      badge.textContent = "CHECKING";
+      badge.className = "smart-badge";
+    }
+  }
+
+  async function checkAppVersion({ announce = false } = {}) {
+    renderUpdateSettings("checking");
     try {
       const response = await fetch(`./version.json?t=${Date.now()}`, { cache: "no-store" });
-      if (!response.ok) return;
+      if (!response.ok) throw new Error("version fetch failed");
       const latest = await response.json();
-      if (!latest?.version || latest.version === APP_VERSION) return;
+      if (!latest?.version) throw new Error("invalid version");
+
+      latestVersionKnown = String(latest.version);
+      renderUpdateSettings("online");
 
       const banner = $("updateBanner");
       const versionText = $("updateVersionText");
-      if (versionText) versionText.textContent = `v${latest.version} is ready`;
-      if (banner) banner.classList.remove("hidden");
+
+      if (latestVersionKnown !== APP_VERSION) {
+        if (versionText) versionText.textContent = `v${latestVersionKnown} is ready`;
+        if (banner) banner.classList.remove("hidden");
+        if (announce) toast(`v${latestVersionKnown} is available`);
+      } else {
+        if (banner) banner.classList.add("hidden");
+        if (announce) toast("TripSpend is up to date");
+      }
+
+      return latestVersionKnown;
     } catch {
-      // Offline is fine; the installed app continues using the current cached version.
+      renderUpdateSettings("offline");
+      if (announce) toast("Could not check for updates while offline");
+      return "";
     }
   }
 
@@ -3728,7 +4215,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.2", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.3", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

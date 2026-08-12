@@ -706,3 +706,57 @@ This makes receipt attachment easier to discover and reduces friction when savin
 - Larger small text for Budget, Spent, Reserved for plans, and Available after plans
 - Stronger divider and better progress bar contrast
 - Improved readability on iPhone screens
+
+
+## v6.6.3 — Reliability & Receipt Fixes
+
+### Receipt viewer
+- Tap an expense to open **Expense Details**.
+- Tap **View** on an attached receipt to open the full receipt.
+- Receipt viewer supports iPhone pinch zoom plus − / + zoom controls.
+- Replace or remove the receipt directly from Expense Details.
+
+### Expense details
+Tapping any expense now shows:
+- home amount and original amount
+- country and date
+- Personal / Shared
+- Paid by
+- Expense For
+- category
+- payment method
+- exchange rate
+- per-person shared split
+- receipt
+
+Edit, Repeat and Delete are available at the bottom.
+
+### Portable backup now includes receipts
+- Export Backup packages all receipt photos referenced by the current trip and Past Trips into the JSON backup.
+- Import Backup restores those receipt files back into IndexedDB.
+- Backups without receipts from older TripSpend versions still import normally.
+
+### Receipt storage safety
+- Receipt replacements receive a new receipt ID instead of overwriting the old image.
+- Old receipt files are preserved when an automatic/manual restore point still references them.
+- Settings → Data Safety shows local storage usage and receipt-photo usage.
+- **Clean unused receipt files** removes only receipt images not referenced by the current data or any local restore point.
+- Deleting expenses/trips triggers safe orphan cleanup.
+
+### Update controls
+Settings now shows:
+- Current version
+- Latest version from GitHub Pages
+- Check for Update
+- Refresh App
+
+This makes stale Home Screen/service-worker versions much easier to fix.
+
+### Shared expense preview
+Before saving a Shared expense, TripSpend now shows the equal split:
+- total amount
+- number of travelers
+- amount per person
+- approximate home-currency share when FX is required
+
+No settlement rules were changed.
