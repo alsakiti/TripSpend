@@ -5444,3 +5444,99 @@ html[data-theme="dark"] .analytics-main-card{
     grid-column:1 / -1;
   }
 }
+
+
+/* =========================================================
+   TripSpend v6.6.4 — Stability & edge-case hardening
+   ========================================================= */
+
+.diagnostics-card{
+  margin-top:12px;
+  padding:14px;
+}
+.diagnostics-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.diagnostics-head strong{
+  display:block;
+  font-size:13px;
+}
+.diagnostics-head p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.4;
+}
+.diagnostics-head .compact-btn{
+  flex:0 0 auto;
+  min-height:34px!important;
+  width:auto!important;
+  padding:0 10px!important;
+  font-size:9px!important;
+}
+.diagnostics-list{
+  display:grid;
+  gap:0;
+  margin-top:10px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.diagnostics-list>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:9px 10px;
+  background:var(--surface2);
+  border-top:1px solid var(--line);
+}
+.diagnostics-list>div:first-child{
+  border-top:0;
+}
+.diagnostics-list span{
+  color:var(--muted);
+  font-size:9px;
+}
+.diagnostics-list strong{
+  font-size:9px;
+  text-align:right;
+}
+.diag-ok{color:var(--ok)!important}
+.diag-warn{color:var(--warn)!important}
+.diag-bad{color:var(--bad)!important}
+.diagnostics-summary{
+  display:block;
+  margin-top:8px;
+  color:var(--muted);
+  font-size:8.5px;
+  line-height:1.4;
+}
+
+.expense-detail-item strong,
+.trip-history-metrics strong,
+.trip-current-metrics strong,
+.analytics-main-meta strong,
+.smart-budget-reserve strong{
+  overflow-wrap:anywhere;
+}
+
+button:disabled{
+  cursor:default;
+  opacity:.62;
+}
+
+.receipt-viewer-stage img:not([src]),
+.expense-detail-receipt img:not([src]),
+.receipt-preview img:not([src]){
+  visibility:hidden;
+}
+
+@media(max-width:600px){
+  .diagnostics-card{padding:12px}
+  .diagnostics-list span,
+  .diagnostics-list strong{font-size:9.5px}
+}

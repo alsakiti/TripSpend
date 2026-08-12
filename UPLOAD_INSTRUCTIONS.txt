@@ -1,22 +1,22 @@
-TripSpend v6.6.3 update
+TripSpend v6.6.4 update
 
-1. Extract TripSpend-v6.6.3-update.zip.
+1. Extract TripSpend-v6.6.4-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.6.3.
+7. Confirm the badge says v6.6.4.
 
-New in v6.6.3:
-- Tap an expense for a full Expense Details sheet
-- Full receipt viewer with zoom
-- Replace/remove receipts from Expense Details
-- Portable JSON backups now include receipt photos
-- Settings shows storage/receipt usage
-- Clean unused receipt files safely
-- Settings shows Current/Latest app version
-- Check for Update + Refresh App
-- Shared expenses preview the per-person split before saving
+Main fixes:
+- Atomic receipt + expense saving
+- Restore/import validation
+- Large-backup protection
+- Safer settlement Mark Paid
+- Stronger country transition dates
+- Faster planned-cost reserve calculation
+- Settings → App health diagnostics
+- Clear Refresh App confirmation
+- Better receipt memory cleanup
 
-Your existing trips, expenses, receipts, Past Trips, settlements and backups are preserved.
+Existing trips, expenses, receipts, Past Trips, settlements and backups are preserved.

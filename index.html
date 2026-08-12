@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.6.3">
-  <link rel="icon" href="icons/icon-192.png?v=6.6.3">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.3">
-  <link rel="stylesheet" href="style.css?v=6.6.3">
+  <link rel="manifest" href="manifest.webmanifest?v=6.6.4">
+  <link rel="icon" href="icons/icon-192.png?v=6.6.4">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.4">
+  <link rel="stylesheet" href="style.css?v=6.6.4">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,7 +32,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6.3</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6.4</span></div>
         <h1 id="headerTitle">TripSpend</h1>
         <p id="headerSub">Travel spending, made simple.</p>
       </div>
@@ -43,8 +43,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.6.3" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.6.3</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.6.4" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.6.4</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -875,13 +875,33 @@
             <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
           </div>
           <div class="app-update-versions">
-            <span><small>Current</small><strong id="currentVersionText">v6.6.3</strong></span>
+            <span><small>Current</small><strong id="currentVersionText">v6.6.4</strong></span>
             <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
           </div>
           <div class="app-update-actions">
             <button id="checkUpdateBtn" class="secondary" type="button">Check for Update</button>
             <button id="refreshAppBtn" class="secondary" type="button">Refresh App</button>
           </div>
+        </div>
+
+        <div class="card diagnostics-card">
+          <div class="diagnostics-head">
+            <div>
+              <strong>App health</strong>
+              <p>Quick checks for storage, database, receipts, performance and the offline app shell.</p>
+            </div>
+            <button id="runDiagnosticsBtn" class="secondary compact-btn" type="button">Run checks</button>
+          </div>
+
+          <div class="diagnostics-list">
+            <div><span>Storage</span><strong id="diagStorage">Checking…</strong></div>
+            <div><span>Database</span><strong id="diagDatabase">Checking…</strong></div>
+            <div><span>Receipts</span><strong id="diagReceipts">Checking…</strong></div>
+            <div><span>Offline app</span><strong id="diagServiceWorker">Checking…</strong></div>
+            <div><span>Data integrity</span><strong id="diagIntegrity">Checking…</strong></div>
+            <div><span>Performance</span><strong id="diagPerformance">Checking…</strong></div>
+          </div>
+          <small id="diagSummary" class="diagnostics-summary">TripSpend will run a quick check when Settings opens.</small>
         </div>
 
 
@@ -1213,8 +1233,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.6.3"></script>
-<script src="fx.js?v=6.6.3"></script>
-<script src="v5.js?v=6.6.3"></script>
+<script src="app.js?v=6.6.4"></script>
+<script src="fx.js?v=6.6.4"></script>
+<script src="v5.js?v=6.6.4"></script>
 </body>
 </html>

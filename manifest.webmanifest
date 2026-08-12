@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v6.6.3",
+  "name": "TripSpend v6.6.4",
   "short_name": "TripSpend",
-  "description": "Reliable offline-first travel spending with receipt backup/viewing, expense details, update controls and protected local storage.",
+  "description": "Offline-first travel spending hardened for receipt safety, backup validation, settlement edge cases, diagnostics and stable updates.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

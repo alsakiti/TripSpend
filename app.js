@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.3";
+  const APP_VERSION = "6.6.4";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -11,6 +11,9 @@
   const DB_RECEIPT_STORE = "receipts";
   const STORAGE_SAVE_DELAY = 140;
   const MAX_DAILY_BACKUPS = 7;
+  const PORTABLE_BACKUP_WARN_BYTES = 25 * 1024 * 1024;
+  const PORTABLE_BACKUP_MAX_BYTES = 75 * 1024 * 1024;
+  const PORTABLE_IMPORT_MAX_BYTES = 100 * 1024 * 1024;
 
   let storageDB = null;
   let storageMode = "starting";
@@ -247,6 +250,103 @@
     };
   }
 
+  function stateIntegrityReport(data) {
+    const errors = [];
+    const warnings = [];
+
+    if (!data || typeof data !== "object") {
+      return { ok: false, errors: ["State is not an object"], warnings };
+    }
+
+    const trip = data.trip || null;
+    const expenses = Array.isArray(data.expenses) ? data.expenses : [];
+    const people = Array.isArray(data.people) ? data.people : [];
+    const stops = Array.isArray(data.stops) ? data.stops : [];
+    const plans = Array.isArray(data.plans) ? data.plans : [];
+    const settlements = Array.isArray(data.settlements) ? data.settlements : [];
+    const history = Array.isArray(data.tripHistory) ? data.tripHistory : [];
+
+    if (trip) {
+      if (!trip.id) errors.push("Current trip is missing an ID");
+      if (trip.startDate && trip.endDate && trip.startDate > trip.endDate) {
+        errors.push("Current trip dates are reversed");
+      }
+    }
+
+    const checkDuplicates = (rows, label) => {
+      const seen = new Set();
+      rows.forEach(row => {
+        if (!row?.id) return;
+        const id = String(row.id);
+        if (seen.has(id)) errors.push(`Duplicate ${label} ID`);
+        seen.add(id);
+      });
+    };
+
+    checkDuplicates(expenses, "expense");
+    checkDuplicates(people, "traveler");
+    checkDuplicates(stops, "country");
+    checkDuplicates(plans, "planned cost");
+    checkDuplicates(settlements, "settlement");
+
+    const personIds = new Set(people.map(person => String(person.id)));
+    const stopIds = new Set(stops.map(stop => String(stop.id)));
+    const planIds = new Set(plans.map(plan => String(plan.id)));
+
+    stops.forEach(stop => {
+      if (stop.startDate && stop.endDate && stop.startDate > stop.endDate) {
+        errors.push(`Country dates are reversed for ${stop.country || "a country"}`);
+      }
+    });
+
+    expenses.forEach(expense => {
+      if (!(Number(expense.homeAmount) >= 0)) errors.push("An expense has an invalid amount");
+      if (expense.stopId && !stopIds.has(String(expense.stopId))) warnings.push("An expense references a missing country");
+      if (expense.paidByPersonId && !personIds.has(String(expense.paidByPersonId))) warnings.push("An expense references a missing payer");
+      if (expense.planId && !planIds.has(String(expense.planId))) warnings.push("An expense references a missing planned cost");
+
+      (expense.personShares || []).forEach(share => {
+        if (share.personId && !personIds.has(String(share.personId))) {
+          warnings.push("An expense references a missing traveler");
+        }
+      });
+    });
+
+    settlements.forEach(payment => {
+      if (!(Number(payment.amount) > 0)) errors.push("A settlement has an invalid amount");
+      if (payment.fromPersonId === payment.toPersonId) errors.push("A settlement pays the same traveler");
+      if (!personIds.has(String(payment.fromPersonId)) || !personIds.has(String(payment.toPersonId))) {
+        warnings.push("A settlement references a missing traveler");
+      }
+    });
+
+    if (trip?.id && history.some(record => String(record.id) === String(trip.id))) {
+      errors.push("Current trip also exists in Past Trips");
+    }
+
+    history.forEach(record => {
+      if (!record?.data?.trip) errors.push("A Past Trip has no trip data");
+      if (record?.data?.tripHistory?.length) warnings.push("A Past Trip contains nested trip history");
+    });
+
+    return {
+      ok: errors.length === 0,
+      errors: [...new Set(errors)],
+      warnings: [...new Set(warnings)]
+    };
+  }
+
+  function snapshotDescription(data) {
+    const trip = data?.trip;
+    if (!trip) {
+      const count = Array.isArray(data?.tripHistory) ? data.tripHistory.length : 0;
+      return `${count} past trip${count === 1 ? "" : "s"} • no active trip`;
+    }
+
+    const count = Array.isArray(data.expenses) ? data.expenses.length : 0;
+    return `${trip.name || "Trip"} • ${fmtDateWithYear(trip.startDate)} – ${fmtDateWithYear(trip.endDate)} • ${count} expense${count === 1 ? "" : "s"}`;
+  }
+
   function snapshotTripData(source = state) {
     return {
       trip: safeClone(source.trip),
@@ -300,13 +400,11 @@
 
     (data?.settlements || []).forEach(payment => {
       const amount = num(payment.amount);
-      if (!(amount > 0)) return;
-      if (balances.has(payment.fromPersonId)) {
-        balances.set(payment.fromPersonId, (balances.get(payment.fromPersonId) || 0) + amount);
-      }
-      if (balances.has(payment.toPersonId)) {
-        balances.set(payment.toPersonId, (balances.get(payment.toPersonId) || 0) - amount);
-      }
+      if (!(amount > 0) || payment.fromPersonId === payment.toPersonId) return;
+      if (!balances.has(payment.fromPersonId) || !balances.has(payment.toPersonId)) return;
+
+      balances.set(payment.fromPersonId, (balances.get(payment.fromPersonId) || 0) + amount);
+      balances.set(payment.toPersonId, (balances.get(payment.toPersonId) || 0) - amount);
     });
 
     return balances;
@@ -1294,9 +1392,50 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     return record;
   }
 
+  async function persistStateAndReceiptAtomically(snapshot, receiptRecord) {
+    if (storageMode !== "indexeddb" || !storageDB || !receiptRecord?.id || !receiptRecord?.blob) {
+      throw new Error("Atomic receipt storage unavailable");
+    }
+
+    invalidateAnalyticsCache();
+    const cleanSnapshot = safeClone(snapshot);
+    const integrity = stateIntegrityReport(cleanSnapshot);
+    if (!integrity.ok) throw new Error(`State integrity failed: ${integrity.errors[0]}`);
+
+    const now = Date.now();
+    const day = today();
+    const tx = storageDB.transaction(
+      [DB_STATE_STORE, DB_BACKUP_STORE, DB_RECEIPT_STORE],
+      "readwrite"
+    );
+
+    tx.objectStore(DB_RECEIPT_STORE).put(receiptRecord);
+    tx.objectStore(DB_STATE_STORE).put({
+      key: "current",
+      data: cleanSnapshot,
+      updatedAt: now,
+      appVersion: APP_VERSION
+    });
+
+    if (meaningfulState(cleanSnapshot)) {
+      const backups = tx.objectStore(DB_BACKUP_STORE);
+      backups.put(backupRecord("latest", "latest", "Latest", cleanSnapshot, now));
+      backups.put(backupRecord(`daily:${day}`, "daily", backupDateLabel(day), cleanSnapshot, now));
+    }
+
+    await txComplete(tx);
+    lastStorageWriteAt = now;
+    pendingStorageSnapshot = null;
+    localStorage.removeItem(KEY);
+    cleanupAutomaticBackups().catch(() => {});
+    renderStoragePanel();
+  }
+
   async function persistStateImmediately(snapshot = state, { maintainBackups = true } = {}) {
     invalidateAnalyticsCache();
     const cleanSnapshot = safeClone(snapshot);
+    const integrity = stateIntegrityReport(cleanSnapshot);
+    if (!integrity.ok) throw new Error(`State integrity failed: ${integrity.errors[0]}`);
 
     if (storageMode !== "indexeddb" || !storageDB) {
       localStorage.setItem(KEY, JSON.stringify(cleanSnapshot));
@@ -1560,7 +1699,18 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const backup = await idbGetBackup(id);
     if (!backup?.data) return toast("Restore point unavailable");
 
-    if (!confirm(`Restore “${backup.label || "this snapshot"}”? Your current trip will be kept as a safety snapshot first.`)) {
+    const normalized = normalizeState(backup.data);
+    const integrity = stateIntegrityReport(normalized);
+
+    if (!integrity.ok) {
+      alert(`This restore point failed validation and was not restored.\n\n${integrity.errors.slice(0, 3).join("\n")}`);
+      return;
+    }
+
+    const description = snapshotDescription(normalized);
+    const warning = integrity.warnings.length ? `\n\nNote: ${integrity.warnings[0]}` : "";
+
+    if (!confirm(`Restore “${backup.label || "this snapshot"}”?\n\n${description}${warning}\n\nYour current data will be kept as a safety snapshot first.`)) {
       return;
     }
 
@@ -1569,14 +1719,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         await createBackupSnapshot("Before restore", state, "before-restore");
       }
 
-      state = normalizeState(backup.data);
+      state = normalized;
       await persistStateImmediately(state);
       applyAppearance(state.preferences?.appearance || "system");
       render();
-      page("dashboard");
-      toast("Restore point restored");
+      page(state.trip ? "dashboard" : "settings");
+      toast("Restore point validated and restored");
     } catch {
-      alert("TripSpend could not restore that snapshot.");
+      alert("TripSpend could not restore that snapshot safely.");
     }
   }
 
@@ -2770,8 +2920,11 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     $("budgetValue").textContent = money(t.budget, t.homeCurrency);
     $("spentValue").textContent = money(s, t.homeCurrency);
 
+    const convertedPlanIds = new Set(
+      state.expenses.map(expense => expense.planId).filter(Boolean)
+    );
     const plannedReserve = (state.plans || [])
-      .filter(plan => plan.status !== "paid" && !state.expenses.some(expense => expense.planId === plan.id))
+      .filter(plan => plan.status !== "paid" && !convertedPlanIds.has(plan.id))
       .reduce((sum, plan) => sum + num(plan.homeAmount), 0);
     const availableAfterPlans = remaining - plannedReserve;
     const safeTodayAfterPlans = daysLeft > 0 ? Math.max(0, availableAfterPlans) / daysLeft : 0;
@@ -2801,6 +2954,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       renderRates();
       renderStoragePanel();
       renderUpdateSettings(latestVersionKnown ? "online" : "checking");
+      runDiagnostics();
     }
 
     if (activePage === "trips") renderTripsPage();
@@ -2826,6 +2980,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       renderRates();
       renderStoragePanel();
       renderUpdateSettings(latestVersionKnown ? "online" : "checking");
+      runDiagnostics();
     }
     if (id === "trips") renderTripsPage();
 
@@ -2864,12 +3019,17 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       URL.revokeObjectURL(expenseDetailReceiptURL);
       expenseDetailReceiptURL = "";
     }
+    if ($("expenseDetailReceiptThumb")) $("expenseDetailReceiptThumb").removeAttribute("src");
   }
 
   function clearReceiptViewerURL() {
     if (receiptViewerURL) {
       URL.revokeObjectURL(receiptViewerURL);
       receiptViewerURL = "";
+    }
+    if ($("receiptViewerImage")) {
+      $("receiptViewerImage").removeAttribute("src");
+      $("receiptViewerImage").style.transform = "";
     }
   }
 
@@ -3279,8 +3439,13 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   function deletePerson(id) {
     const person = personById(id);
     if (!person) return;
-    const used = state.expenses.some(e => (e.personShares || []).some(s => s.personId === id));
-    if (used) return toast("Archive this traveler instead to preserve history");
+    const usedByExpenses = state.expenses.some(e =>
+      e.paidByPersonId === id || (e.personShares || []).some(s => s.personId === id)
+    );
+    const usedBySettlements = (state.settlements || []).some(s =>
+      s.fromPersonId === id || s.toPersonId === id
+    );
+    if (usedByExpenses || usedBySettlements) return toast("Archive this traveler instead to preserve history");
     if (!confirm(`Delete ${person.name} from this trip?`)) return;
     state.people = state.people.filter(p => p.id !== id);
     save();
@@ -3412,6 +3577,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   $("expenseForm").onsubmit = async e => {
     e.preventDefault();
 
+    const stateBeforeExpenseSave = safeClone(state);
     const amount = num($("expenseAmount").value);
     const currency = $("expenseCurrency").value;
     const rate = currency === state.trip.homeCurrency ? 1 : num($("exchangeRate").value);
@@ -3467,23 +3633,6 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       state.expenses.push(x);
     }
 
-    try {
-      if (pendingReceiptBlob && storageMode === "indexeddb") {
-        await idbPutReceipt({
-          id: x.receiptId,
-          tripId: state.trip.id,
-          expenseId: x.id,
-          name: pendingReceiptName || "Receipt.jpg",
-          type: pendingReceiptBlob.type || "image/jpeg",
-          size: pendingReceiptBlob.size || 0,
-          blob: pendingReceiptBlob,
-          createdAt: Date.now()
-        });
-      }
-    } catch {
-      toast("Expense saved, but receipt could not be stored");
-    }
-
     if (currency !== state.trip.homeCurrency) state.rates[rateKey(currency)] = rate;
 
     state.preferences = state.preferences || {};
@@ -3496,7 +3645,30 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       ...(state.preferences.recentCategories || []).filter(category => category !== x.category)
     ].filter(category => CATS.includes(category)).slice(0, 5);
 
-    save();
+    try {
+      if (pendingReceiptBlob) {
+        if (storageMode !== "indexeddb") throw new Error("Receipt storage needs IndexedDB");
+
+        await persistStateAndReceiptAtomically(state, {
+          id: x.receiptId,
+          tripId: state.trip.id,
+          expenseId: x.id,
+          name: pendingReceiptName || "Receipt.jpg",
+          type: pendingReceiptBlob.type || "image/jpeg",
+          size: pendingReceiptBlob.size || 0,
+          blob: pendingReceiptBlob,
+          createdAt: Date.now()
+        });
+      } else {
+        save({ immediate: removeExistingReceipt });
+      }
+    } catch {
+      state = normalizeState(stateBeforeExpenseSave);
+      render();
+      toast("Nothing was saved because the receipt could not be stored safely");
+      return;
+    }
+
     if (pendingReceiptBlob || removeExistingReceipt) {
       cleanupUnusedReceipts({ silent: true }).catch(() => {});
     }
@@ -3563,8 +3735,23 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     try {
       const ids = collectReceiptIds(state, new Set());
       const receipts = [];
+      let receiptBytes = 0;
 
       if (storageMode === "indexeddb" && storageDB && ids.size) {
+        for (const id of ids) {
+          const record = await idbGetReceipt(id);
+          if (record?.blob) receiptBytes += Number(record.size || record.blob.size || 0);
+        }
+
+        if (receiptBytes > PORTABLE_BACKUP_MAX_BYTES) {
+          alert(`This backup contains ${humanBytes(receiptBytes)} of receipt photos, which is too large to package safely on iPhone. Remove unnecessary receipts or export from a device with more memory.`);
+          return;
+        }
+
+        if (receiptBytes > PORTABLE_BACKUP_WARN_BYTES &&
+            !confirm(`This backup includes ${humanBytes(receiptBytes)} of receipt photos and may take longer to create. Continue?`)) {
+          return;
+        }
         for (const id of ids) {
           const record = await idbGetReceipt(id);
           if (!record?.blob) continue;
@@ -3578,6 +3765,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
             createdAt: record.createdAt || Date.now(),
             dataURL: await blobToDataURL(record.blob)
           });
+          await new Promise(resolve => setTimeout(resolve, 0));
         }
       }
 
@@ -3642,17 +3830,31 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   async function importBackup(file) {
     if (!file) return;
     try {
+      if (file.size > PORTABLE_IMPORT_MAX_BYTES) {
+        alert(`This backup is ${humanBytes(file.size)} and is too large to import safely on this device.`);
+        return;
+      }
+
       const parsed = JSON.parse(await file.text());
       const data = parsed.data || parsed;
       const hasTripData = !!data?.trip || (Array.isArray(data?.tripHistory) && data.tripHistory.length > 0);
       if (!data || !Array.isArray(data.expenses || []) || !hasTripData) throw new Error("invalid");
-      if (!confirm("Import this backup? It will replace the current TripSpend data in this browser.")) return;
+
+      const normalizedImport = normalizeState(data);
+      const integrity = stateIntegrityReport(normalizedImport);
+      if (!integrity.ok) {
+        alert(`This backup failed validation and was not imported.\n\n${integrity.errors.slice(0, 3).join("\n")}`);
+        return;
+      }
+
+      const importDescription = snapshotDescription(normalizedImport);
+      if (!confirm(`Import this backup?\n\n${importDescription}\n\nIt will replace the current TripSpend data in this browser.`)) return;
 
       if (meaningfulState(state) && storageMode === "indexeddb") {
         await createBackupSnapshot("Before import", state, "before-import");
       }
 
-      state = normalizeState(data);
+      state = normalizedImport;
       await persistStateImmediately(state);
 
       const receiptRows = Array.isArray(parsed.receipts) ? parsed.receipts : [];
@@ -3783,6 +3985,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   });
 
   $("cleanReceiptStorageBtn")?.addEventListener("click", () => cleanupUnusedReceipts());
+  $("runDiagnosticsBtn")?.addEventListener("click", () => runDiagnostics({ announce: true }));
 
   $("checkUpdateBtn")?.addEventListener("click", () => checkAppVersion({ announce: true }));
   $("refreshAppBtn")?.addEventListener("click", forceAppUpdate);
@@ -4132,7 +4335,110 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if (storageMode === "indexeddb" && pendingStorageSnapshot) {
       flushPendingSave();
     }
+    clearReceiptPreviewURL();
+    clearExpenseDetailReceiptURL();
+    clearReceiptViewerURL();
   });
+
+  function setDiagnostic(id, text, status = "ok") {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = `diag-${status}`;
+  }
+
+  async function runDiagnostics({ announce = false } = {}) {
+    const started = performance.now();
+    let issues = 0;
+
+    if (storageMode === "indexeddb") {
+      setDiagnostic("diagStorage", storagePersistent ? "Persistent • OK" : "IndexedDB • OK", "ok");
+    } else if (storageMode === "localStorage") {
+      setDiagnostic("diagStorage", "Safe fallback", "warn");
+      issues += 1;
+    } else {
+      setDiagnostic("diagStorage", "Starting…", "warn");
+      issues += 1;
+    }
+
+    try {
+      if (storageMode === "indexeddb" && storageDB) {
+        await idbReadMeta("storageVersion");
+        setDiagnostic("diagDatabase", "Readable • OK", "ok");
+      } else {
+        setDiagnostic("diagDatabase", "Fallback mode", "warn");
+        issues += 1;
+      }
+    } catch {
+      setDiagnostic("diagDatabase", "Read failed", "bad");
+      issues += 1;
+    }
+
+    try {
+      const referenced = collectReceiptIds(state, new Set());
+      const rows = storageMode === "indexeddb" && storageDB ? await idbListReceipts() : [];
+      const available = new Set(rows.map(row => String(row.id)));
+      const missing = [...referenced].filter(id => !available.has(id));
+
+      if (!missing.length) {
+        setDiagnostic("diagReceipts", `${rows.length} stored • OK`, "ok");
+      } else {
+        setDiagnostic("diagReceipts", `${missing.length} missing`, "warn");
+        issues += 1;
+      }
+    } catch {
+      setDiagnostic("diagReceipts", "Check failed", "warn");
+      issues += 1;
+    }
+
+    try {
+      const registration = "serviceWorker" in navigator
+        ? await navigator.serviceWorker.getRegistration()
+        : null;
+
+      if (registration) {
+        const active = !!navigator.serviceWorker.controller;
+        setDiagnostic("diagServiceWorker", active ? "Active • OK" : "Installed", active ? "ok" : "warn");
+        if (!active) issues += 1;
+      } else {
+        setDiagnostic("diagServiceWorker", "Not installed", "warn");
+        issues += 1;
+      }
+    } catch {
+      setDiagnostic("diagServiceWorker", "Check failed", "warn");
+      issues += 1;
+    }
+
+    const integrity = stateIntegrityReport(state);
+    if (integrity.ok && !integrity.warnings.length) {
+      setDiagnostic("diagIntegrity", "Healthy • OK", "ok");
+    } else if (integrity.ok) {
+      setDiagnostic("diagIntegrity", `${integrity.warnings.length} warning${integrity.warnings.length === 1 ? "" : "s"}`, "warn");
+      issues += 1;
+    } else {
+      setDiagnostic("diagIntegrity", `${integrity.errors.length} error${integrity.errors.length === 1 ? "" : "s"}`, "bad");
+      issues += 1;
+    }
+
+    const perfStatus = lastRenderMs > 250 ? "warn" : "ok";
+    setDiagnostic(
+      "diagPerformance",
+      `${state.expenses.length} expenses • ${Math.max(1, Math.round(lastRenderMs || 0))} ms render`,
+      perfStatus
+    );
+    if (perfStatus === "warn") issues += 1;
+
+    const elapsedMs = Math.max(1, Math.round(performance.now() - started));
+    const summary = $("diagSummary");
+    if (summary) {
+      summary.textContent = issues
+        ? `${issues} item${issues === 1 ? "" : "s"} need attention • checked in ${elapsedMs} ms`
+        : `Everything looks healthy • checked in ${elapsedMs} ms`;
+    }
+
+    if (announce) toast(issues ? "Diagnostics finished with warnings" : "TripSpend checks passed");
+    return { issues, integrity };
+  }
 
   function renderUpdateSettings(status = "checking") {
     if ($("currentVersionText")) $("currentVersionText").textContent = `v${APP_VERSION}`;
@@ -4193,6 +4499,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   }
 
   async function forceAppUpdate() {
+    const button = $("refreshAppBtn") || $("applyUpdateBtn");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Refreshing…";
+    }
+
+    sessionStorage.setItem("tripspend.refreshRequested", String(Date.now()));
+
     try {
       if ("serviceWorker" in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
@@ -4200,13 +4514,15 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
           await registration.update().catch(() => {});
         }
       }
+
       const keys = await caches.keys();
       await Promise.all(
         keys.filter(key => key.startsWith("tripspend-")).map(key => caches.delete(key))
       );
     } catch {
-      // Ignore cache-management failures and still reload.
+      // Reload still gives the network a chance to fetch the newest shell.
     }
+
     location.reload();
   }
 
@@ -4215,7 +4531,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.3", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.4", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
@@ -4226,9 +4542,21 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       // The new worker is active. A manual or next launch refresh will use it.
-      checkAppVersion();
+      checkAppVersion().then(() => {
+        if (sessionStorage.getItem("tripspend.refreshRequested")) {
+          sessionStorage.removeItem("tripspend.refreshRequested");
+          toast(`App refreshed • v${APP_VERSION}`);
+        }
+      });
     });
   } else {
-    addEventListener("load", checkAppVersion);
+    addEventListener("load", () => {
+      checkAppVersion().then(() => {
+        if (sessionStorage.getItem("tripspend.refreshRequested")) {
+          sessionStorage.removeItem("tripspend.refreshRequested");
+          toast(`App refreshed • v${APP_VERSION}`);
+        }
+      });
+    });
   }
 })();

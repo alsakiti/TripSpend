@@ -760,3 +760,49 @@ Before saving a Shared expense, TripSpend now shows the equal split:
 - approximate home-currency share when FX is required
 
 No settlement rules were changed.
+
+
+## v6.6.4 — Stability & Edge-Case Fixes
+
+### Receipt save safety
+- A new receipt and its expense update now save in one IndexedDB transaction.
+- If receipt storage fails, the expense change is rolled back instead of leaving a broken receipt link.
+
+### Backup/import protection
+- Restore points are validated before use.
+- Restore confirmation shows trip name, dates and expense count.
+- Receipt-heavy portable backups warn above 25 MB.
+- Receipt data above 75 MB is blocked from on-device packaging to reduce iPhone memory crashes.
+- Portable imports above 100 MB are blocked.
+- Imports are validated before replacing current data.
+
+### Trip isolation / integrity
+App Health checks for duplicate IDs, invalid dates, broken expense references, invalid settlements and current-trip/Past-Trip collisions.
+
+### Settlement edge cases
+- Mark Paid cannot overpay the remaining balance.
+- Repeated taps on an already settled payment do nothing.
+- Self-payments are ignored.
+- Travelers referenced by expense payer or settlement history must be archived instead of deleted.
+
+### Country/date boundaries
+On a shared transition date, the country beginning that exact date wins deterministically.
+
+### Planned-cost reserve
+Paid or already-converted planned costs are reserved only once.
+The lookup is faster on large trips.
+
+### App Health
+Settings → App health checks:
+- Storage
+- Database
+- Receipts
+- Offline app / service worker
+- Data integrity
+- Performance
+
+### Update reliability
+Refresh App now shows **Refreshing…**, then confirms **App refreshed • v6.6.4** after reload.
+
+### Memory cleanup
+Receipt preview/viewer image URLs and image sources are released when closed or when iOS backgrounds the app.

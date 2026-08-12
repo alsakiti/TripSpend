@@ -468,11 +468,20 @@
 
   function stopForDate(date) {
     if (!date) return stops()[0] || null;
-    const ordered = stops().slice().sort((a,b) => (a.startDate || "").localeCompare(b.startDate || ""));
-    const active = ordered.filter(s => s.startDate <= date && date <= s.endDate);
-    if (active.length) return active.at(-1); // shared transition date belongs to the next country
+
+    const ordered = stops().slice().sort((a,b) =>
+      (a.startDate || "").localeCompare(b.startDate || "") ||
+      Number(a.createdAt || 0) - Number(b.createdAt || 0)
+    );
+
+    const startingToday = ordered.filter(stop => stop.startDate === date);
+    if (startingToday.length) return startingToday.at(-1);
+
+    const active = ordered.filter(stop => stop.startDate <= date && date <= stop.endDate);
+    if (active.length) return active.at(-1);
+
     if (date < (ordered[0]?.startDate || date)) return ordered[0] || null;
-    return ordered.filter(s => s.startDate <= date).at(-1) || ordered[0] || null;
+    return ordered.filter(stop => stop.startDate <= date).at(-1) || ordered[0] || null;
   }
 
   function sortStops() {
@@ -908,8 +917,27 @@
   }
 
   function recordSettlement(fromPersonId, toPersonId, amount) {
-    const value = Number(amount || 0);
-    if (!(value > 0) || !personById(fromPersonId) || !personById(toPersonId)) return;
+    const requested = Number(amount || 0);
+    if (!(requested > 0) || fromPersonId === toPersonId) return;
+    if (!personById(fromPersonId) || !personById(toPersonId)) return core.toast("Traveler record is unavailable");
+
+    const balances = core.settlementBalancesFor(state());
+    const debtorBalance = Number(balances.get(fromPersonId) || 0);
+    const creditorBalance = Number(balances.get(toPersonId) || 0);
+    const maxAllowed = Math.max(
+      0,
+      Math.min(
+        Math.abs(Math.min(0, debtorBalance)),
+        Math.max(0, creditorBalance)
+      )
+    );
+
+    if (!(maxAllowed > 0.000001)) {
+      renderSettlement();
+      return core.toast("This payment is already settled");
+    }
+
+    const value = Math.min(requested, maxAllowed);
 
     state().settlements = Array.isArray(state().settlements) ? state().settlements : [];
     state().settlements.push({
@@ -921,7 +949,7 @@
       createdAt: Date.now()
     });
 
-    core.save();
+    core.save({ immediate: true });
     renderSettlement();
     core.toast("Marked as paid");
   }
