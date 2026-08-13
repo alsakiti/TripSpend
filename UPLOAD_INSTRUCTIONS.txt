@@ -1,20 +1,18 @@
-TripSpend v6.7.1 update
+TripSpend v6.7.2 update
 
-1. Extract TripSpend-v6.7.1-update.zip.
+1. Extract TripSpend-v6.7.2-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.7.1.
+7. Confirm the badge says v6.7.2.
 
-Home Dashboard Refresh:
-- Budget is now first
-- New Today itinerary card
-- Quick Add Expense + small Plan action
-- Current Country is compact
-- Next no longer duplicates Today
-- Trip Health is quieter
-- Country budgets collapsed behind View all
-- Home adapts before / during / after a trip
-- No data migration or calculation changes
+What changed:
+- Reverted the heavy v6.7.1 Home redesign
+- Restored the cleaner v6.7 Home structure
+- Removed full itinerary-style content from Home
+- Home now has one compact Next Up preview only
+- Next Up opens Plan → Itinerary
+- Plan remains the full planning experience
+- No data or calculation migration

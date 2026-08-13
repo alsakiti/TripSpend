@@ -1055,61 +1055,56 @@ Itinerary data is stored in the same local TripSpend state:
 - IndexedDB schema remains v2; no receipt-store migration is required.
 
 
-## v6.7.1 — Home Dashboard Refresh
+## v6.7.2 — Home / Plan Separation
 
-Home is redesigned around one question: **What do I need to know right now?**
+This release corrects the v6.7.1 direction and restores the cleaner v6.7 Home structure.
 
-### New Home hierarchy
-1. **Trip Budget Left**
-2. **Today**
-3. **Add Expense**
-4. **Current Country**
-5. **Next**
-6. **Trip Health**
-7. Collapsed Country Budgets
-8. Trips & History
+### Home
+Home is again focused on:
+- Trip Budget Left
+- Safe Today / Spent Today
+- Add Expense
+- Current Country
+- Country budgets
+- one compact **Next Up** row
+- Trip Health
+- Trips & History
 
-### Today
-The new Today card reads directly from the v6.7 Trip Planner:
-- shows up to 3 itinerary items for today
-- time, icon, title and country/location are visible at a glance
-- tapping an item opens it in the planner
-- `+ Add plan` creates a new itinerary item
-- if there are no plans, Home stays calm and simply says **No plans today**
+There is **no full Today itinerary card** and no second Plan-style experience on Home.
 
-### Adaptive trip state
-Before the trip:
-- Today becomes an **Upcoming Trip** card
-- shows the countdown
-- previews the first itinerary plans
+### Next Up
+The existing compact Home planner row now shows only one useful preview:
+- the next itinerary item today, if one exists
+- otherwise the next future itinerary item
+- otherwise the next country
+- otherwise a simple Trip Planner / Trip Complete state
 
-During the trip:
-- Today shows today's itinerary
+If multiple plans exist today, the label can show the count, while still displaying only one item.
 
-After the trip:
-- Today becomes **Trip Complete**
-- points toward Analytics for the final spending result
+Tapping **Next Up** opens the **Itinerary** view in Plan.
 
-### Next
-The Next row no longer duplicates today's itinerary.
-It shows:
-- the next future itinerary item, or
-- the next destination when there is no future itinerary item
-
-### Country budgets
-The Current Country remains visible, including its budget.
-The full country-budget list is collapsed behind **View all** so it does not permanently crowd Home.
+### Plan
+Plan remains the only full planning surface:
+- day-by-day itinerary
+- flights
+- hotels
+- activities
+- restaurants
+- transport
+- notes
+- booking references
+- estimated costs
+- Planned / Booked / Done / Paid
+- Itinerary | Costs
 
 ### Design
-- tighter Home spacing
-- quieter Safe Today / Spent Today metrics
-- compact current-country card
-- smaller one-line health banner
-- Trips & History remains deliberately low emphasis
-- no extra dashboard charts
+- Home stays visually lighter than Plan.
+- Add Expense remains the dominant Home action.
+- Next Up is styled as a compact bridge to the planner.
+- Trip Health and Trips & History stay low emphasis.
 
 ### Compatibility
-- No data-model migration
-- No IndexedDB migration
-- No calculation changes
-- Existing trips, itinerary items, receipts, settlements and backups remain compatible
+- No data-model migration.
+- No IndexedDB migration.
+- No calculation changes.
+- Existing itinerary, expenses, receipts, settlements, history and backups remain compatible.
