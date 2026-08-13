@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.7.5";
+  const APP_VERSION = "6.7.6";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -2435,8 +2435,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   function renderHealth() {
     const h = health(), banner = $("healthBanner");
-    // Keep structural/modifier classes owned by the markup. Replacing className here
-    // used to silently remove v6-health-banner after the first render.
+    if (!banner) return;
+    // Preserve structural Home classes while updating only the health state.
     banner.classList.remove("on-track", "watch", "over");
     banner.classList.add(h.cls);
     $("healthIcon").textContent = h.icon;
@@ -4469,7 +4469,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
               { opacity: 0, transform: "translateY(-4px)" },
               { opacity: 1, transform: "translateY(0)" }
             ],
-            { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" }
+            { duration: 170, easing: "cubic-bezier(.2,.8,.2,1)" }
           );
         }
       } else if (!reduceMotion && details.animate) {
@@ -4478,7 +4478,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
             { opacity: 1, transform: "translateY(0)" },
             { opacity: 0, transform: "translateY(-4px)" }
           ],
-          { duration: 140, easing: "ease-in" }
+          { duration: 130, easing: "ease-in" }
         );
         animation.onfinish = () => {
           if (!homeBudgetDetailsOpen) details.classList.add("hidden");
@@ -4487,6 +4487,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         details.classList.add("hidden");
       }
     }
+
     $("homeBudgetDetailsToggle")?.setAttribute("aria-expanded", String(homeBudgetDetailsOpen));
     if ($("homeBudgetDetailsArrow")) $("homeBudgetDetailsArrow").textContent = homeBudgetDetailsOpen ? "⌃" : "⌄";
   });
@@ -4495,7 +4496,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const explanation = $("safeTodayExplanation");
     if (!explanation) return;
     const open = explanation.classList.toggle("hidden") === false;
-    $("safeTodayInfo").setAttribute("aria-expanded", String(open));
+    $("safeTodayInfo")?.setAttribute("aria-expanded", String(open));
   });
 
   $("closeModal").onclick = closeModal;
@@ -5108,7 +5109,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.5", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.6", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

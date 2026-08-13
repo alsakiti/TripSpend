@@ -1111,27 +1111,57 @@ Plan remains the only full planning surface:
 
 
 ## v6.7.3 — Home Dashboard Polish
-
-This release improves the responsiveness and consistency of the Home dashboard.
-
-- Trip Health retains its compact Home styling after dashboard refreshes.
-- Budget Details opens and closes smoothly while honoring reduced-motion preferences.
-- Country flags and country-budget rows update with fewer live DOM operations.
-- Country progress bars consistently indicate warning and over-budget states.
-- Home actions have clearer keyboard focus, and country-budget controls expose descriptive labels.
-- The service-worker cache is versioned as v6.7.3 so installed apps receive the updated shell.
+- Preserved Home health styling after refreshes.
+- Smoothed Budget Details with reduced-motion support.
+- Batched country/flag DOM updates and improved focus states.
 
 ## v6.7.4 — Refined Home Experience
-
-- Reorders Home around today's budget, the primary expense action, and current trip context.
-- Clarifies over-budget amounts and explains the Safe Today calculation.
-- Replaces browser prompts with an accessible country-budget editor.
-- Updates existing country-budget nodes where possible instead of rebuilding the full list.
-- Improves Home typography, spacing, focus states, and reduced-motion-friendly interactions.
+- Improved Home hierarchy and Safe Today explanation.
+- Replaced brittle browser-prompt budget editing with a consistent in-app flow.
+- Improved country budget rendering and accessibility.
 
 ## v6.7.5 — Home Reliability Fixes
+- Corrected current-country over-budget wording.
+- Kept the main budget label aligned with the displayed amount.
+- Improved keyboard focus behavior in the country-budget editor.
+- Hardened country-row updates.
 
-- Corrects over-budget wording in the current-country card.
-- Keeps the main budget label aligned with the amount it represents.
-- Restores focus after closing the country-budget editor and contains keyboard focus while it is open.
-- Removes a browser-compatibility dependency from country-row updates.
+## v6.7.6 — Calm Home Dashboard
+
+A pure UI redesign that gives Home and Plan clearly different jobs.
+
+### Home hierarchy
+1. **Trip Budget Left** — the strongest visual element.
+2. **Safe Today / Spent Today** — one compact daily strip.
+3. **Add Expense** — the only dominant Home action.
+4. **Trip Context** — Current Country and one Next Up preview in a single surface.
+5. **Country Budgets** — compact spending rows.
+6. **Trip Health** — a quiet one-line signal.
+7. **Trips & History** — low-emphasis access at the bottom.
+
+### Home / Plan separation
+- Home answers: **How am I doing?**
+- Plan answers: **What am I doing?**
+- Home shows only one **Next Up** item and never reproduces the full itinerary.
+
+### Design changes
+- Fewer separate cards.
+- Less card-inside-card visual weight.
+- More whitespace and stronger hierarchy.
+- Current Country + Next Up are visually grouped.
+- Safe Today and Spent Today no longer look like two independent dashboard cards.
+- Country budgets remain financial/status-focused rather than planner-like.
+
+### Reliability retained
+- Country over-budget wording is explicit.
+- Health styling is preserved after renders.
+- Budget details respect reduced-motion preferences.
+- Country budget editing uses an accessible in-app editor instead of `prompt()`.
+- Keyboard focus returns after closing the editor.
+
+### Compatibility
+- No data-model migration.
+- No IndexedDB migration.
+- `DB_VERSION` remains 2.
+- No calculation changes.
+- Existing trips, itinerary, expenses, receipts, settlements, history and backups remain compatible.

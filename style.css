@@ -6938,15 +6938,6 @@ button:active:not(:disabled),
   opacity:.72;
   transform:none!important;
 }
-.home-budget-details{
-  transform-origin:top;
-}
-.home-budget-details-toggle:focus-visible,
-.v6-plan-row:focus-visible,
-.home-trip-history-btn:focus-visible{
-  outline:3px solid color-mix(in srgb,var(--brand) 34%,transparent);
-  outline-offset:3px;
-}
 
 /* Expenses: cards glide rather than jump */
 .expense{
@@ -7808,128 +7799,472 @@ html[data-theme="dark"] .v6-plan-row{
   }
 }
 
+
 /* =========================================================
-   TripSpend v6.7.4 — calmer Home hierarchy
+   TripSpend v6.7.6 — Calm Home Dashboard
+   Home = spending status. Plan = full planning.
+   Pure UI release; no data-model changes.
    ========================================================= */
-.v6-dashboard{
-  --home-gap:14px;
+
+.v676-dashboard{
+  --home-gap:12px;
+  display:flex;
+  flex-direction:column;
+  gap:var(--home-gap);
 }
-.v6-budget-card{
+.v676-dashboard>.v6-budget-card,
+.v676-dashboard>.v6-quick-add,
+.v676-dashboard>.section,
+.v676-dashboard>.health-banner,
+.v676-dashboard>.home-trip-history-btn{
   margin-top:0!important;
+  margin-bottom:0!important;
 }
-.v6-summary{
-  border-radius:20px!important;
+
+/* 1 — Budget is the hero, but with less "card stack" weight. */
+.v676-budget-wrap{
+  display:grid;
+  gap:8px;
+}
+.v676-budget-hero{
+  border-radius:21px!important;
   padding:20px!important;
+  box-shadow:0 12px 30px rgba(15,23,42,.12)!important;
 }
-.v6-summary .eyebrow{
-  font-size:11px!important;
+.v676-budget-hero .summary-head{
+  align-items:flex-start;
 }
-.v6-quick-add{
-  min-height:52px!important;
-  margin-top:var(--home-gap)!important;
-  font-size:15px!important;
-  letter-spacing:-.01em;
+.v676-budget-hero .remaining strong{
+  line-height:.98;
 }
-.v6-today-card{
-  min-height:86px!important;
-  padding:15px!important;
+.v676-budget-hero .progress{
+  margin:17px 0 16px!important;
+  height:7px!important;
 }
-.v6-today-card small{
+.v676-budget-small{
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  gap:14px!important;
+}
+.v676-budget-small>span{
+  min-width:0;
+}
+.v676-budget-small>span:last-child{
+  text-align:right;
+}
+.v676-budget-small small{
+  display:block!important;
+  margin-bottom:3px;
+  color:#b9c2d0!important;
+  font-size:9px!important;
+  text-transform:uppercase;
+  letter-spacing:.055em;
+}
+.v676-budget-small strong{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
   font-size:12px!important;
-  line-height:1.4;
 }
-.v6-today-card strong{
-  font-size:17px!important;
+
+/* 2 — Safe Today and Spent Today are one compact strip, not two cards. */
+.v676-day-strip{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);
+  align-items:center;
+  min-height:68px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--surface);
 }
-.today-metric-label{
+.v676-day-divider{
+  width:1px;
+  height:36px;
+  background:var(--line);
+}
+.v676-day-stat{
+  min-width:0;
+  padding:4px 8px;
+}
+.v676-day-stat:last-child{
+  text-align:right;
+}
+.v676-day-label{
   display:flex;
   align-items:center;
   gap:5px;
+  color:var(--muted);
+  font-size:9px;
+  font-weight:750;
+}
+.v676-day-stat:last-child .v676-day-label{
+  justify-content:flex-end;
+}
+.v676-day-stat strong{
+  display:block;
+  margin-top:4px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:15px;
+  letter-spacing:-.025em;
+  font-variant-numeric:tabular-nums;
 }
 .metric-info{
-  width:20px;
-  height:20px;
-  padding:0;
+  width:17px!important;
+  height:17px!important;
+  min-height:17px!important;
+  padding:0!important;
+  border:1px solid currentColor!important;
+  border-radius:999px!important;
+  background:transparent!important;
+  color:inherit!important;
+  font-size:9px!important;
+  line-height:1!important;
+  opacity:.62;
+}
+.v676-safe-explanation{
+  margin:0 5px!important;
+  padding:8px 10px!important;
+  border-radius:11px!important;
+  background:var(--surface2)!important;
+  color:var(--muted)!important;
+  font-size:9px!important;
+  line-height:1.4!important;
+}
+
+/* 3 — Add Expense is the only dominant Home action. */
+.v676-quick-add{
+  min-height:50px!important;
+  border-radius:15px!important;
+  font-size:12px!important;
+  letter-spacing:-.01em;
+  box-shadow:0 8px 18px rgba(15,23,42,.10);
+}
+
+/* 4 — Current country + Next Up are one Trip Context surface. */
+.v676-trip-context{
+  overflow:hidden;
   border:1px solid var(--line);
-  border-radius:50%!important;
-  background:var(--surface2);
+  border-radius:19px;
+  background:var(--surface);
+  box-shadow:0 5px 18px rgba(16,24,40,.035);
+}
+.v676-context-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px 14px 7px;
+}
+.v676-context-head h2{
+  margin:1px 0 0;
+  font-size:14px;
+  letter-spacing:-.025em;
+}
+.v676-context-eyebrow,
+.v676-section-eyebrow{
+  display:block;
+  color:var(--muted);
+  font-size:7.5px;
+  font-weight:900;
+  letter-spacing:.1em;
+}
+.v676-flag-rail{
+  margin:0!important;
+  max-width:45%;
+  justify-content:flex-end;
+}
+.v676-current-country{
+  margin:0 10px 9px!important;
+  padding:10px 11px!important;
+  min-height:75px!important;
+  border:0!important;
+  border-radius:14px!important;
+  background:var(--surface2)!important;
+  box-shadow:none!important;
+}
+.v676-current-country .current-country-main>strong{
+  font-size:15px!important;
+}
+.v676-current-country .current-country-main>small{
+  font-size:8.5px!important;
+}
+.v676-current-country .current-country-status{
+  font-size:7px!important;
+  letter-spacing:.065em!important;
+}
+.v676-current-country .current-country-side{
+  gap:4px!important;
+}
+.v676-current-country .current-country-side>strong{
+  font-size:8.5px!important;
+}
+.v676-current-country .current-country-progress{
+  bottom:0!important;
+  left:0!important;
+  right:0!important;
+}
+.v676-next-up{
+  width:100%;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  min-height:62px;
+  padding:9px 13px;
+  border:0;
+  border-top:1px solid var(--line);
+  background:transparent;
+  color:var(--text);
+  text-align:left;
+}
+.v676-next-icon{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:var(--brand-soft,#eef4ff);
+  color:var(--brand,#2563eb);
+  font-size:17px;
+  font-weight:900;
+}
+.v676-next-up .v6-plan-copy small{
+  color:var(--brand,#2563eb)!important;
+  font-size:7.5px!important;
+  font-weight:900!important;
+  letter-spacing:.09em!important;
+}
+.v676-next-up .v6-plan-copy strong{
+  margin-top:2px!important;
+  font-size:11.5px!important;
+}
+.v676-next-up .v6-plan-copy>span{
+  margin-top:2px!important;
+  color:var(--muted)!important;
+  font-size:8.5px!important;
+}
+.v676-next-up .v6-plan-arrow{
+  color:var(--muted);
+  font-size:20px;
+}
+
+/* 5 — Country spending rows stay compact and financial, not planner-like. */
+.v676-country-budget-section{
+  padding-top:4px;
+}
+.v676-country-budget-section .v6-section-title{
+  margin-bottom:8px!important;
+}
+.v676-country-budget-section .v6-section-title h2{
+  margin-top:1px!important;
+  font-size:13px!important;
+}
+.v676-country-budget-section .country-budget-summary{
+  margin-bottom:6px!important;
+  font-size:8.5px!important;
+}
+.v676-country-budget-section .country-budget-list{
+  gap:6px!important;
+}
+.v676-country-budget-section .country-budget-row{
+  min-height:58px!important;
+  padding:9px 10px!important;
+  border-radius:13px!important;
+  box-shadow:none!important;
+}
+.v676-country-budget-section .country-budget-row-top strong{
+  font-size:10px!important;
+}
+.v676-country-budget-section .country-budget-row-top small{
+  margin-top:2px!important;
+  font-size:7.5px!important;
+}
+.v676-country-budget-section .country-budget-track{
+  height:4px!important;
+  margin-top:7px!important;
+}
+
+/* 6 — Health is a status line, not another visual card. */
+.v676-health-row{
+  min-height:43px!important;
+  grid-template-columns:27px 1fr!important;
+  gap:8px!important;
+  padding:7px 9px!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+}
+.v676-health-row .health-icon{
+  width:27px!important;
+  height:27px!important;
+  border-radius:9px!important;
+  font-size:11px!important;
+}
+.v676-health-row strong{
+  font-size:9.5px!important;
+}
+.v676-health-row span{
+  margin-top:1px!important;
+  font-size:8px!important;
+}
+
+/* 7 — History is available but intentionally quiet. */
+.v676-history-btn{
+  min-height:56px!important;
+  padding:8px 10px!important;
+  border-radius:15px!important;
+  box-shadow:none!important;
+  opacity:.92;
+}
+.v676-history-btn .home-trip-history-icon{
+  width:34px!important;
+  height:34px!important;
+}
+.v676-history-btn .home-trip-history-copy strong{
+  font-size:10px!important;
+}
+.v676-history-btn .home-trip-history-copy small{
+  font-size:8px!important;
+}
+
+/* Budget details opening/closing remains animation-safe. */
+.home-budget-details{
+  transform-origin:top;
+  will-change:opacity,transform;
+}
+
+/* Accessible country-budget editor replacing browser prompts. */
+.v676-budget-editor-sheet{
+  max-width:520px;
+}
+.v676-budget-editor-form{
+  padding-top:10px!important;
+}
+.v676-budget-editor-meta{
+  margin:0 0 14px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.45;
+}
+.v676-budget-input-wrap{
+  position:relative;
+}
+.v676-budget-input-wrap input{
+  padding-right:68px!important;
+  font-size:18px!important;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+.v676-budget-input-wrap span{
+  position:absolute;
+  top:50%;
+  right:13px;
+  transform:translateY(-50%);
   color:var(--muted);
   font-size:11px;
   font-weight:850;
-  line-height:18px;
 }
-.safe-today-explanation{
-  margin:-3px 2px 13px;
-  padding:10px 12px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:var(--surface);
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.45;
-}
-.home-trip-context{
-  margin-top:22px;
-}
-.home-context-title{
-  margin:0 2px 9px!important;
-}
-.home-context-title h2,
-.v6-country-budget-section .v6-section-title h2{
-  font-size:16px!important;
-  letter-spacing:-.02em;
-}
-.v6-current-country{
-  border-radius:18px!important;
-}
-.v6-plan-row{
-  margin-top:8px!important;
-  min-height:72px!important;
-}
-.v6-plan-copy small{
-  font-size:10px!important;
-}
-.v6-plan-copy strong{
-  font-size:14px!important;
-}
-.v6-plan-copy>span{
-  font-size:12px!important;
-  line-height:1.35;
-}
-.v6-health-banner{
-  min-height:58px!important;
-  padding:10px 12px!important;
-}
-.v6-health-banner strong{
-  font-size:13px!important;
-}
-.v6-health-banner span{
-  font-size:12px!important;
-  line-height:1.4;
-}
-.country-budget-sheet{
-  max-width:520px;
-}
-.country-budget-editor-context{
-  margin:0 0 16px;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.45;
-}
-.country-budget-editor-actions{
+.v676-budget-editor-actions{
   display:grid;
-  grid-template-columns:1fr 1.25fr;
-  gap:10px;
+  grid-template-columns:1fr 1.15fr;
+  gap:8px;
+  margin-top:6px;
 }
-.country-budget-editor-actions .primary{
-  min-width:0;
+.v676-budget-editor-actions .primary{
+  width:100%;
 }
-body.modal-open{
-  overflow:hidden;
+.v676-dashboard button:focus-visible,
+.v676-budget-editor-sheet button:focus-visible,
+.v676-budget-editor-sheet input:focus-visible{
+  outline:3px solid rgba(47,128,237,.25);
+  outline-offset:2px;
 }
+
+/* Preserve warning/over-budget visual states consistently. */
+.country-budget-fill.budget-watch,
+#currentCountryBudgetBar.budget-watch{
+  opacity:.72;
+}
+.country-budget-fill.budget-over,
+#currentCountryBudgetBar.budget-over{
+  opacity:1;
+}
+.country-over-budget{
+  color:var(--bad)!important;
+}
+
+/* Dark mode stays calm and avoids nested-card glare. */
+html[data-theme="dark"] .v676-trip-context{
+  border-color:#263243;
+  background:var(--surface);
+}
+html[data-theme="dark"] .v676-current-country{
+  background:#172130!important;
+}
+html[data-theme="dark"] .v676-next-icon{
+  background:#1c2b44;
+  color:#9ac1ff;
+}
+html[data-theme="dark"] .v676-day-strip{
+  background:var(--surface);
+}
+
 @media(max-width:600px){
-  .v6-summary{padding:18px!important}
-  .home-trip-context{margin-top:19px}
-  .country-budget-editor-actions{grid-template-columns:1fr}
-  .country-budget-editor-actions .secondary{order:2}
+  .v676-dashboard{
+    --home-gap:10px;
+  }
+  .v676-budget-hero{
+    padding:18px!important;
+  }
+  .v676-day-strip{
+    min-height:64px;
+    padding:7px 9px;
+  }
+  .v676-day-stat{
+    padding:3px 6px;
+  }
+  .v676-day-stat strong{
+    font-size:14px;
+  }
+  .v676-trip-context{
+    border-radius:17px;
+  }
+  .v676-context-head{
+    padding:11px 12px 6px;
+  }
+  .v676-current-country{
+    margin:0 8px 8px!important;
+  }
+  .v676-next-up{
+    min-height:59px;
+    padding:8px 11px;
+  }
+}
+
+@media(max-width:370px){
+  .v676-budget-hero .pill{
+    padding:6px 8px!important;
+    font-size:9px!important;
+  }
+  .v676-day-label{
+    font-size:8px;
+  }
+  .v676-day-stat strong{
+    font-size:12.5px;
+  }
+  .v676-flag-rail{
+    display:none!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .v676-dashboard *,
+  .v676-budget-editor-sheet *{
+    scroll-behavior:auto!important;
+    animation-duration:.001ms!important;
+    transition-duration:.001ms!important;
+  }
 }

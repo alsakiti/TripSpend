@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.7.5">
-  <link rel="icon" href="icons/icon-192.png?v=6.7.5">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.7.5">
-  <link rel="stylesheet" href="style.css?v=6.7.5">
+  <link rel="manifest" href="manifest.webmanifest?v=6.7.6">
+  <link rel="icon" href="icons/icon-192.png?v=6.7.6">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.7.6">
+  <link rel="stylesheet" href="style.css?v=6.7.6">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,7 +32,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.7.5</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.7.6</span></div>
         <div class="header-trip-title-row">
           <h1 id="headerTitle">TripSpend</h1>
           <button id="tripSwitcherTrigger" class="trip-switcher-trigger hidden" type="button" aria-label="Switch trip" title="Switch trip">⌄</button>
@@ -46,8 +46,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.7.5" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.7.5</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.7.6" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.7.6</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -208,10 +208,11 @@
     </section>
 
     <section id="mainView" class="hidden">
-      <section id="dashboard" class="page active v6-dashboard">
+      <section id="dashboard" class="page active v6-dashboard v676-dashboard">
 
-        <div class="v6-budget-card">
-          <div class="summary v6-summary">
+        <!-- Home is for spending status. Full planning remains in Plan. -->
+        <div class="v6-budget-card v676-budget-wrap">
+          <div class="summary v6-summary v676-budget-hero">
             <div class="summary-head">
               <div>
                 <div id="budgetHeroLabel" class="eyebrow light">TRIP BUDGET LEFT</div>
@@ -225,9 +226,9 @@
 
             <div class="progress"><div id="progressBar"></div></div>
 
-            <div class="v6-budget-small">
-              <span><small>Budget</small><strong id="budgetValue">0 OMR</strong></span>
+            <div class="v6-budget-small v676-budget-small">
               <span><small>Spent</small><strong id="spentValue">0 OMR</strong></span>
+              <span><small>Trip budget</small><strong id="budgetValue">0 OMR</strong></span>
             </div>
 
             <button id="homeBudgetDetailsToggle" class="home-budget-details-toggle" type="button" aria-expanded="false">
@@ -252,42 +253,52 @@
             </div>
           </div>
 
-          <div class="metrics v6-today-metrics">
-            <div class="metric v6-today-card">
-              <small class="today-metric-label">☀️ Safe today <button id="safeTodayInfo" class="metric-info" type="button" aria-expanded="false" aria-controls="safeTodayExplanation" aria-label="How Safe today is calculated">?</button></small>
+          <div class="v676-day-strip">
+            <div class="v676-day-stat">
+              <span class="v676-day-label">☀️ Safe today
+                <button id="safeTodayInfo" class="metric-info" type="button"
+                  aria-expanded="false" aria-controls="safeTodayExplanation"
+                  aria-label="How Safe today is calculated">?</button>
+              </span>
               <strong id="safeToday">0 OMR</strong>
             </div>
-            <div class="metric v6-today-card">
-              <small>🧾 Spent today</small>
+            <div class="v676-day-divider" aria-hidden="true"></div>
+            <div class="v676-day-stat">
+              <span class="v676-day-label">🧾 Spent today</span>
               <strong id="spentToday">0 OMR</strong>
             </div>
           </div>
-          <p id="safeTodayExplanation" class="safe-today-explanation hidden">Your balance after upcoming planned costs, divided across the days left in your trip.</p>
+          <p id="safeTodayExplanation" class="safe-today-explanation v676-safe-explanation hidden">
+            Your balance after upcoming planned costs, divided across the days left in your trip.
+          </p>
         </div>
 
-        <button id="quickAdd" class="primary v6-quick-add">＋ Add Expense</button>
+        <button id="quickAdd" class="primary v6-quick-add v676-quick-add">＋ Add Expense</button>
 
-        <section class="home-trip-context" aria-labelledby="homeTripContextTitle">
-          <div class="section-title v6-section-title home-context-title">
-            <h2 id="homeTripContextTitle">Current trip</h2>
+        <section class="v676-trip-context" aria-labelledby="homeTripContextTitle">
+          <div class="v676-context-head">
+            <div>
+              <span class="v676-context-eyebrow">CURRENT TRIP</span>
+              <h2 id="homeTripContextTitle">Trip context</h2>
+            </div>
+            <div id="tripFlagRail" class="trip-flag-rail v676-flag-rail" aria-label="Trip countries"></div>
           </div>
 
-          <div id="currentCountryCard" class="current-country-card v6-current-country">
+          <div id="currentCountryCard" class="current-country-card v6-current-country v676-current-country">
             <div class="current-country-main">
               <span id="currentCountryStatus" class="current-country-status">CURRENT COUNTRY • AUTO BY DATE</span>
               <strong id="currentCountryName">—</strong>
               <small id="currentCountryDates">—</small>
             </div>
             <div class="current-country-side">
-              <div id="tripFlagRail" class="trip-flag-rail" aria-label="Trip countries"></div>
               <span id="currentCountryCurrency" class="country-currency-pill">—</span>
               <strong id="currentCountryBudgetText">No country budget</strong>
             </div>
             <div class="current-country-progress"><div id="currentCountryBudgetBar"></div></div>
           </div>
 
-          <button id="v6PlanRow" class="card v6-plan-row" type="button">
-            <span class="v6-plan-icon">→</span>
+          <button id="v6PlanRow" class="v676-next-up" type="button">
+            <span class="v676-next-icon" aria-hidden="true">→</span>
             <span class="v6-plan-copy">
               <small id="v6PlanLabel">NEXT UP</small>
               <strong id="v6NextCountry">—</strong>
@@ -297,16 +308,19 @@
           </button>
         </section>
 
-        <section id="countryBudgetSection" class="section country-budget-section v6-country-budget-section">
+        <section id="countryBudgetSection" class="section country-budget-section v6-country-budget-section v676-country-budget-section">
           <div class="section-title v6-section-title">
-            <h2>Countries</h2>
+            <div>
+              <span class="v676-section-eyebrow">SPENDING BY COUNTRY</span>
+              <h2>Country budgets</h2>
+            </div>
             <button id="countryBudgetManage" class="link-btn" type="button">Manage</button>
           </div>
           <div id="countryBudgetSummary" class="country-budget-summary"></div>
           <div id="countryBudgetList" class="country-budget-list v6-country-budget-list"></div>
         </section>
 
-        <div id="healthBanner" class="health-banner on-track v6-health-banner">
+        <div id="healthBanner" class="health-banner on-track v6-health-banner v676-health-row">
           <div class="health-icon" id="healthIcon">✓</div>
           <div>
             <strong id="healthTitle">On track</strong>
@@ -314,7 +328,7 @@
           </div>
         </div>
 
-        <button id="homeTripHistoryBtn" class="card home-trip-history-btn" type="button">
+        <button id="homeTripHistoryBtn" class="card home-trip-history-btn v676-history-btn" type="button">
           <span class="home-trip-history-icon" aria-hidden="true">🧳</span>
           <span class="home-trip-history-copy">
             <strong>Trips & history</strong>
@@ -999,7 +1013,7 @@
             <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
           </div>
           <div class="app-update-versions">
-            <span><small>Current</small><strong id="currentVersionText">v6.7.5</strong></span>
+            <span><small>Current</small><strong id="currentVersionText">v6.7.6</strong></span>
             <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
           </div>
           <div class="app-update-actions">
@@ -1386,33 +1400,36 @@
   </div>
 </div>
 
+
 <div id="countryBudgetModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="countryBudgetEditorTitle">
-  <div class="sheet compact-sheet country-budget-sheet">
+  <div class="sheet v676-budget-editor-sheet">
     <div class="handle"></div>
     <div class="modal-head">
       <div>
         <div class="eyebrow">COUNTRY BUDGET</div>
         <h2 id="countryBudgetEditorTitle">Set country budget</h2>
       </div>
-      <button id="closeCountryBudgetEditor" class="icon-btn" type="button" aria-label="Close country budget editor">✕</button>
+      <button id="countryBudgetEditorClose" class="icon-btn" type="button" aria-label="Close country budget editor">✕</button>
     </div>
-    <form id="countryBudgetEditorForm" class="form modal-form country-budget-form">
-      <p id="countryBudgetEditorContext" class="country-budget-editor-context"></p>
-      <label>Budget in <span id="countryBudgetHomeCurrency">home currency</span>
-        <input id="countryBudgetEditorAmount" type="number" min="0" step="0.001" inputmode="decimal" required>
+    <form id="countryBudgetEditorForm" class="form modal-form v676-budget-editor-form">
+      <p id="countryBudgetEditorMeta" class="v676-budget-editor-meta">Set a budget in your home currency.</p>
+      <label>Budget
+        <div class="v676-budget-input-wrap">
+          <input id="countryBudgetEditorInput" type="number" min="0" step="0.001" inputmode="decimal" placeholder="0">
+          <span id="countryBudgetEditorCurrency">OMR</span>
+        </div>
       </label>
-      <p id="countryBudgetAllocationHint" class="field-hint"></p>
-      <div class="country-budget-editor-actions">
-        <button id="clearCountryBudgetEditor" class="secondary" type="button">Clear budget</button>
-        <button class="primary" type="submit">Save budget</button>
+      <div class="v676-budget-editor-actions">
+        <button id="countryBudgetEditorClear" class="secondary" type="button">Clear budget</button>
+        <button class="primary" type="submit">Save Budget</button>
       </div>
     </form>
   </div>
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.7.5"></script>
-<script src="fx.js?v=6.7.5"></script>
-<script src="v5.js?v=6.7.5"></script>
+<script src="app.js?v=6.7.6"></script>
+<script src="fx.js?v=6.7.6"></script>
+<script src="v5.js?v=6.7.6"></script>
 </body>
 </html>
