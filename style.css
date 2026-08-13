@@ -6938,6 +6938,16 @@ button:active:not(:disabled),
   opacity:.72;
   transform:none!important;
 }
+.home-budget-details{
+  transform-origin:top;
+  will-change:opacity,transform;
+}
+.home-budget-details-toggle:focus-visible,
+.v6-plan-row:focus-visible,
+.home-trip-history-btn:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--brand) 34%,transparent);
+  outline-offset:3px;
+}
 
 /* Expenses: cards glide rather than jump */
 .expense{

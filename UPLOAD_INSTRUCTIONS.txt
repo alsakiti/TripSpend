@@ -1,18 +1,17 @@
-TripSpend v6.7.2 update
+TripSpend v6.7.3 update
 
-1. Extract TripSpend-v6.7.2-update.zip.
+1. Extract TripSpend-v6.7.3-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.7.2.
+7. Confirm the badge says v6.7.3.
 
 What changed:
-- Reverted the heavy v6.7.1 Home redesign
-- Restored the cleaner v6.7 Home structure
-- Removed full itinerary-style content from Home
-- Home now has one compact Next Up preview only
-- Next Up opens Plan → Itinerary
-- Plan remains the full planning experience
+- Preserved compact Trip Health styling across Home renders
+- Smoothed the Budget Details disclosure with reduced-motion support
+- Reduced layout work when refreshing country flags and budgets
+- Added warning and over-budget states to country progress bars
+- Improved keyboard focus and country-budget accessibility
 - No data or calculation migration

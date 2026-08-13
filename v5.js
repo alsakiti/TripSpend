@@ -589,14 +589,16 @@
     const rail = $("tripFlagRail");
     if (rail) {
       rail.replaceChildren();
+      const fragment = document.createDocumentFragment();
       stops().forEach(tripStop => {
         const flag = document.createElement("span");
         flag.className = "trip-flag";
         flag.classList.toggle("active", tripStop.id === stop.id);
         flag.textContent = core.countryFlag(tripStop.country);
         flag.title = tripStop.country;
-        rail.append(flag);
+        fragment.append(flag);
       });
+      rail.append(fragment);
     }
   }
 
@@ -632,6 +634,7 @@
       summary.textContent = `${core.money(Math.abs(allocationDiff), home)} over-allocated.`;
     }
 
+    const fragment = document.createDocumentFragment();
     stops().forEach(stop => {
       const b = stopBudgetState(stop);
       const row = document.createElement("button");
@@ -663,12 +666,17 @@
       const fill = document.createElement("div");
       fill.className = "country-budget-fill";
       fill.style.width = `${b.pct}%`;
+      const rawPct = b.budget > 0 ? b.spent / b.budget * 100 : 0;
+      fill.classList.toggle("budget-watch", rawPct >= 80 && rawPct <= 100);
+      fill.classList.toggle("budget-over", rawPct > 100);
       track.append(fill);
 
       row.append(top, track);
       row.onclick = () => setCountryBudget(stop.id);
-      list.append(row);
+      row.setAttribute("aria-label", `${stop.country}: ${amount.textContent}`);
+      fragment.append(row);
     });
+    list.append(fragment);
   }
 
   function setCountryBudget(stopId) {
