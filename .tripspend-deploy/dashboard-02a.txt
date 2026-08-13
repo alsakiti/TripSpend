@@ -1,0 +1,23 @@
+            <button id="countryBudgetManage" class="link-btn" type="button">Manage</button>
+          </div>
+          <div id="countryBudgetSummary" class="country-budget-summary"></div>
+          <div id="countryBudgetList" class="country-budget-list v6-country-budget-list"></div>
+        </section>
+
+        <div id="healthBanner" class="health-banner on-track v6-health-banner v676-health-row">
+          <div class="health-icon" id="healthIcon">✓</div>
+          <div>
+            <strong id="healthTitle">On track</strong>
+            <span id="healthText">Your budget looks healthy.</span>
+          </div>
+        </div>
+
+        <button id="homeTripHistoryBtn" class="card home-trip-history-btn v676-history-btn" type="button">
+          <span class="home-trip-history-icon" aria-hidden="true">🧳</span>
+          <span class="home-trip-history-copy">
+            <strong>Trips & history</strong>
+            <small id="homeTripHistoryMeta">Switch trips or open past trips</small>
+          </span>
+          <span class="home-trip-history-arrow" aria-hidden="true">›</span>
+        </button>
+
