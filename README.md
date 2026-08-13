@@ -1108,3 +1108,23 @@ Plan remains the only full planning surface:
 - No IndexedDB migration.
 - No calculation changes.
 - Existing itinerary, expenses, receipts, settlements, history and backups remain compatible.
+
+
+## v6.7.3 — Home Dashboard Polish
+
+This release improves the responsiveness and consistency of the Home dashboard.
+
+- Trip Health retains its compact Home styling after dashboard refreshes.
+- Budget Details opens and closes smoothly while honoring reduced-motion preferences.
+- Country flags and country-budget rows update with fewer live DOM operations.
+- Country progress bars consistently indicate warning and over-budget states.
+- Home actions have clearer keyboard focus, and country-budget controls expose descriptive labels.
+- The service-worker cache is versioned as v6.7.3 so installed apps receive the updated shell.
+
+## v6.7.4 — Refined Home Experience
+
+- Reorders Home around today's budget, the primary expense action, and current trip context.
+- Clarifies over-budget amounts and explains the Safe Today calculation.
+- Replaces browser prompts with an accessible country-budget editor.
+- Updates existing country-budget nodes where possible instead of rebuilding the full list.
+- Improves Home typography, spacing, focus states, and reduced-motion-friendly interactions.

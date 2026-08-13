@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.7.2";
+  const APP_VERSION = "6.7.4";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -2435,7 +2435,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   function renderHealth() {
     const h = health(), banner = $("healthBanner");
-    banner.className = `health-banner ${h.cls}`;
+    // Keep structural/modifier classes owned by the markup. Replacing className here
+    // used to silently remove v6-health-banner after the first render.
+    banner.classList.remove("on-track", "watch", "over");
+    banner.classList.add(h.cls);
     $("healthIcon").textContent = h.icon;
     $("healthTitle").textContent = h.title;
     $("healthText").textContent = h.text;
@@ -3385,7 +3388,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     renderHomeTripHistoryAccess();
 
     renderHealth();
-    $("remainingValue").textContent = smartAmount(remaining, t.homeCurrency);
+    $("remainingValue").textContent = smartAmount(Math.abs(remaining), t.homeCurrency);
+    if ($("budgetHeroLabel")) {
+      $("budgetHeroLabel").textContent = remaining < 0 ? "OVER TRIP BUDGET" : "AVAILABLE TO SPEND";
+    }
     applyLargeMoneyClass($("remainingValue"), $("remainingValue").textContent);
     $("remainingCode").textContent = t.homeCurrency;
     const rawBudgetPct = t.budget > 0 ? (s / t.budget * 100) : 0;
@@ -4449,9 +4455,47 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   $("homeBudgetDetailsToggle")?.addEventListener("click", () => {
     homeBudgetDetailsOpen = !homeBudgetDetailsOpen;
-    $("homeBudgetDetails")?.classList.toggle("hidden", !homeBudgetDetailsOpen);
+    const details = $("homeBudgetDetails");
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (details) {
+      details.getAnimations?.().forEach(animation => animation.cancel());
+
+      if (homeBudgetDetailsOpen) {
+        details.classList.remove("hidden");
+        if (!reduceMotion && details.animate) {
+          details.animate(
+            [
+              { opacity: 0, transform: "translateY(-4px)" },
+              { opacity: 1, transform: "translateY(0)" }
+            ],
+            { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" }
+          );
+        }
+      } else if (!reduceMotion && details.animate) {
+        const animation = details.animate(
+          [
+            { opacity: 1, transform: "translateY(0)" },
+            { opacity: 0, transform: "translateY(-4px)" }
+          ],
+          { duration: 140, easing: "ease-in" }
+        );
+        animation.onfinish = () => {
+          if (!homeBudgetDetailsOpen) details.classList.add("hidden");
+        };
+      } else {
+        details.classList.add("hidden");
+      }
+    }
     $("homeBudgetDetailsToggle")?.setAttribute("aria-expanded", String(homeBudgetDetailsOpen));
     if ($("homeBudgetDetailsArrow")) $("homeBudgetDetailsArrow").textContent = homeBudgetDetailsOpen ? "⌃" : "⌄";
+  });
+
+  $("safeTodayInfo")?.addEventListener("click", () => {
+    const explanation = $("safeTodayExplanation");
+    if (!explanation) return;
+    const open = explanation.classList.toggle("hidden") === false;
+    $("safeTodayInfo").setAttribute("aria-expanded", String(open));
   });
 
   $("closeModal").onclick = closeModal;
@@ -5064,7 +5108,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.2", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.4", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
