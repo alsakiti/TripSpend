@@ -579,8 +579,11 @@
     const b = stopBudgetState(stop);
     if (budgetText) {
       budgetText.textContent = b.budget > 0
-        ? `${core.money(Math.max(0, b.remaining), state().trip.homeCurrency)} left`
+        ? (b.remaining >= 0
+            ? `${core.money(b.remaining, state().trip.homeCurrency)} left`
+            : `${core.money(Math.abs(b.remaining), state().trip.homeCurrency)} over`)
         : "No country budget";
+      budgetText.classList.toggle("country-over-budget", b.budget > 0 && b.remaining < 0);
     }
     if (bar) {
       bar.style.width = `${b.pct}%`;
