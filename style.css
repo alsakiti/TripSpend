@@ -6940,7 +6940,6 @@ button:active:not(:disabled),
 }
 .home-budget-details{
   transform-origin:top;
-  will-change:opacity,transform;
 }
 .home-budget-details-toggle:focus-visible,
 .v6-plan-row:focus-visible,

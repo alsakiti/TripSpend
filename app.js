@@ -1,8 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.7.4";
-  const APP_VERSION = "6.7.3";
+  const APP_VERSION = "6.7.5";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -3391,7 +3390,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     renderHealth();
     $("remainingValue").textContent = smartAmount(Math.abs(remaining), t.homeCurrency);
     if ($("budgetHeroLabel")) {
-      $("budgetHeroLabel").textContent = remaining < 0 ? "OVER TRIP BUDGET" : "AVAILABLE TO SPEND";
+      $("budgetHeroLabel").textContent = remaining < 0 ? "OVER TRIP BUDGET" : "TRIP BUDGET LEFT";
     }
     applyLargeMoneyClass($("remainingValue"), $("remainingValue").textContent);
     $("remainingCode").textContent = t.homeCurrency;
@@ -5109,8 +5108,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.4", {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.3", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.5", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

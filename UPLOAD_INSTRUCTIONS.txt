@@ -1,28 +1,17 @@
-TripSpend v6.7.4 update
+TripSpend v6.7.5 update
 
-1. Extract TripSpend-v6.7.4-update.zip.
-TripSpend v6.7.3 update
-
-1. Extract TripSpend-v6.7.3-update.zip.
+1. Extract TripSpend-v6.7.5-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.7.4.
+7. Confirm the badge says v6.7.5.
 
 What changed:
-- Reordered Home around today's budget, Add Expense, and current trip context
-- Clarified over-budget amounts and explained the Safe Today calculation
-- Replaced browser prompts with a consistent country-budget editor
-- Reduced layout work when refreshing country flags and budgets
-- Improved Home typography, spacing, focus states, and accessibility
-7. Confirm the badge says v6.7.3.
-
-What changed:
-- Preserved compact Trip Health styling across Home renders
-- Smoothed the Budget Details disclosure with reduced-motion support
-- Reduced layout work when refreshing country flags and budgets
-- Added warning and over-budget states to country progress bars
-- Improved keyboard focus and country-budget accessibility
+- Corrected over-budget wording in the current-country card
+- Kept the main budget label aligned with the balance it represents
+- Restored keyboard focus after closing the country-budget editor
+- Kept keyboard focus inside the editor while it is open
+- Improved country-row updates on older browsers
 - No data or calculation migration
