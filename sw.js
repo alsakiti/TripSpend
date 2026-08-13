@@ -3,6 +3,7 @@ const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css?v=6.8.0",
+  "./dashboard.css?v=6.8.0",
   "./app.js?v=6.8.0",
   "./fx.js?v=6.8.0",
   "./v5.js?v=6.8.0",
