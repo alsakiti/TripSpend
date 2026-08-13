@@ -7,6 +7,15 @@ const APP_SHELL = [
   "./fx.js?v=6.7.4",
   "./v5.js?v=6.7.4",
   "./manifest.webmanifest?v=6.7.4",
+const CACHE = "tripspend-v6.7.3";
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./style.css?v=6.7.3",
+  "./app.js?v=6.7.3",
+  "./fx.js?v=6.7.3",
+  "./v5.js?v=6.7.3",
+  "./manifest.webmanifest?v=6.7.3",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",

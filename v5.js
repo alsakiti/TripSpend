@@ -694,6 +694,9 @@
       if (rebuild || !row.isConnected) fragment.append(row);
     });
     if (fragment.childNodes.length) list.append(fragment);
+      fragment.append(row);
+    });
+    list.append(fragment);
   }
 
   function setCountryBudget(stopId) {
