@@ -1,0 +1,56 @@
+      <section id="dashboard" class="page active v6-dashboard v676-dashboard">
+
+        <!-- Home is for spending status. Full planning remains in Plan. -->
+        <div class="v6-budget-card v676-budget-wrap">
+          <div class="summary v6-summary v676-budget-hero">
+            <div class="summary-head">
+              <div>
+                <div id="budgetHeroLabel" class="eyebrow light">TRIP BUDGET LEFT</div>
+                <div class="remaining">
+                  <strong id="remainingValue">0</strong>
+                  <span id="remainingCode">OMR</span>
+                </div>
+              </div>
+              <span id="usedPct" class="pill">0% used</span>
+            </div>
+
+            <div class="progress"><div id="progressBar"></div></div>
+
+            <div class="v6-budget-small v676-budget-small">
+              <span><small>Spent</small><strong id="spentValue">0 OMR</strong></span>
+              <span><small>Trip budget</small><strong id="budgetValue">0 OMR</strong></span>
+            </div>
+
+            <button id="homeBudgetDetailsToggle" class="home-budget-details-toggle" type="button" aria-expanded="false">
+              <span>
+                <small>BUDGET DETAILS</small>
+                <strong id="homeBudgetDetailsHint">Plans & available balance</strong>
+              </span>
+              <span id="homeBudgetDetailsArrow" aria-hidden="true">⌄</span>
+            </button>
+
+            <div id="homeBudgetDetails" class="home-budget-details hidden">
+              <div class="smart-budget-reserve">
+                <span>
+                  <small>Reserved for plans</small>
+                  <strong id="plannedReserveValue">0 OMR</strong>
+                </span>
+                <span>
+                  <small>Available after plans</small>
+                  <strong id="availableAfterPlansValue">0 OMR</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="v676-day-strip">
+            <div class="v676-day-stat">
+              <span class="v676-day-label">☀️ Safe today
+                <button id="safeTodayInfo" class="metric-info" type="button"
+                  aria-expanded="false" aria-controls="safeTodayExplanation"
+                  aria-label="How Safe today is calculated">?</button>
+              </span>
+              <strong id="safeToday">0 OMR</strong>
+            </div>
+            <div class="v676-day-divider" aria-hidden="true"></div>
+            <div class="v676-day-stat">
