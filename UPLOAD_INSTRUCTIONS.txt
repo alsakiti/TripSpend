@@ -1,20 +1,17 @@
-TripSpend v6.7.6 update
+TripSpend v6.7.5 update
 
-1. Extract TripSpend-v6.7.6-update.zip.
+1. Extract TripSpend-v6.7.5-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.7.6.
+7. Confirm the badge says v6.7.5.
 
 What changed:
-- Pure Home dashboard redesign
-- Budget remains the main hero
-- Safe Today + Spent Today combined into one compact strip
-- Current Country + Next Up combined into one Trip Context surface
-- Country budgets made more compact
-- Trip Health and Trips & History reduced in visual weight
-- Plan remains the only full itinerary/planning screen
-- Accessible in-app country budget editor retained
-- No data, IndexedDB, or calculation migration
+- Corrected over-budget wording in the current-country card
+- Kept the main budget label aligned with the balance it represents
+- Restored keyboard focus after closing the country-budget editor
+- Kept keyboard focus inside the editor while it is open
+- Improved country-row updates on older browsers
+- No data or calculation migration
