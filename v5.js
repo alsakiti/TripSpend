@@ -13,6 +13,7 @@
   let editingSetupPersonIndex = -1;
   let plannerView = "itinerary";
   let editingItineraryId = "";
+  let homeCountryBudgetsOpen = false;
 
   const CURRENCY_BY_COUNTRY = {
     Oman:"OMR", Thailand:"THB", Indonesia:"IDR", Singapore:"SGD", Malaysia:"MYR",
@@ -690,6 +691,161 @@
   }
 
 
+  function localDateParts(dateStr) {
+    const d = new Date(`${dateStr}T12:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  function dayDistance(fromDate, toDate) {
+    const from = localDateParts(fromDate);
+    const to = localDateParts(toDate);
+    if (!from || !to) return 0;
+    return Math.round((to - from) / 86400000);
+  }
+
+  function renderHomeToday() {
+    const card = $("homeTodayCard");
+    const eyebrow = $("homeTodayEyebrow");
+    const title = $("homeTodayTitle");
+    const meta = $("homeTodayMeta");
+    const dateEl = $("homeTodayDate");
+    const list = $("homeTodayList");
+    const addButton = $("homeTodayAddPlan");
+    const openButton = $("homeTodayOpen");
+    if (!card || !eyebrow || !title || !meta || !list || !state().trip) return;
+
+    const today = core.today();
+    const before = today < state().trip.startDate;
+    const after = today > state().trip.endDate;
+    const allItems = itinerary().slice().sort(itinerarySort);
+    const todayItems = allItems.filter(item => item.date === today && item.status !== "done");
+    const futureItems = allItems.filter(item => item.date >= today && item.status !== "done");
+    const firstFuture = futureItems[0] || null;
+
+    list.replaceChildren();
+    card.classList.toggle("pretrip", before);
+    card.classList.toggle("posttrip", after);
+    card.classList.toggle("empty-day", !todayItems.length && !before && !after);
+
+    dateEl.textContent = new Date(`${today}T12:00:00`).toLocaleDateString(undefined, {
+      weekday: "short",
+      day: "numeric",
+      month: "short"
+    });
+
+    if (before) {
+      const days = Math.max(0, dayDistance(today, state().trip.startDate));
+      eyebrow.textContent = "UPCOMING TRIP";
+      title.textContent = days === 0 ? "Your trip starts today" : `${days} day${days === 1 ? "" : "s"} to go`;
+      meta.textContent = firstFuture
+        ? `First plan: ${itineraryTypeInfo(firstFuture.type).icon} ${firstFuture.title}`
+        : "Your itinerary is ready for the first plan.";
+      dateEl.textContent = core.fmtDateWithYear(state().trip.startDate);
+      if (openButton) openButton.textContent = "Open itinerary";
+      if (addButton) addButton.textContent = "＋ Add plan";
+
+      futureItems.slice(0, 2).forEach(item => list.append(buildHomeTodayItem(item, true)));
+      if (!futureItems.length) list.append(buildHomeTodayEmpty("No plans yet", "Add your first flight, hotel or activity."));
+      return;
+    }
+
+    if (after) {
+      eyebrow.textContent = "TRIP COMPLETE";
+      title.textContent = "Your trip is complete";
+      meta.textContent = "Review spending, settlements and your final trip result.";
+      dateEl.textContent = `${core.fmtDateWithYear(state().trip.startDate)} – ${core.fmtDateWithYear(state().trip.endDate)}`;
+      if (openButton) openButton.textContent = "View analytics";
+      if (addButton) addButton.textContent = "Open planner";
+      list.append(buildHomeTodayEmpty("✓ Finished", `${state().expenses.length} expense${state().expenses.length === 1 ? "" : "s"} recorded.`));
+      return;
+    }
+
+    eyebrow.textContent = "TODAY";
+    if (todayItems.length) {
+      title.textContent = `${todayItems.length} plan${todayItems.length === 1 ? "" : "s"} today`;
+      meta.textContent = "Your next actions, without opening the full planner.";
+      todayItems.slice(0, 3).forEach(item => list.append(buildHomeTodayItem(item, false)));
+
+      if (todayItems.length > 3) {
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "home-today-more";
+        more.textContent = `＋ ${todayItems.length - 3} more today`;
+        more.onclick = () => core.page("plan");
+        list.append(more);
+      }
+    } else {
+      title.textContent = "No plans today";
+      meta.textContent = "Keep the day open or add something to your itinerary.";
+      list.append(buildHomeTodayEmpty("Nothing scheduled", "A free day can be part of the plan too."));
+    }
+
+    if (openButton) openButton.textContent = "Open planner";
+    if (addButton) addButton.textContent = "＋ Add plan";
+  }
+
+  function buildHomeTodayItem(item, showDate = false) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "home-today-item";
+
+    const time = document.createElement("span");
+    time.className = "home-today-time";
+    time.textContent = showDate ? core.fmtDate(item.date) : (item.time || "Any");
+
+    const icon = document.createElement("span");
+    icon.className = "home-today-item-icon";
+    icon.textContent = itineraryTypeInfo(item.type).icon;
+
+    const copy = document.createElement("span");
+    copy.className = "home-today-item-copy";
+    const strong = document.createElement("strong");
+    strong.textContent = item.title;
+    const small = document.createElement("small");
+    const stop = stopById(item.stopId);
+    const bits = [];
+    if (showDate && item.time) bits.push(item.time);
+    if (stop) bits.push(`${core.countryFlag(stop.country)} ${stop.country}`);
+    if (item.location) bits.push(item.location);
+    small.textContent = bits.join(" • ") || item.type;
+    copy.append(strong, small);
+
+    const arrow = document.createElement("span");
+    arrow.className = "home-today-item-arrow";
+    arrow.textContent = "›";
+
+    row.append(time, icon, copy, arrow);
+    row.onclick = () => {
+      core.page("plan");
+      setTimeout(() => openItineraryForm(item), 60);
+    };
+    return row;
+  }
+
+  function buildHomeTodayEmpty(titleText, subText) {
+    const row = document.createElement("div");
+    row.className = "home-today-empty";
+    const icon = document.createElement("span");
+    icon.textContent = "○";
+    const copy = document.createElement("div");
+    const strong = document.createElement("strong");
+    strong.textContent = titleText;
+    const small = document.createElement("small");
+    small.textContent = subText;
+    copy.append(strong, small);
+    row.append(icon, copy);
+    return row;
+  }
+
+  function renderHomeCountryBudgetVisibility() {
+    const details = $("countryBudgetDetails");
+    const toggle = $("homeCountryBudgetsToggle");
+    if (!details || !toggle) return;
+    details.classList.toggle("hidden", !homeCountryBudgetsOpen);
+    toggle.textContent = homeCountryBudgetsOpen ? "Hide" : "View all";
+    toggle.setAttribute("aria-expanded", String(homeCountryBudgetsOpen));
+  }
+
   function renderV6NextDestination() {
     const button = $("v6PlanRow");
     const label = $("v6PlanLabel");
@@ -698,22 +854,19 @@
     if (!button || !name || !dates || !state().trip) return;
 
     const today = core.today();
-    const activeItems = itinerary()
-      .filter(item => item.status !== "done" && item.date >= today)
+    const nextItem = itinerary()
+      .filter(item => item.status !== "done" && item.date > today)
       .slice()
-      .sort(itinerarySort);
-
-    const todayItem = activeItems.find(item => item.date === today);
-    const nextItem = todayItem || activeItems[0];
+      .sort(itinerarySort)[0] || null;
 
     if (nextItem) {
       const stop = stopById(nextItem.stopId);
       const type = itineraryTypeInfo(nextItem.type);
-      if (label) label.textContent = nextItem.date === today ? "TODAY" : "NEXT PLAN";
+      if (label) label.textContent = "NEXT PLAN";
       name.textContent = `${type.icon} ${nextItem.title}`;
       const timeText = nextItem.time ? `${nextItem.time} • ` : "";
-      const countryText = stop ? `${core.countryFlag(stop.country)} ${stop.country}` : core.fmtDateWithYear(nextItem.date);
-      dates.textContent = `${timeText}${countryText}`;
+      const countryText = stop ? `${core.countryFlag(stop.country)} ${stop.country}` : "";
+      dates.textContent = `${core.fmtDateWithYear(nextItem.date)} • ${timeText}${countryText}`.replace(/ • $/, "");
       return;
     }
 
@@ -2192,8 +2345,10 @@
     if (!state().trip) return;
 
     if (id === "dashboard") {
+      renderHomeToday();
       renderCurrentCountry();
       renderCountryBudgets();
+      renderHomeCountryBudgetVisibility();
       renderV6NextDestination();
     }
 
@@ -2467,8 +2622,46 @@
 
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));
-  $("countryBudgetManage")?.addEventListener("click", () => core.page("plan"));
-  $("v6PlanRow")?.addEventListener("click", () => core.page("plan"));
+  $("countryBudgetManage")?.addEventListener("click", () => {
+    setPlannerView("costs");
+    core.page("plan");
+  });
+
+  $("homeCountryBudgetsToggle")?.addEventListener("click", () => {
+    homeCountryBudgetsOpen = !homeCountryBudgetsOpen;
+    renderHomeCountryBudgetVisibility();
+  });
+
+  $("homeAddPlan")?.addEventListener("click", () => {
+    setPlannerView("itinerary");
+    core.page("plan");
+    setTimeout(() => openItineraryForm(), 70);
+  });
+
+  $("homeTodayAddPlan")?.addEventListener("click", () => {
+    if (core.today() > state().trip.endDate) {
+      setPlannerView("itinerary");
+      core.page("plan");
+      return;
+    }
+    setPlannerView("itinerary");
+    core.page("plan");
+    setTimeout(() => openItineraryForm(), 70);
+  });
+
+  $("homeTodayOpen")?.addEventListener("click", () => {
+    if (core.today() > state().trip.endDate) {
+      core.page("analytics");
+      return;
+    }
+    setPlannerView("itinerary");
+    core.page("plan");
+  });
+
+  $("v6PlanRow")?.addEventListener("click", () => {
+    setPlannerView("itinerary");
+    core.page("plan");
+  });
   $("settingsPlan")?.addEventListener("click", () => core.page("plan"));
   $("settingsAddCountry")?.addEventListener("click", () => {
     core.page("plan");

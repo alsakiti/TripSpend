@@ -1,24 +1,20 @@
-TripSpend v6.7 update
+TripSpend v6.7.1 update
 
-1. Extract TripSpend-v6.7-update.zip.
+1. Extract TripSpend-v6.7.1-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
 4. Wait about 1–2 minutes.
 5. Completely close TripSpend.
 6. Reopen it while online.
-7. Confirm the badge says v6.7.
+7. Confirm the badge says v6.7.1.
 
-New Trip Planner:
-- Plan tab now has Itinerary | Costs
-- Day-by-day itinerary timeline
-- Flight / Hotel / Activity / Restaurant / Transport / Note
-- Date, time, country, location, booking reference, note and status
-- Optional estimated cost
-- Estimated cost automatically links to Planned Costs
-- One-tap + Expense from itinerary
-- Planned / Booked / Done / Paid states
-- Edit / Delete / Done controls
-- Home plan row quietly shows Today / Next Plan
-- Itinerary is preserved in backups and Past Trips
-
-Existing trips and expenses are preserved.
+Home Dashboard Refresh:
+- Budget is now first
+- New Today itinerary card
+- Quick Add Expense + small Plan action
+- Current Country is compact
+- Next no longer duplicates Today
+- Trip Health is quieter
+- Country budgets collapsed behind View all
+- Home adapts before / during / after a trip
+- No data migration or calculation changes

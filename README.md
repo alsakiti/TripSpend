@@ -1053,3 +1053,63 @@ Itinerary data is stored in the same local TripSpend state:
 - Existing planned costs continue to work.
 - Existing trips load with an empty itinerary until you add items.
 - IndexedDB schema remains v2; no receipt-store migration is required.
+
+
+## v6.7.1 — Home Dashboard Refresh
+
+Home is redesigned around one question: **What do I need to know right now?**
+
+### New Home hierarchy
+1. **Trip Budget Left**
+2. **Today**
+3. **Add Expense**
+4. **Current Country**
+5. **Next**
+6. **Trip Health**
+7. Collapsed Country Budgets
+8. Trips & History
+
+### Today
+The new Today card reads directly from the v6.7 Trip Planner:
+- shows up to 3 itinerary items for today
+- time, icon, title and country/location are visible at a glance
+- tapping an item opens it in the planner
+- `+ Add plan` creates a new itinerary item
+- if there are no plans, Home stays calm and simply says **No plans today**
+
+### Adaptive trip state
+Before the trip:
+- Today becomes an **Upcoming Trip** card
+- shows the countdown
+- previews the first itinerary plans
+
+During the trip:
+- Today shows today's itinerary
+
+After the trip:
+- Today becomes **Trip Complete**
+- points toward Analytics for the final spending result
+
+### Next
+The Next row no longer duplicates today's itinerary.
+It shows:
+- the next future itinerary item, or
+- the next destination when there is no future itinerary item
+
+### Country budgets
+The Current Country remains visible, including its budget.
+The full country-budget list is collapsed behind **View all** so it does not permanently crowd Home.
+
+### Design
+- tighter Home spacing
+- quieter Safe Today / Spent Today metrics
+- compact current-country card
+- smaller one-line health banner
+- Trips & History remains deliberately low emphasis
+- no extra dashboard charts
+
+### Compatibility
+- No data-model migration
+- No IndexedDB migration
+- No calculation changes
+- Existing trips, itinerary items, receipts, settlements and backups remain compatible
