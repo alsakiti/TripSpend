@@ -11,6 +11,8 @@
   let setupDraftPeople = [];
   let editingSetupStopIndex = -1;
   let editingSetupPersonIndex = -1;
+  let plannerView = "itinerary";
+  let editingItineraryId = "";
 
   const CURRENCY_BY_COUNTRY = {
     Oman:"OMR", Thailand:"THB", Indonesia:"IDR", Singapore:"SGD", Malaysia:"MYR",
@@ -25,6 +27,7 @@
   function state() { return core.getState(); }
   function stops() { return Array.isArray(state().stops) ? state().stops : []; }
   function plans() { return Array.isArray(state().plans) ? state().plans : []; }
+  function itinerary() { return Array.isArray(state().itinerary) ? state().itinerary : []; }
   function people() { return core.activePeople(); }
   function stopById(id) { return stops().find(s => s.id === id) || null; }
   function personById(id) { return state().people.find(p => p.id === id) || null; }
@@ -446,6 +449,34 @@
     return state().expenses.reduce((sum, e) => sum + Number(e.homeAmount || 0), 0);
   }
 
+  const ITINERARY_TYPES = {
+    Flight: { icon: "✈️", category: "Flights" },
+    Hotel: { icon: "🏨", category: "Hotel" },
+    Activity: { icon: "🎟️", category: "Activities" },
+    Restaurant: { icon: "🍽️", category: "Food" },
+    Transport: { icon: "🚕", category: "Transport" },
+    Note: { icon: "📝", category: "Other" }
+  };
+
+  function itineraryTypeInfo(type) {
+    return ITINERARY_TYPES[type] || ITINERARY_TYPES.Activity;
+  }
+
+  function itinerarySort(a, b) {
+    return (a.date || "").localeCompare(b.date || "") ||
+      (a.time || "99:99").localeCompare(b.time || "99:99") ||
+      Number(a.createdAt || 0) - Number(b.createdAt || 0);
+  }
+
+  function linkedPlanForItem(item) {
+    return item?.planId ? plans().find(plan => plan.id === item.planId) || null : null;
+  }
+
+  function itineraryExpenseRecorded(item) {
+    if (!item?.planId) return false;
+    return state().expenses.some(expense => expense.planId === item.planId);
+  }
+
   function upcomingPlans() {
     return plans().filter(p => p.status !== "paid");
   }
@@ -666,16 +697,32 @@
     const dates = $("v6NextCountryDates");
     if (!button || !name || !dates || !state().trip) return;
 
+    const today = core.today();
+    const activeItems = itinerary()
+      .filter(item => item.status !== "done" && item.date >= today)
+      .slice()
+      .sort(itinerarySort);
+
+    const todayItem = activeItems.find(item => item.date === today);
+    const nextItem = todayItem || activeItems[0];
+
+    if (nextItem) {
+      const stop = stopById(nextItem.stopId);
+      const type = itineraryTypeInfo(nextItem.type);
+      if (label) label.textContent = nextItem.date === today ? "TODAY" : "NEXT PLAN";
+      name.textContent = `${type.icon} ${nextItem.title}`;
+      const timeText = nextItem.time ? `${nextItem.time} • ` : "";
+      const countryText = stop ? `${core.countryFlag(stop.country)} ${stop.country}` : core.fmtDateWithYear(nextItem.date);
+      dates.textContent = `${timeText}${countryText}`;
+      return;
+    }
+
     const ordered = stops().slice().sort((a,b) =>
       (a.startDate || "").localeCompare(b.startDate || "")
     );
-    const today = core.today();
 
     let next = ordered.find(stop => stop.startDate > today);
-
-    if (!next && today < state().trip.startDate) {
-      next = ordered[0] || null;
-    }
+    if (!next && today < state().trip.startDate) next = ordered[0] || null;
 
     if (next) {
       if (label) label.textContent = today < state().trip.startDate ? "FIRST DESTINATION" : "NEXT DESTINATION";
@@ -683,11 +730,11 @@
       dates.textContent = `${core.fmtDateWithYear(next.startDate)} • ${next.currency}`;
     } else {
       const current = stopForDate(today);
-      if (label) label.textContent = today > state().trip.endDate ? "TRIP COMPLETE" : "TRIP PLAN";
+      if (label) label.textContent = today > state().trip.endDate ? "TRIP COMPLETE" : "TRIP PLANNER";
       name.textContent = today > state().trip.endDate ? "Trip complete" : (current ? `${core.countryFlag(current.country)} ${current.country}` : "View trip");
       dates.textContent = today > state().trip.endDate
         ? `${core.fmtDateWithYear(state().trip.startDate)} – ${core.fmtDateWithYear(state().trip.endDate)}`
-        : "View countries & planned costs";
+        : "Open itinerary & costs";
     }
   }
 
@@ -730,6 +777,414 @@
         nextEl.append(icon, body);
       }
     }
+  }
+
+  function renderPlannerView() {
+    const itineraryTab = $("planViewItinerary");
+    const costsTab = $("planViewCosts");
+    const itinerarySection = $("planItinerarySection");
+    const countrySection = $("planCountrySection");
+    const costSection = $("planCostSection");
+
+    const showItinerary = plannerView !== "costs";
+    itineraryTab?.classList.toggle("active", showItinerary);
+    costsTab?.classList.toggle("active", !showItinerary);
+    itineraryTab?.setAttribute("aria-selected", String(showItinerary));
+    costsTab?.setAttribute("aria-selected", String(!showItinerary));
+
+    itinerarySection?.classList.toggle("hidden", !showItinerary);
+    countrySection?.classList.toggle("hidden", showItinerary);
+    costSection?.classList.toggle("hidden", showItinerary);
+  }
+
+  function setPlannerView(view) {
+    plannerView = view === "costs" ? "costs" : "itinerary";
+    renderPlannerView();
+
+    if (plannerView === "itinerary") {
+      renderItineraryStopOptions();
+      renderItinerary();
+    } else {
+      renderStops();
+      renderPlanStopOptions();
+      renderPlannedCosts();
+    }
+  }
+
+  function setItineraryType(type) {
+    const normalized = ITINERARY_TYPES[type] ? type : "Activity";
+    if ($("itineraryType")) $("itineraryType").value = normalized;
+    document.querySelectorAll(".itinerary-type-chip").forEach(button => {
+      button.classList.toggle("active", button.dataset.itineraryType === normalized);
+    });
+  }
+
+  function renderItineraryStopOptions(selected = "") {
+    const select = $("itineraryStop");
+    if (!select) return;
+
+    const current = selected || select.value;
+    select.replaceChildren();
+
+    const auto = document.createElement("option");
+    auto.value = "";
+    auto.textContent = "Auto from date";
+    select.append(auto);
+
+    stops().forEach(stop => {
+      const option = document.createElement("option");
+      option.value = stop.id;
+      option.textContent = `${core.countryFlag(stop.country)} ${stop.country}`;
+      select.append(option);
+    });
+
+    if ([...select.options].some(option => option.value === current)) select.value = current;
+  }
+
+  function resetItineraryForm() {
+    editingItineraryId = "";
+    $("itineraryForm")?.reset();
+    if ($("itineraryFormTitle")) $("itineraryFormTitle").textContent = "Add itinerary item";
+    if ($("itinerarySaveBtn")) $("itinerarySaveBtn").textContent = "Add to Itinerary";
+    setItineraryType("Activity");
+
+    const defaultDate = core.today() < state().trip.startDate
+      ? state().trip.startDate
+      : (core.today() > state().trip.endDate ? state().trip.endDate : core.today());
+
+    if ($("itineraryDate")) {
+      $("itineraryDate").value = defaultDate;
+      $("itineraryDate").dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if ($("itineraryStatus")) $("itineraryStatus").value = "planned";
+    if ($("itineraryCurrencyHint")) $("itineraryCurrencyHint").textContent = `(${state().trip.homeCurrency}, optional)`;
+    renderItineraryStopOptions();
+  }
+
+  function openItineraryForm(item = null) {
+    setPlannerView("itinerary");
+    resetItineraryForm();
+
+    if (item) {
+      editingItineraryId = item.id;
+      if ($("itineraryFormTitle")) $("itineraryFormTitle").textContent = "Edit itinerary item";
+      if ($("itinerarySaveBtn")) $("itinerarySaveBtn").textContent = "Save Changes";
+      setItineraryType(item.type);
+      $("itineraryTitle").value = item.title || "";
+      $("itineraryDate").value = item.date || state().trip.startDate;
+      $("itineraryDate").dispatchEvent(new Event("input", { bubbles: true }));
+      $("itineraryTime").value = item.time || "";
+      renderItineraryStopOptions(item.stopId || "");
+      $("itineraryStatus").value = item.status === "booked" ? "booked" : "planned";
+      $("itineraryLocation").value = item.location || "";
+      $("itineraryBookingRef").value = item.bookingRef || "";
+      $("itineraryAmount").value = Number(item.homeAmount || 0) > 0 ? item.homeAmount : "";
+      $("itineraryNote").value = item.note || "";
+    }
+
+    setPlanEditor("itineraryForm", true);
+    setTimeout(() => $("itineraryTitle")?.focus(), 80);
+  }
+
+  function closeItineraryForm() {
+    setPlanEditor("itineraryForm", false);
+    resetItineraryForm();
+  }
+
+  function syncItineraryCost(item, amount, category) {
+    const existingPlan = linkedPlanForItem(item);
+    const recorded = existingPlan && state().expenses.some(expense => expense.planId === existingPlan.id);
+
+    if (!(amount > 0)) {
+      if (existingPlan && !recorded) {
+        state().plans = plans().filter(plan => plan.id !== existingPlan.id);
+        item.planId = "";
+      }
+      return;
+    }
+
+    if (existingPlan) {
+      existingPlan.title = item.title;
+      existingPlan.homeAmount = amount;
+      existingPlan.date = item.date;
+      existingPlan.stopId = item.stopId;
+      existingPlan.category = category;
+      existingPlan.note = [item.location, item.bookingRef, item.note].filter(Boolean).join(" • ").slice(0, 120);
+      if (!recorded) existingPlan.status = "planned";
+      return;
+    }
+
+    const plan = {
+      id: core.uid("plan"),
+      title: item.title,
+      homeAmount: amount,
+      date: item.date,
+      stopId: item.stopId,
+      category,
+      note: [item.location, item.bookingRef, item.note].filter(Boolean).join(" • ").slice(0, 120),
+      status: "planned",
+      createdAt: Date.now()
+    };
+    state().plans.push(plan);
+    item.planId = plan.id;
+  }
+
+  function saveItineraryItem() {
+    const title = $("itineraryTitle")?.value.trim();
+    const date = $("itineraryDate")?.value;
+    if (!title) return core.toast("Enter an itinerary title");
+    if (!date) return core.toast("Choose a date");
+
+    let stopId = $("itineraryStop")?.value || "";
+    if (!stopId) stopId = stopForDate(date)?.id || "";
+
+    const type = $("itineraryType")?.value || "Activity";
+    const amount = Number($("itineraryAmount")?.value || 0);
+    const category = itineraryTypeInfo(type).category;
+    const existing = editingItineraryId
+      ? itinerary().find(item => item.id === editingItineraryId)
+      : null;
+
+    const item = existing || {
+      id: core.uid("itinerary"),
+      createdAt: Date.now(),
+      planId: ""
+    };
+
+    Object.assign(item, {
+      title,
+      type,
+      date,
+      time: $("itineraryTime")?.value || "",
+      stopId,
+      location: $("itineraryLocation")?.value.trim() || "",
+      bookingRef: $("itineraryBookingRef")?.value.trim() || "",
+      note: $("itineraryNote")?.value.trim() || "",
+      homeAmount: amount,
+      status: $("itineraryStatus")?.value === "booked" ? "booked" : (item.status === "done" ? "done" : "planned"),
+      updatedAt: Date.now()
+    });
+
+    if (!existing) state().itinerary.push(item);
+    syncItineraryCost(item, amount, category);
+
+    core.save({ immediate: true });
+    closeItineraryForm();
+    core.render();
+    core.toast(existing ? "Itinerary updated" : "Added to itinerary");
+  }
+
+  function toggleItineraryDone(item) {
+    item.status = item.status === "done" ? "planned" : "done";
+    item.updatedAt = Date.now();
+    core.save();
+    core.render();
+    core.toast(item.status === "done" ? "Marked done" : "Moved back to planned");
+  }
+
+  function deleteItineraryItem(item) {
+    if (!confirm(`Delete “${item.title}” from your itinerary?`)) return;
+
+    const plan = linkedPlanForItem(item);
+    const recorded = plan && state().expenses.some(expense => expense.planId === plan.id);
+    if (plan && !recorded) {
+      state().plans = plans().filter(row => row.id !== plan.id);
+    }
+
+    state().itinerary = itinerary().filter(row => row.id !== item.id);
+    core.save({ immediate: true });
+    core.render();
+    core.toast("Itinerary item deleted");
+  }
+
+  function itineraryMeta(item) {
+    const pieces = [];
+    if (item.time) pieces.push(item.time);
+    const stop = stopById(item.stopId);
+    if (stop) pieces.push(`${core.countryFlag(stop.country)} ${stop.country}`);
+    if (item.location) pieces.push(item.location);
+    return pieces.join(" • ");
+  }
+
+  function itineraryStatusLabel(item) {
+    if (item.status === "done") return "DONE";
+    if (itineraryExpenseRecorded(item)) return "PAID";
+    if (item.status === "booked") return "BOOKED";
+    return "PLANNED";
+  }
+
+  function renderItinerary() {
+    const host = $("itineraryList");
+    const todaySummary = $("itineraryTodaySummary");
+    if (!host || !state().trip) return;
+
+    host.replaceChildren();
+    const rows = itinerary().slice().sort(itinerarySort);
+    const today = core.today();
+
+    if (todaySummary) {
+      const todayRows = rows.filter(item => item.date === today && item.status !== "done");
+      if (todayRows.length) {
+        todaySummary.classList.remove("hidden");
+        todaySummary.innerHTML = `<span>Today</span><strong>${todayRows.length} plan${todayRows.length === 1 ? "" : "s"}</strong><small>${todayRows.slice(0,2).map(item => `${itineraryTypeInfo(item.type).icon} ${item.title}`).join(" • ")}</small>`;
+      } else {
+        todaySummary.classList.add("hidden");
+        todaySummary.replaceChildren();
+      }
+    }
+
+    if (!rows.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state itinerary-empty";
+      const strong = document.createElement("strong");
+      strong.textContent = "Your itinerary starts here";
+      const span = document.createElement("span");
+      span.textContent = "Add a flight, hotel, activity, restaurant, transport or simple note.";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "small-primary";
+      button.textContent = "＋ Add first item";
+      button.onclick = () => openItineraryForm();
+      empty.append(strong, span, button);
+      host.append(empty);
+      return;
+    }
+
+    const grouped = new Map();
+    rows.forEach(item => {
+      if (!grouped.has(item.date)) grouped.set(item.date, []);
+      grouped.get(item.date).push(item);
+    });
+
+    const fragment = document.createDocumentFragment();
+
+    grouped.forEach((dayItems, date) => {
+      const day = document.createElement("section");
+      day.className = "itinerary-day";
+      if (date === today) day.classList.add("today");
+      if (date < today) day.classList.add("past");
+
+      const head = document.createElement("div");
+      head.className = "itinerary-day-head";
+      const dateCopy = document.createElement("div");
+      const eyebrow = document.createElement("small");
+      eyebrow.textContent = date === today ? "TODAY" : new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: "long" }).toUpperCase();
+      const title = document.createElement("strong");
+      title.textContent = core.fmtDateWithYear(date);
+      dateCopy.append(eyebrow, title);
+
+      const count = document.createElement("span");
+      count.textContent = `${dayItems.length} item${dayItems.length === 1 ? "" : "s"}`;
+      head.append(dateCopy, count);
+      day.append(head);
+
+      const list = document.createElement("div");
+      list.className = "itinerary-day-items";
+
+      dayItems.forEach(item => {
+        const type = itineraryTypeInfo(item.type);
+        const card = document.createElement("article");
+        card.className = `itinerary-card itinerary-${item.status}`;
+        if (item.status === "done") card.classList.add("completed");
+
+        const timeline = document.createElement("div");
+        timeline.className = "itinerary-time";
+        timeline.textContent = item.time || "•";
+
+        const icon = document.createElement("div");
+        icon.className = "itinerary-icon";
+        icon.textContent = type.icon;
+
+        const body = document.createElement("div");
+        body.className = "itinerary-body";
+        const top = document.createElement("div");
+        top.className = "itinerary-card-top";
+        const name = document.createElement("strong");
+        name.textContent = item.title;
+        const status = document.createElement("span");
+        status.className = `itinerary-status ${item.status}`;
+        if (itineraryExpenseRecorded(item)) status.classList.add("paid");
+        status.textContent = itineraryStatusLabel(item);
+        top.append(name, status);
+
+        const meta = document.createElement("small");
+        meta.textContent = itineraryMeta(item) || item.type;
+
+        body.append(top, meta);
+
+        if (item.bookingRef) {
+          const booking = document.createElement("span");
+          booking.className = "itinerary-booking";
+          booking.textContent = `Booking: ${item.bookingRef}`;
+          body.append(booking);
+        }
+
+        if (item.note) {
+          const note = document.createElement("p");
+          note.className = "itinerary-note";
+          note.textContent = item.note;
+          body.append(note);
+        }
+
+        const footer = document.createElement("div");
+        footer.className = "itinerary-card-footer";
+
+        const cost = document.createElement("div");
+        cost.className = "itinerary-cost";
+        if (Number(item.homeAmount || 0) > 0) {
+          const small = document.createElement("small");
+          small.textContent = itineraryExpenseRecorded(item) ? "Recorded" : "Estimated";
+          const strong = document.createElement("strong");
+          strong.textContent = core.money(item.homeAmount, state().trip.homeCurrency);
+          cost.append(small, strong);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "itinerary-actions";
+
+        if (Number(item.homeAmount || 0) > 0 && !itineraryExpenseRecorded(item)) {
+          const expense = document.createElement("button");
+          expense.type = "button";
+          expense.className = "mini-btn itinerary-expense-btn";
+          expense.textContent = "＋ Expense";
+          expense.onclick = () => {
+            const plan = linkedPlanForItem(item);
+            if (plan) recordPlanAsExpense(plan);
+          };
+          actions.append(expense);
+        }
+
+        const done = document.createElement("button");
+        done.type = "button";
+        done.className = "mini-btn";
+        done.textContent = item.status === "done" ? "Undo" : "Done";
+        done.onclick = () => toggleItineraryDone(item);
+
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "mini-btn";
+        edit.textContent = "Edit";
+        edit.onclick = () => openItineraryForm(item);
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "mini-btn delete";
+        del.textContent = "Delete";
+        del.onclick = () => deleteItineraryItem(item);
+
+        actions.append(done, edit, del);
+        footer.append(cost, actions);
+        body.append(footer);
+
+        card.append(timeline, icon, body);
+        list.append(card);
+      });
+
+      day.append(list);
+      fragment.append(day);
+    });
+
+    host.append(fragment);
   }
 
   function renderPlannerSummary() {
@@ -1745,9 +2200,15 @@
     if (id === "plan") {
       renderPlanHero();
       renderPlannerSummary();
-      renderStops();
-      renderPlanStopOptions();
-      renderPlannedCosts();
+      renderPlannerView();
+      if (plannerView === "itinerary") {
+        renderItineraryStopOptions();
+        renderItinerary();
+      } else {
+        renderStops();
+        renderPlanStopOptions();
+        renderPlannedCosts();
+      }
     }
 
     if (id === "analytics") {
@@ -1867,6 +2328,7 @@
   bindDateDisplay("newStopStart", "newStopStartDisplay", true);
   bindDateDisplay("newStopEnd", "newStopEndDisplay", true);
   bindDateDisplay("planDate", "planDateDisplay", true);
+  bindDateDisplay("itineraryDate", "itineraryDateDisplay", true);
 
   $("setupToggleCountries")?.addEventListener("click", () => {
     const panel = $("setupMultiCountryPanel");
@@ -2016,6 +2478,24 @@
     }, 120);
   });
   $("planDone")?.addEventListener("click", () => core.page("dashboard"));
+
+  $("planViewItinerary")?.addEventListener("click", () => setPlannerView("itinerary"));
+  $("planViewCosts")?.addEventListener("click", () => setPlannerView("costs"));
+
+  $("planAddItinerary")?.addEventListener("click", () => openItineraryForm());
+  $("itineraryCancel")?.addEventListener("click", closeItineraryForm);
+  $("itineraryForm")?.addEventListener("submit", event => {
+    event.preventDefault();
+    saveItineraryItem();
+  });
+
+  document.querySelectorAll(".itinerary-type-chip").forEach(button => {
+    button.addEventListener("click", () => setItineraryType(button.dataset.itineraryType));
+  });
+
+  $("itineraryDate")?.addEventListener("change", () => {
+    if (!$("itineraryStop")?.value) renderItineraryStopOptions(stopForDate($("itineraryDate").value)?.id || "");
+  });
 
   $("planAddCountry")?.addEventListener("click", () => {
     setPlanEditor("addStopForm", true);

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.6.9";
+  const APP_VERSION = "6.7";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -131,7 +131,7 @@
   }
 
   function blank() {
-    return { trip: null, expenses: [], rates: {}, people: [], stops: [], plans: [], settlements: [], tripHistory: [], preferences: {} };
+    return { trip: null, expenses: [], rates: {}, people: [], stops: [], plans: [], itinerary: [], settlements: [], tripHistory: [], preferences: {} };
   }
 
   function normalizeExpense(expense) {
@@ -207,6 +207,27 @@
         }))
       : [];
 
+    const itinerary = Array.isArray(clean.itinerary)
+      ? clean.itinerary.filter(item => item && item.id).map(item => ({
+          id: String(item.id),
+          title: String(item.title || "Itinerary item").trim().slice(0, 90),
+          type: ["Flight","Hotel","Activity","Restaurant","Transport","Note"].includes(item.type)
+            ? item.type
+            : "Activity",
+          date: String(item.date || trip?.startDate || ""),
+          time: String(item.time || "").slice(0, 5),
+          stopId: item.stopId ? String(item.stopId) : "",
+          location: String(item.location || "").slice(0, 120),
+          bookingRef: String(item.bookingRef || "").slice(0, 80),
+          note: String(item.note || "").slice(0, 240),
+          homeAmount: num(item.homeAmount, 0),
+          planId: item.planId ? String(item.planId) : "",
+          status: item.status === "done" ? "done" : (item.status === "booked" ? "booked" : "planned"),
+          createdAt: num(item.createdAt, Date.now()),
+          updatedAt: num(item.updatedAt, item.createdAt || Date.now())
+        }))
+      : [];
+
     const settlements = Array.isArray(clean.settlements)
       ? clean.settlements
           .filter(s => s && s.id && s.fromPersonId && s.toPersonId && num(s.amount) > 0)
@@ -241,6 +262,7 @@
       people,
       stops,
       plans,
+      itinerary,
       settlements,
       tripHistory,
       preferences: {
@@ -269,6 +291,7 @@
     const people = Array.isArray(data.people) ? data.people : [];
     const stops = Array.isArray(data.stops) ? data.stops : [];
     const plans = Array.isArray(data.plans) ? data.plans : [];
+    const itinerary = Array.isArray(data.itinerary) ? data.itinerary : [];
     const settlements = Array.isArray(data.settlements) ? data.settlements : [];
     const history = Array.isArray(data.tripHistory) ? data.tripHistory : [];
 
@@ -293,6 +316,7 @@
     checkDuplicates(people, "traveler");
     checkDuplicates(stops, "country");
     checkDuplicates(plans, "planned cost");
+    checkDuplicates(itinerary, "itinerary");
     checkDuplicates(settlements, "settlement");
 
     const personIds = new Set(people.map(person => String(person.id)));
@@ -303,6 +327,12 @@
       if (stop.startDate && stop.endDate && stop.startDate > stop.endDate) {
         errors.push(`Country dates are reversed for ${stop.country || "a country"}`);
       }
+    });
+
+    itinerary.forEach(item => {
+      if (!item.date) warnings.push("An itinerary item has no date");
+      if (item.stopId && !stopIds.has(String(item.stopId))) warnings.push("An itinerary item references a missing country");
+      if (item.planId && !planIds.has(String(item.planId))) warnings.push("An itinerary item references a missing planned cost");
     });
 
     expenses.forEach(expense => {
@@ -361,6 +391,7 @@
       people: safeClone(source.people || []),
       stops: safeClone(source.stops || []),
       plans: safeClone(source.plans || []),
+      itinerary: safeClone(source.itinerary || []),
       settlements: safeClone(source.settlements || []),
       preferences: safeClone(source.preferences || {})
     };
@@ -3983,6 +4014,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       ],
       stops: allSetupStops,
       plans: [],
+      itinerary: [],
       settlements: [],
       tripHistory: preservedHistory,
       preferences: {
@@ -5032,7 +5064,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.6.9", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

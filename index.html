@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.6.9">
-  <link rel="icon" href="icons/icon-192.png?v=6.6.9">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.6.9">
-  <link rel="stylesheet" href="style.css?v=6.6.9">
+  <link rel="manifest" href="manifest.webmanifest?v=6.7">
+  <link rel="icon" href="icons/icon-192.png?v=6.7">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.7">
+  <link rel="stylesheet" href="style.css?v=6.7">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -32,7 +32,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.6.9</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.7</span></div>
         <div class="header-trip-title-row">
           <h1 id="headerTitle">TripSpend</h1>
           <button id="tripSwitcherTrigger" class="trip-switcher-trigger hidden" type="button" aria-label="Switch trip" title="Switch trip">⌄</button>
@@ -46,8 +46,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.6.9" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.6.9</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.7" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.7</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -598,9 +598,9 @@
       <section id="plan" class="page plan-v651">
         <div class="page-title plan-page-title">
           <div>
-            <div class="eyebrow">TRIP PLAN</div>
-            <h2>Countries & costs</h2>
-            <p>See the journey, budgets and upcoming costs in one place.</p>
+            <div class="eyebrow">TRIP PLANNER</div>
+            <h2>Your trip</h2>
+            <p>Plan what you are doing, then keep the cost connected to your spending.</p>
           </div>
           <button id="planDone" class="small-primary" type="button">Done</button>
         </div>
@@ -637,7 +637,95 @@
           </div>
         </div>
 
-        <section class="section plan-country-section">
+        <div class="plan-view-switcher" role="tablist" aria-label="Trip planner view">
+          <button id="planViewItinerary" class="plan-view-tab active" type="button" role="tab" aria-selected="true">
+            <span>🗓️</span> Itinerary
+          </button>
+          <button id="planViewCosts" class="plan-view-tab" type="button" role="tab" aria-selected="false">
+            <span>💳</span> Costs
+          </button>
+        </div>
+
+        <section id="planItinerarySection" class="section itinerary-section">
+          <div class="section-title plan-section-title itinerary-section-title">
+            <div>
+              <h2>Itinerary</h2>
+              <small>Flights, hotels, activities, restaurants and notes by day.</small>
+            </div>
+            <button id="planAddItinerary" class="small-primary" type="button">＋ Add item</button>
+          </div>
+
+          <form id="itineraryForm" class="card form planner-form plan-inline-editor itinerary-form hidden">
+            <div class="plan-editor-head">
+              <strong id="itineraryFormTitle">Add itinerary item</strong>
+              <button id="itineraryCancel" class="link-btn" type="button">Cancel</button>
+            </div>
+
+            <div class="itinerary-type-row" role="group" aria-label="Itinerary type">
+              <button class="itinerary-type-chip active" data-itinerary-type="Activity" type="button">🎟️ Activity</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Flight" type="button">✈️ Flight</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Hotel" type="button">🏨 Hotel</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Restaurant" type="button">🍽️ Restaurant</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Transport" type="button">🚕 Transport</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Note" type="button">📝 Note</button>
+            </div>
+            <input id="itineraryType" type="hidden" value="Activity">
+
+            <label>Title
+              <input id="itineraryTitle" maxlength="90" required placeholder="Schönbrunn Palace, hotel check-in…">
+            </label>
+
+            <div class="grid2 itinerary-date-time-grid">
+              <label class="date-field-label"><span>Date</span>
+                <div class="date-picker-card planner-single-date">
+                  <span id="itineraryDateDisplay" class="date-display">Select date</span>
+                  <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
+                  <input id="itineraryDate" class="native-date-input" type="date" required aria-label="Itinerary date">
+                </div>
+              </label>
+
+              <label>Time <small>(optional)</small>
+                <input id="itineraryTime" type="time">
+              </label>
+            </div>
+
+            <div class="grid2">
+              <label>Country
+                <select id="itineraryStop"></select>
+              </label>
+              <label>Status
+                <select id="itineraryStatus">
+                  <option value="planned">Planned</option>
+                  <option value="booked">Booked</option>
+                </select>
+              </label>
+            </div>
+
+            <label>Location <small>(optional)</small>
+              <input id="itineraryLocation" maxlength="120" placeholder="Hotel, venue, neighborhood…">
+            </label>
+
+            <div class="grid2">
+              <label>Booking reference <small>(optional)</small>
+                <input id="itineraryBookingRef" maxlength="80" placeholder="Confirmation / ticket number">
+              </label>
+              <label>Estimated cost <small id="itineraryCurrencyHint">(home currency, optional)</small>
+                <input id="itineraryAmount" type="number" min="0" step="0.001" inputmode="decimal" placeholder="0">
+              </label>
+            </div>
+
+            <label>Note <small>(optional)</small>
+              <textarea id="itineraryNote" maxlength="240" rows="3" placeholder="Reservation details, reminders, what to bring…"></textarea>
+            </label>
+
+            <button id="itinerarySaveBtn" class="primary" type="submit">Add to Itinerary</button>
+          </form>
+
+          <div id="itineraryTodaySummary" class="itinerary-today-summary hidden"></div>
+          <div id="itineraryList" class="itinerary-list"></div>
+        </section>
+
+        <section id="planCountrySection" class="section plan-country-section hidden">
           <div class="section-title plan-section-title">
             <div>
               <h2>Countries</h2>
@@ -691,7 +779,7 @@
           <div id="stopList" class="stop-list plan-stop-list"></div>
         </section>
 
-        <section class="section plan-cost-section">
+        <section id="planCostSection" class="section plan-cost-section hidden">
           <div class="section-title plan-section-title">
             <div>
               <h2>Upcoming costs</h2>
@@ -904,7 +992,7 @@
             <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
           </div>
           <div class="app-update-versions">
-            <span><small>Current</small><strong id="currentVersionText">v6.6.9</strong></span>
+            <span><small>Current</small><strong id="currentVersionText">v6.7</strong></span>
             <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
           </div>
           <div class="app-update-actions">
@@ -1292,8 +1380,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.6.9"></script>
-<script src="fx.js?v=6.6.9"></script>
-<script src="v5.js?v=6.6.9"></script>
+<script src="app.js?v=6.7"></script>
+<script src="fx.js?v=6.7"></script>
+<script src="v5.js?v=6.7"></script>
 </body>
 </html>

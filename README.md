@@ -988,3 +988,68 @@ Exchange-rate precision is intentionally unchanged.
 - No calculation changes.
 - No data-model or IndexedDB migration.
 - Existing trips, receipts, settlements, Past Trips and backups remain compatible.
+
+
+## v6.7 — Trip Planner
+
+The existing Plan tab is now a lightweight Trip Planner without turning TripSpend into a complicated itinerary app.
+
+### Itinerary | Costs
+The Plan tab now has two clean views:
+- **Itinerary** — day-by-day travel plans
+- **Costs** — the existing countries, country budgets and planned costs
+
+### Itinerary items
+Add:
+- ✈️ Flight
+- 🏨 Hotel
+- 🎟️ Activity
+- 🍽️ Restaurant
+- 🚕 Transport
+- 📝 Note
+
+Each item can have:
+- date
+- optional time
+- country
+- Planned / Booked status
+- location
+- booking reference
+- optional estimated cost
+- note
+
+### Cost connection
+When an itinerary item has an estimated cost:
+- TripSpend automatically creates/updates a linked Planned Cost
+- it is included in existing Safe Today / planned-reserve calculations
+- **+ Expense** opens Add Expense already filled from the itinerary item
+- once recorded, the itinerary item shows **PAID**
+- no duplicate data entry is required
+
+### Day-by-day timeline
+- Plans are grouped by date
+- Today is highlighted
+- Times and country/location appear directly in the timeline
+- Completed items fade back
+- Mark items Done / Undo
+- Edit and Delete from the timeline
+
+### Home integration
+The existing compact plan row on Home now quietly prioritizes:
+- **TODAY** when you have an itinerary item today
+- otherwise **NEXT PLAN**
+- otherwise it falls back to the next destination as before
+
+This adds trip planning without adding another Home card.
+
+### Local-first
+Itinerary data is stored in the same local TripSpend state:
+- included in automatic restore points
+- included in portable JSON backups
+- included when trips move into Past Trips
+- restored when reopening a Past Trip
+
+### Compatibility
+- Existing planned costs continue to work.
+- Existing trips load with an empty itinerary until you add items.
+- IndexedDB schema remains v2; no receipt-store migration is required.
