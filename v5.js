@@ -13,6 +13,10 @@
   let editingSetupPersonIndex = -1;
   let plannerView = "itinerary";
   let editingItineraryId = "";
+  let editingCountryBudgetId = "";
+  let countryBudgetReturnFocus = null;
+  let lastFlagRailSignature = "";
+  let lastCountryBudgetStructureSignature = "";
 
   const CURRENCY_BY_COUNTRY = {
     Oman:"OMR", Thailand:"THB", Indonesia:"IDR", Singapore:"SGD", Malaysia:"MYR",
@@ -576,8 +580,11 @@
     const b = stopBudgetState(stop);
     if (budgetText) {
       budgetText.textContent = b.budget > 0
-        ? `${core.money(Math.max(0, b.remaining), state().trip.homeCurrency)} left`
+        ? (b.remaining >= 0
+            ? `${core.money(b.remaining, state().trip.homeCurrency)} left`
+            : `${core.money(Math.abs(b.remaining), state().trip.homeCurrency)} over`)
         : "No country budget";
+      budgetText.classList.toggle("country-over-budget", b.budget > 0 && b.remaining < 0);
     }
     if (bar) {
       bar.style.width = `${b.pct}%`;
@@ -588,15 +595,20 @@
 
     const rail = $("tripFlagRail");
     if (rail) {
+      const signature = stops().map(tripStop => `${tripStop.id}:${tripStop.country}:${tripStop.id === stop.id}`).join("|");
+      if (signature === lastFlagRailSignature) return;
+      lastFlagRailSignature = signature;
       rail.replaceChildren();
+      const fragment = document.createDocumentFragment();
       stops().forEach(tripStop => {
         const flag = document.createElement("span");
         flag.className = "trip-flag";
         flag.classList.toggle("active", tripStop.id === stop.id);
         flag.textContent = core.countryFlag(tripStop.country);
         flag.title = tripStop.country;
-        rail.append(flag);
+        fragment.append(flag);
       });
+      rail.append(fragment);
     }
   }
 
@@ -606,12 +618,14 @@
     const section = $("countryBudgetSection");
     if (!list || !summary || !state().trip) return;
 
-    list.replaceChildren();
-
     // Country 1's budget is already shown in the current-country card.
     // The horizontal country strip only adds value on multi-country trips.
     if (section) section.classList.toggle("hidden", stops().length <= 1);
-    if (stops().length <= 1) return;
+    if (stops().length <= 1) {
+      list.replaceChildren();
+      lastCountryBudgetStructureSignature = "";
+      return;
+    }
 
     const home = state().trip.homeCurrency;
     const allocated = stops().reduce((sum, stop) => sum + Number(stop.budget || 0), 0);
@@ -632,11 +646,24 @@
       summary.textContent = `${core.money(Math.abs(allocationDiff), home)} over-allocated.`;
     }
 
+    const structureSignature = stops().map(stop => stop.id).join("|");
+    const rebuild = structureSignature !== lastCountryBudgetStructureSignature;
+    if (rebuild) {
+      list.replaceChildren();
+      lastCountryBudgetStructureSignature = structureSignature;
+    }
+    const existingRows = new Map(
+      [...list.querySelectorAll("[data-stop-id]")].map(row => [row.dataset.stopId, row])
+    );
+    const fragment = document.createDocumentFragment();
     stops().forEach(stop => {
       const b = stopBudgetState(stop);
-      const row = document.createElement("button");
+      let row = rebuild ? null : existingRows.get(stop.id);
+      if (!row) row = document.createElement("button");
       row.type = "button";
       row.className = "country-budget-row v6-country-chip";
+      row.dataset.stopId = stop.id;
+      row.replaceChildren();
 
       const top = document.createElement("div");
       top.className = "country-budget-row-top";
@@ -663,30 +690,60 @@
       const fill = document.createElement("div");
       fill.className = "country-budget-fill";
       fill.style.width = `${b.pct}%`;
+      const rawPct = b.budget > 0 ? b.spent / b.budget * 100 : 0;
+      fill.classList.toggle("budget-watch", rawPct >= 80 && rawPct <= 100);
+      fill.classList.toggle("budget-over", rawPct > 100);
       track.append(fill);
 
       row.append(top, track);
       row.onclick = () => setCountryBudget(stop.id);
-      list.append(row);
+      row.setAttribute("aria-label", `${stop.country}: ${amount.textContent}`);
+      if (rebuild || !row.isConnected) fragment.append(row);
     });
+    if (fragment.childNodes.length) list.append(fragment);
   }
 
   function setCountryBudget(stopId) {
     const stop = stopById(stopId);
     if (!stop) return;
-    const current = Number(stop.budget || 0);
-    const response = prompt(
-      `Budget for ${stop.country} (${state().trip.homeCurrency})`,
-      current > 0 ? String(current) : ""
-    );
-    if (response === null) return;
+    editingCountryBudgetId = stop.id;
+    const home = state().trip.homeCurrency;
+    const otherAllocated = stops()
+      .filter(row => row.id !== stop.id)
+      .reduce((sum, row) => sum + Number(row.budget || 0), 0);
+    const available = Number(state().trip.budget || 0) - otherAllocated;
+    countryBudgetReturnFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    $("countryBudgetEditorTitle").textContent = `${core.countryFlag(stop.country)} ${stop.country}`;
+    $("countryBudgetEditorContext").textContent = `${stop.currency} local currency • ${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)}`;
+    $("countryBudgetHomeCurrency").textContent = home;
+    $("countryBudgetEditorAmount").value = Number(stop.budget || 0) > 0 ? stop.budget : "";
+    $("countryBudgetAllocationHint").textContent = available >= 0
+      ? `${core.money(available, home)} of the trip budget is available for this country.`
+      : `Other country budgets already exceed the trip budget by ${core.money(Math.abs(available), home)}.`;
+    $("countryBudgetModal").classList.remove("hidden");
+    document.body.classList.add("modal-open");
+    setTimeout(() => $("countryBudgetEditorAmount")?.focus(), 80);
+  }
 
-    const value = Number(response);
-    if (!Number.isFinite(value) || value < 0) return core.toast("Enter a valid country budget");
+  function closeCountryBudgetEditor() {
+    const returnFocus = countryBudgetReturnFocus;
+    editingCountryBudgetId = "";
+    countryBudgetReturnFocus = null;
+    $("countryBudgetModal")?.classList.add("hidden");
+    document.body.classList.remove("modal-open");
+    if (returnFocus?.isConnected) returnFocus.focus();
+  }
+
+  function saveCountryBudget(value) {
+    const stop = stopById(editingCountryBudgetId);
+    if (!stop || !Number.isFinite(value) || value < 0) return core.toast("Enter a valid country budget");
     stop.budget = value;
     core.save();
+    closeCountryBudgetEditor();
     core.render();
-    core.toast(`${stop.country} budget updated`);
+    core.toast(value > 0 ? `${stop.country} budget updated` : `${stop.country} budget cleared`);
   }
 
 
@@ -2486,6 +2543,34 @@
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));
   $("countryBudgetManage")?.addEventListener("click", () => core.page("plan"));
+  $("closeCountryBudgetEditor")?.addEventListener("click", closeCountryBudgetEditor);
+  $("countryBudgetModal")?.addEventListener("click", event => {
+    if (event.target === $("countryBudgetModal")) closeCountryBudgetEditor();
+  });
+  document.addEventListener("keydown", event => {
+    const modal = $("countryBudgetModal");
+    if (!modal || modal.classList.contains("hidden")) return;
+    if (event.key === "Escape") return closeCountryBudgetEditor();
+    if (event.key !== "Tab") return;
+
+    const controls = [...modal.querySelectorAll("button, input, select, textarea, [tabindex]:not([tabindex='-1'])")]
+      .filter(control => !control.disabled && control.getClientRects().length);
+    if (!controls.length) return;
+    const first = controls[0];
+    const last = controls.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  $("clearCountryBudgetEditor")?.addEventListener("click", () => saveCountryBudget(0));
+  $("countryBudgetEditorForm")?.addEventListener("submit", event => {
+    event.preventDefault();
+    saveCountryBudget(Number($("countryBudgetEditorAmount")?.value));
+  });
   $("v6PlanRow")?.addEventListener("click", () => {
     setPlannerView("itinerary");
     core.page("plan");
