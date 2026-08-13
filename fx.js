@@ -6,6 +6,7 @@
   const API = "https://api.frankfurter.dev/v2/rate";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
   const $ = id => document.getElementById(id);
+  let conversionRequestId = 0;
 
   function appState() {
     try { return JSON.parse(localStorage.getItem(APP_KEY) || "{}"); }
@@ -85,16 +86,14 @@
     }
 
     if (navigator.onLine) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
       try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 8000);
         const response = await fetch(`${API}/${encodeURIComponent(from)}/${encodeURIComponent(to)}`, {
           headers: { "Accept": "application/json" },
           signal: controller.signal,
           cache: "no-store"
         });
-        clearTimeout(timer);
-
         if (!response.ok) throw new Error(`Rate service returned ${response.status}`);
         const data = await response.json();
         const rate = Number(data.rate);
@@ -104,6 +103,8 @@
         return { ...item, source: "live" };
       } catch (error) {
         if (!allowCache) throw error;
+      } finally {
+        clearTimeout(timer);
       }
     }
 
@@ -147,6 +148,7 @@
     const from = $("fxFrom").value;
     const to = $("fxTo").value;
     const status = $("fxStatus");
+    const requestId = ++conversionRequestId;
 
     if (!(amount >= 0)) return;
 
@@ -170,8 +172,14 @@
         info = await fetchRate(from, to, { allowCache: true });
       }
 
+      // Currency changes and typing can start overlapping lookups. Ignore an
+      // older response rather than allowing it to overwrite the newest pair.
+      if (requestId !== conversionRequestId || $("fxFrom").value !== from || $("fxTo").value !== to) return;
+
+      const currentAmount = Number(amountEl.value || 0);
+
       $("fxRateValue").textContent = `1 ${from} = ${rateDecimals(info.rate)} ${to}`;
-      $("fxConverted").textContent = formatAmount(amount * Number(info.rate), to);
+      $("fxConverted").textContent = formatAmount(currentAmount * Number(info.rate), to);
 
       if (info.source === "live") {
         status.className = "fx-status good";
@@ -187,6 +195,7 @@
         status.textContent = "Same currency — no exchange rate needed.";
       }
     } catch (err) {
+      if (requestId !== conversionRequestId) return;
       $("fxRateValue").textContent = "—";
       $("fxConverted").textContent = "—";
       status.className = "fx-status bad";

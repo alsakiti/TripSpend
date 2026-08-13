@@ -1135,3 +1135,17 @@ This release improves the responsiveness and consistency of the Home dashboard.
 - Keeps the main budget label aligned with the amount it represents.
 - Restores focus after closing the country-budget editor and contains keyboard focus while it is open.
 - Removes a browser-compatibility dependency from country-row updates.
+
+## v6.7.6 — Currency Converter Reliability
+
+- Prevents a slower, outdated exchange-rate request from overwriting the latest selected currency pair.
+- Uses the current amount when an exchange-rate request finishes while the user is still typing.
+- Cleans up exchange-rate request timeouts after both successful and failed requests.
+
+## v6.8 — Today-first dashboard
+
+- Adds a personalized, date-aware greeting and a clearer daily overview.
+- Introduces a unified budget hero with integrated Safe Today and Spent Today metrics.
+- Redesigns Add Expense as a prominent, descriptive quick action.
+- Groups current-trip context and country budgets into clean, scannable surfaces.
+- Adds responsive light and dark styling for a more polished mobile dashboard.

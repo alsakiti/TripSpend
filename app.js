@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.7.5";
+  const APP_VERSION = "6.8.0";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -2314,6 +2314,22 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       .reduce((sum, e) => sum + num(e.homeAmount), 0);
   }
 
+  function renderDashboardWelcome() {
+    const date = $("dashboardDate");
+    const greeting = $("dashboardGreeting");
+    if (!date || !greeting) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    const dayPart = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    date.textContent = now.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "short",
+      day: "numeric"
+    }).toUpperCase();
+    greeting.textContent = `${dayPart}${state.trip?.name ? `, ${state.trip.name}` : ""}`;
+  }
+
   function toHome(amount, currency, rate) {
     if (!state.trip) return 0;
     const a = num(amount);
@@ -3385,6 +3401,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
     $("headerTitle").textContent = t.name;
     $("headerSub").textContent = `${countryFlag(t.destination)} ${t.destination} • ${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}`;
+    renderDashboardWelcome();
     renderHomeTripHistoryAccess();
 
     renderHealth();
@@ -5108,7 +5125,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.5", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.8.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
