@@ -7808,3 +7808,129 @@ html[data-theme="dark"] .v6-plan-row{
     font-size:11.5px!important;
   }
 }
+
+/* =========================================================
+   TripSpend v6.7.4 — calmer Home hierarchy
+   ========================================================= */
+.v6-dashboard{
+  --home-gap:14px;
+}
+.v6-budget-card{
+  margin-top:0!important;
+}
+.v6-summary{
+  border-radius:20px!important;
+  padding:20px!important;
+}
+.v6-summary .eyebrow{
+  font-size:11px!important;
+}
+.v6-quick-add{
+  min-height:52px!important;
+  margin-top:var(--home-gap)!important;
+  font-size:15px!important;
+  letter-spacing:-.01em;
+}
+.v6-today-card{
+  min-height:86px!important;
+  padding:15px!important;
+}
+.v6-today-card small{
+  font-size:12px!important;
+  line-height:1.4;
+}
+.v6-today-card strong{
+  font-size:17px!important;
+}
+.today-metric-label{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.metric-info{
+  width:20px;
+  height:20px;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:50%!important;
+  background:var(--surface2);
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  line-height:18px;
+}
+.safe-today-explanation{
+  margin:-3px 2px 13px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45;
+}
+.home-trip-context{
+  margin-top:22px;
+}
+.home-context-title{
+  margin:0 2px 9px!important;
+}
+.home-context-title h2,
+.v6-country-budget-section .v6-section-title h2{
+  font-size:16px!important;
+  letter-spacing:-.02em;
+}
+.v6-current-country{
+  border-radius:18px!important;
+}
+.v6-plan-row{
+  margin-top:8px!important;
+  min-height:72px!important;
+}
+.v6-plan-copy small{
+  font-size:10px!important;
+}
+.v6-plan-copy strong{
+  font-size:14px!important;
+}
+.v6-plan-copy>span{
+  font-size:12px!important;
+  line-height:1.35;
+}
+.v6-health-banner{
+  min-height:58px!important;
+  padding:10px 12px!important;
+}
+.v6-health-banner strong{
+  font-size:13px!important;
+}
+.v6-health-banner span{
+  font-size:12px!important;
+  line-height:1.4;
+}
+.country-budget-sheet{
+  max-width:520px;
+}
+.country-budget-editor-context{
+  margin:0 0 16px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+}
+.country-budget-editor-actions{
+  display:grid;
+  grid-template-columns:1fr 1.25fr;
+  gap:10px;
+}
+.country-budget-editor-actions .primary{
+  min-width:0;
+}
+body.modal-open{
+  overflow:hidden;
+}
+@media(max-width:600px){
+  .v6-summary{padding:18px!important}
+  .home-trip-context{margin-top:19px}
+  .country-budget-editor-actions{grid-template-columns:1fr}
+  .country-budget-editor-actions .secondary{order:2}
+}

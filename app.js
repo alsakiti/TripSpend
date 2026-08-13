@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+  const APP_VERSION = "6.7.4";
   const APP_VERSION = "6.7.3";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
@@ -3388,7 +3389,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     renderHomeTripHistoryAccess();
 
     renderHealth();
-    $("remainingValue").textContent = smartAmount(remaining, t.homeCurrency);
+    $("remainingValue").textContent = smartAmount(Math.abs(remaining), t.homeCurrency);
+    if ($("budgetHeroLabel")) {
+      $("budgetHeroLabel").textContent = remaining < 0 ? "OVER TRIP BUDGET" : "AVAILABLE TO SPEND";
+    }
     applyLargeMoneyClass($("remainingValue"), $("remainingValue").textContent);
     $("remainingCode").textContent = t.homeCurrency;
     const rawBudgetPct = t.budget > 0 ? (s / t.budget * 100) : 0;
@@ -4488,6 +4492,13 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if ($("homeBudgetDetailsArrow")) $("homeBudgetDetailsArrow").textContent = homeBudgetDetailsOpen ? "⌃" : "⌄";
   });
 
+  $("safeTodayInfo")?.addEventListener("click", () => {
+    const explanation = $("safeTodayExplanation");
+    if (!explanation) return;
+    const open = explanation.classList.toggle("hidden") === false;
+    $("safeTodayInfo").setAttribute("aria-expanded", String(open));
+  });
+
   $("closeModal").onclick = closeModal;
   $("modal").onclick = e => { if (e.target === $("modal")) closeModal(); };
 
@@ -5098,6 +5109,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.4", {
         const reg = await navigator.serviceWorker.register("./sw.js?v=6.7.3", {
           updateViaCache: "none"
         });
