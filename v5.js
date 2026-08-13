@@ -14,7 +14,6 @@
   let plannerView = "itinerary";
   let editingItineraryId = "";
   let editingCountryBudgetId = "";
-  let countryBudgetReturnFocus = null;
   let lastFlagRailSignature = "";
   let lastCountryBudgetStructureSignature = "";
 
@@ -652,13 +651,10 @@
       list.replaceChildren();
       lastCountryBudgetStructureSignature = structureSignature;
     }
-    const existingRows = new Map(
-      [...list.querySelectorAll("[data-stop-id]")].map(row => [row.dataset.stopId, row])
-    );
     const fragment = document.createDocumentFragment();
     stops().forEach(stop => {
       const b = stopBudgetState(stop);
-      let row = rebuild ? null : existingRows.get(stop.id);
+      let row = rebuild ? null : list.querySelector(`[data-stop-id="${CSS.escape(stop.id)}"]`);
       if (!row) row = document.createElement("button");
       row.type = "button";
       row.className = "country-budget-row v6-country-chip";
@@ -701,6 +697,9 @@
       if (rebuild || !row.isConnected) fragment.append(row);
     });
     if (fragment.childNodes.length) list.append(fragment);
+      fragment.append(row);
+    });
+    list.append(fragment);
   }
 
   function setCountryBudget(stopId) {
@@ -712,9 +711,6 @@
       .filter(row => row.id !== stop.id)
       .reduce((sum, row) => sum + Number(row.budget || 0), 0);
     const available = Number(state().trip.budget || 0) - otherAllocated;
-    countryBudgetReturnFocus = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
     $("countryBudgetEditorTitle").textContent = `${core.countryFlag(stop.country)} ${stop.country}`;
     $("countryBudgetEditorContext").textContent = `${stop.currency} local currency • ${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)}`;
     $("countryBudgetHomeCurrency").textContent = home;
@@ -728,12 +724,9 @@
   }
 
   function closeCountryBudgetEditor() {
-    const returnFocus = countryBudgetReturnFocus;
     editingCountryBudgetId = "";
-    countryBudgetReturnFocus = null;
     $("countryBudgetModal")?.classList.add("hidden");
     document.body.classList.remove("modal-open");
-    if (returnFocus?.isConnected) returnFocus.focus();
   }
 
   function saveCountryBudget(value) {
@@ -2548,22 +2541,8 @@
     if (event.target === $("countryBudgetModal")) closeCountryBudgetEditor();
   });
   document.addEventListener("keydown", event => {
-    const modal = $("countryBudgetModal");
-    if (!modal || modal.classList.contains("hidden")) return;
-    if (event.key === "Escape") return closeCountryBudgetEditor();
-    if (event.key !== "Tab") return;
-
-    const controls = [...modal.querySelectorAll("button, input, select, textarea, [tabindex]:not([tabindex='-1'])")]
-      .filter(control => !control.disabled && control.getClientRects().length);
-    if (!controls.length) return;
-    const first = controls[0];
-    const last = controls.at(-1);
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
+    if (event.key === "Escape" && !$("countryBudgetModal")?.classList.contains("hidden")) {
+      closeCountryBudgetEditor();
     }
   });
   $("clearCountryBudgetEditor")?.addEventListener("click", () => saveCountryBudget(0));
