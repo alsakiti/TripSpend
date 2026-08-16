@@ -1,4 +1,4 @@
-const CACHE = "tripspend-v6.8.2";
+const CACHE = "tripspend-v6.8.2-hotfix1";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,7 +8,7 @@ const APP_SHELL = [
   "./fx.js?v=6.8.2",
   "./v5.js?v=6.8.2",
   "./ai.js?v=6.8.2",
-  "./i18n.js?v=6.8.2",
+  "./i18n.js?v=6.8.2-hotfix1",
   "./manifest.webmanifest?v=6.8.2",
   "./version.json",
   "./icons/icon-96.png",
