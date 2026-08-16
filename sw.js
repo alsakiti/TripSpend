@@ -1,20 +1,21 @@
-const CACHE = "tripspend-v6.8.9-labels1";
-const APP_VERSION = "6.8.9";
+const CACHE = "tripspend-v6.9.0-i18n-audit1";
+const APP_VERSION = "6.9.0";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.8.9",
-  "./dashboard.css?v=6.8.9",
-  "./fx.js?v=6.8.9",
-  "./v5.js?v=6.8.9",
+  "./style.css?v=6.9.0",
+  "./dashboard.css?v=6.9.0",
+  "./fx.js?v=6.9.0",
+  "./v5.js?v=6.9.0",
   "./ai-v684.js?v=6.8.4-ai3",
-  "./i18n.js?v=6.8.9-labels1",
-  "./i18n-layout-fix.js?v=6.8.9-labels1",
-  "./rtl-polish-v687.js?v=6.8.9-labels1",
-  "./lang-flag.js?v=6.8.9-labels1",
-  "./setup-lang-v688.js?v=6.8.9-labels1",
-  "./budget-labels-v689.js?v=6.8.9-labels1",
-  "./manifest.webmanifest?v=6.8.9",
+  "./i18n.js?v=6.9.0-audit1",
+  "./i18n-layout-fix.js?v=6.9.0-audit1",
+  "./rtl-polish-v687.js?v=6.9.0-audit1",
+  "./lang-flag.js?v=6.9.0-audit1",
+  "./setup-lang-v688.js?v=6.9.0-audit1",
+  "./budget-labels-v689.js?v=6.9.0-audit1",
+  "./i18n-audit-v690.js?v=6.9.0-audit1",
+  "./manifest.webmanifest?v=6.9.0",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -37,8 +38,9 @@ async function upgradeHtml(response) {
 
   let html = await response.text();
   html = html
-    .replaceAll("v6.8.1", "v6.8.9")
-    .replaceAll("?v=6.8.1", "?v=6.8.9");
+    .replaceAll("v6.8.1", `v${APP_VERSION}`)
+    .replaceAll("?v=6.8.1", `?v=${APP_VERSION}`)
+    .replace(/(<[^>]*class=["'][^"']*version-badge[^"']*["'][^>]*>)v\d+\.\d+\.\d+(<\/[^>]+>)/gi, `$1v${APP_VERSION}$2`);
 
   html = html.replace(/<script[^>]+ai\.js[^>]*><\/script>\s*/gi, "");
 
@@ -47,23 +49,18 @@ async function upgradeHtml(response) {
     html = html.replace("</body>", aiBoot + "</body>");
   }
 
-  if (!html.includes("i18n.js")) {
-    html = html.replace("</body>", `<script src="./i18n.js?v=6.8.9-labels1"></script>\n</body>`);
-  }
-  if (!html.includes("i18n-layout-fix.js")) {
-    html = html.replace("</body>", `<script src="./i18n-layout-fix.js?v=6.8.9-labels1"></script>\n</body>`);
-  }
-  if (!html.includes("rtl-polish-v687.js")) {
-    html = html.replace("</body>", `<script src="./rtl-polish-v687.js?v=6.8.9-labels1"></script>\n</body>`);
-  }
-  if (!html.includes("lang-flag.js")) {
-    html = html.replace("</body>", `<script src="./lang-flag.js?v=6.8.9-labels1"></script>\n</body>`);
-  }
-  if (!html.includes("setup-lang-v688.js")) {
-    html = html.replace("</body>", `<script src="./setup-lang-v688.js?v=6.8.9-labels1"></script>\n</body>`);
-  }
-  if (!html.includes("budget-labels-v689.js")) {
-    html = html.replace("</body>", `<script src="./budget-labels-v689.js?v=6.8.9-labels1"></script>\n</body>`);
+  const languageScripts = [
+    ["i18n.js", "./i18n.js?v=6.9.0-audit1"],
+    ["i18n-layout-fix.js", "./i18n-layout-fix.js?v=6.9.0-audit1"],
+    ["rtl-polish-v687.js", "./rtl-polish-v687.js?v=6.9.0-audit1"],
+    ["lang-flag.js", "./lang-flag.js?v=6.9.0-audit1"],
+    ["setup-lang-v688.js", "./setup-lang-v688.js?v=6.9.0-audit1"],
+    ["budget-labels-v689.js", "./budget-labels-v689.js?v=6.9.0-audit1"],
+    ["i18n-audit-v690.js", "./i18n-audit-v690.js?v=6.9.0-audit1"]
+  ];
+
+  for (const [marker, src] of languageScripts) {
+    if (!html.includes(marker)) html = html.replace("</body>", `<script src="${src}"></script>\n</body>`);
   }
 
   return htmlResponse(response, html);
@@ -72,8 +69,8 @@ async function upgradeHtml(response) {
 async function upgradeAppJs(response) {
   if (!response || !response.ok) return response;
   let js = await response.text();
-  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.9";');
-  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.9-labels1");
+  js = js.replace('const APP_VERSION = "6.8.3";', `const APP_VERSION = "${APP_VERSION}";`);
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.9.0-i18n-audit1");
 
   const headers = new Headers(response.headers);
   headers.delete("content-length");
@@ -112,7 +109,8 @@ self.addEventListener("fetch", event => {
     url.pathname.endsWith("/rtl-polish-v687.js") ||
     url.pathname.endsWith("/lang-flag.js") ||
     url.pathname.endsWith("/setup-lang-v688.js") ||
-    url.pathname.endsWith("/budget-labels-v689.js");
+    url.pathname.endsWith("/budget-labels-v689.js") ||
+    url.pathname.endsWith("/i18n-audit-v690.js");
 
   if (request.mode === "navigate") {
     event.respondWith((async () => {
