@@ -1,4 +1,4 @@
-const CACHE = "tripspend-v6.8.0-ai1";
+const CACHE = "tripspend-v6.8.0-ai2";
 const APP_SHELL = [
   "./",
   "./index.html",
