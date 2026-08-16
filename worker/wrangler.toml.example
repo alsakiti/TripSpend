@@ -7,3 +7,13 @@ ALLOWED_ORIGIN = "https://alsakiti.github.io"
 
 [ai]
 binding = "AI"
+
+# Production AI protection: 30 AI requests per client/trip per minute.
+# Use a unique positive namespace ID if 7001 is already used by another Worker.
+[[ratelimits]]
+name = "AI_RATE_LIMITER"
+namespace_id = "7001"
+
+[ratelimits.simple]
+limit = 30
+period = 60
