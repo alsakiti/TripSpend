@@ -41,16 +41,36 @@
         left: 16px !important;
         right: auto !important;
       }
+
       body.lang-ar #dashboardDate,
       body.lang-ar #dashboardGreeting {
         direction: rtl !important;
         unicode-bidi: isolate !important;
         text-align: right !important;
+        font-family: "SF Arabic", "Geeza Pro", "Noto Sans Arabic", Tahoma, Arial, sans-serif !important;
+        letter-spacing: normal !important;
+        word-spacing: normal !important;
+        font-kerning: normal !important;
+        font-variant-ligatures: common-ligatures contextual !important;
+        font-feature-settings: "liga" 1, "calt" 1, "kern" 1 !important;
+        text-rendering: optimizeLegibility !important;
       }
+
+      body.lang-ar #dashboardDate {
+        text-transform: none !important;
+      }
+
+      body.lang-ar #dashboardGreeting {
+        line-height: 1.18 !important;
+      }
+
       #dashboardGreeting .ts-trip-name {
         direction: ltr !important;
         unicode-bidi: isolate !important;
         display: inline-block;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+        letter-spacing: normal !important;
+        word-spacing: normal !important;
       }
     `;
     document.head.appendChild(style);
