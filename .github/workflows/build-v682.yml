@@ -1,0 +1,35 @@
+name: Build TripSpend v6.8.2
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v6.8.2
+      - name: Apply v6.8.2
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html'); s=p.read_text(); s=s.replace('6.8.1','6.8.2'); s=s.replace('<script src="app.js?v=6.8.2"></script>','<script src="i18n.js?v=6.8.2"></script>\n<script src="app.js?v=6.8.2"></script>'); p.write_text(s)
+          p=Path('app.js'); s=p.read_text().replace('const APP_VERSION = "6.8.1"','const APP_VERSION = "6.8.2"').replace('./sw.js?v=6.8.1','./sw.js?v=6.8.2'); p.write_text(s)
+          p=Path('ai.js'); s=p.read_text().replace('short: "GLM-4.7 Flash"','short: "Llama 3.3 70B"').replace('v6.8.1 AI Worker update','v6.8.2 AI Worker update'); p.write_text(s)
+          p=Path('sw.js'); s=p.read_text().replace('tripspend-v6.8.1-ai-actions2','tripspend-v6.8.2').replace('6.8.1','6.8.2'); s=s.replace('"./ai.js?v=6.8.2",','"./ai.js?v=6.8.2",\n  "./i18n.js?v=6.8.2",'); p.write_text(s)
+          Path('version.json').write_text('{\n  "version": "6.8.2",\n  "label": "TripSpend v6.8.2"\n}\n')
+          p=Path('dashboard.css'); s=p.read_text(); marker='/* v6.8.2 language switch */'; css='''\n\n/* v6.8.2 language switch */\n.language-toggle{margin-inline-start:auto;align-self:flex-start;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;min-width:54px;height:34px;padding:0 12px;font:700 13px/1 system-ui;box-shadow:0 6px 18px rgba(0,0,0,.08);cursor:pointer}\nhtml[dir="rtl"] body{direction:rtl;text-align:right}\nhtml[dir="rtl"] .bottom-nav,html[dir="rtl"] .trip-ai-compose{direction:rtl}\nhtml[dir="rtl"] input,html[dir="rtl"] textarea,html[dir="rtl"] select{text-align:right}\nhtml[dir="rtl"] .dashboard-welcome,html[dir="rtl"] .dashboard-section-head,html[dir="rtl"] .topbar{direction:rtl}\n'''; p.write_text(s if marker in s else s+css)
+          PY
+          node --check app.js
+          node --check ai.js
+          node --check i18n.js
+          node --check sw.js
+          grep -q 'v6.8.2' index.html
+          grep -q 'i18n.js?v=6.8.2' index.html
+      - name: Commit build
+        run: |
+          git config user.name "TripSpend Build"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html app.js ai.js sw.js version.json dashboard.css i18n.js
+          git diff --cached --quiet || git commit -m "Build TripSpend v6.8.2 with Arabic language switch"
+          git push origin HEAD:release/v6.8.2
