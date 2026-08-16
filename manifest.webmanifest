@@ -1,7 +1,7 @@
 {
-  "name": "TripSpend v6.8.1",
+  "name": "TripSpend v7.0.0",
   "short_name": "TripSpend",
-  "description": "A smooth local-first travel spending app with a clean Home dashboard and a dedicated full Trip Planner.",
+  "description": "Local-first bilingual travel budget, expense and AI trip assistant.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
