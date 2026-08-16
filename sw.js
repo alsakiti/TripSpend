@@ -1,17 +1,18 @@
-const CACHE = "tripspend-v6.8.6-ar2";
-const APP_VERSION = "6.8.6";
+const CACHE = "tripspend-v6.8.7-rtl1";
+const APP_VERSION = "6.8.7";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.8.6",
-  "./dashboard.css?v=6.8.6",
-  "./fx.js?v=6.8.6",
-  "./v5.js?v=6.8.6",
+  "./style.css?v=6.8.7",
+  "./dashboard.css?v=6.8.7",
+  "./fx.js?v=6.8.7",
+  "./v5.js?v=6.8.7",
   "./ai-v684.js?v=6.8.4-ai3",
-  "./i18n.js?v=6.8.6-ar2",
-  "./i18n-layout-fix.js?v=6.8.6-ar2",
-  "./lang-flag.js?v=6.8.6-ar2",
-  "./manifest.webmanifest?v=6.8.6",
+  "./i18n.js?v=6.8.7-rtl1",
+  "./i18n-layout-fix.js?v=6.8.7-rtl1",
+  "./rtl-polish-v687.js?v=6.8.7-rtl1",
+  "./lang-flag.js?v=6.8.7-rtl1",
+  "./manifest.webmanifest?v=6.8.7",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -34,8 +35,8 @@ async function upgradeHtml(response) {
 
   let html = await response.text();
   html = html
-    .replaceAll("v6.8.1", "v6.8.6")
-    .replaceAll("?v=6.8.1", "?v=6.8.6");
+    .replaceAll("v6.8.1", "v6.8.7")
+    .replaceAll("?v=6.8.1", "?v=6.8.7");
 
   html = html.replace(/<script[^>]+ai\.js[^>]*><\/script>\s*/gi, "");
 
@@ -45,13 +46,16 @@ async function upgradeHtml(response) {
   }
 
   if (!html.includes("i18n.js")) {
-    html = html.replace("</body>", `<script src="./i18n.js?v=6.8.6-ar2"></script>\n</body>`);
+    html = html.replace("</body>", `<script src="./i18n.js?v=6.8.7-rtl1"></script>\n</body>`);
   }
   if (!html.includes("i18n-layout-fix.js")) {
-    html = html.replace("</body>", `<script src="./i18n-layout-fix.js?v=6.8.6-ar2"></script>\n</body>`);
+    html = html.replace("</body>", `<script src="./i18n-layout-fix.js?v=6.8.7-rtl1"></script>\n</body>`);
+  }
+  if (!html.includes("rtl-polish-v687.js")) {
+    html = html.replace("</body>", `<script src="./rtl-polish-v687.js?v=6.8.7-rtl1"></script>\n</body>`);
   }
   if (!html.includes("lang-flag.js")) {
-    html = html.replace("</body>", `<script src="./lang-flag.js?v=6.8.6-ar2"></script>\n</body>`);
+    html = html.replace("</body>", `<script src="./lang-flag.js?v=6.8.7-rtl1"></script>\n</body>`);
   }
 
   return htmlResponse(response, html);
@@ -60,8 +64,8 @@ async function upgradeHtml(response) {
 async function upgradeAppJs(response) {
   if (!response || !response.ok) return response;
   let js = await response.text();
-  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.6";');
-  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.6-ar2");
+  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.7";');
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.7-rtl1");
 
   const headers = new Headers(response.headers);
   headers.delete("content-length");
@@ -97,6 +101,7 @@ self.addEventListener("fetch", event => {
   const isEnhancedAi = url.pathname.endsWith("/ai-v684.js");
   const isLanguageRuntime = url.pathname.endsWith("/i18n.js") ||
     url.pathname.endsWith("/i18n-layout-fix.js") ||
+    url.pathname.endsWith("/rtl-polish-v687.js") ||
     url.pathname.endsWith("/lang-flag.js");
 
   if (request.mode === "navigate") {
