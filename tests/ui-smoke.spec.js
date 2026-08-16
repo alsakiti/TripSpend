@@ -18,7 +18,10 @@ function seedTripState() {
       personShares:[{personId:"person-test",amount:12}], planId:"", receiptId:"", createdAt:Date.now()
     }],
     rates:{},
-    people:[{id:"person-test",name:"Me",active:true,createdAt:Date.now()}],
+    people:[
+      {id:"person-test",name:"Me",active:true,createdAt:Date.now()},
+      {id:"person-hu",name:"Hu",active:true,createdAt:Date.now()}
+    ],
     stops:[
       {id:"stop-test",country:"Germany",startDate:"2026-08-12",endDate:"2026-08-18",currency:"EUR",budget:0,createdAt:Date.now()},
       {id:"stop-austria",country:"Austria",startDate:"2026-08-18",endDate:"2026-08-20",currency:"EUR",budget:0,createdAt:Date.now()},
@@ -45,7 +48,7 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.1");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.3");
 }
 
 test("setup screen is bilingual, RTL-safe and keeps Arabic flag on the left", async ({ page }) => {
@@ -149,4 +152,39 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
   await page.screenshot({ path:"test-results/expenses-ar.png", fullPage:true });
+});
+
+test("Arabic Add Expense sheet fully localizes static and dynamic copy", async ({ page }) => {
+  await seedTrip(page);
+  await bootV7(page);
+  await page.waitForSelector("#mainView:not(.hidden)");
+
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+
+  await page.evaluate(() => window.TripSpendCore?.openModal?.(""));
+  await expect(page.locator("#modal")).not.toHaveClass(/hidden/);
+  await page.waitForTimeout(250);
+
+  let modalText = await page.locator("#modal").innerText();
+  expect(modalText).toContain("إضافة مصروف");
+  expect(modalText).toContain("نوع المصروف");
+  expect(modalText).toContain("لمسافر واحد");
+  expect(modalText).toContain("تقسيم مع الآخرين");
+  expect(modalText).toContain("معبأ تلقائيًا");
+  expect(modalText).toContain("صورة اختيارية تُحفظ محليًا مع هذا المصروف.");
+
+  for (const english of ["TRANSACTION","Add Expense","Expense type","For one traveler","Split with others","AUTO-FILLED","Optional photo stored locally with this expense."]) {
+    expect(modalText).not.toContain(english);
+  }
+
+  await page.locator("#expenseTypeShared").click();
+  await page.waitForTimeout(150);
+  modalText = await page.locator("#modal").innerText();
+  expect(modalText).toContain("اختر جميع من شاركوا في هذا المصروف");
+  expect(modalText).not.toContain("Choose everyone who shared this expense");
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(2);
+  await page.screenshot({ path:"test-results/add-expense-ar.png", fullPage:true });
 });
