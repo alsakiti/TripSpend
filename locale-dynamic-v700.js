@@ -140,6 +140,33 @@
     navAdd.setAttribute("aria-hidden",hide ? "true" : "false");
   }
 
+  function syncHeaderRoute(isAr) {
+    const sub = document.getElementById("headerSub");
+    const appState = window.TripSpendCore?.getState?.();
+    const stops = Array.isArray(appState?.stops) ? appState.stops : [];
+    if (!sub || !appState?.trip || stops.length <= 1) return;
+
+    const names = stops.map(stop => {
+      const english = String(stop?.country || "").trim();
+      const localized = isAr ? country(english) : english;
+      const flag = String(window.TripSpendCore?.countryFlag?.(english) || "").trim();
+      return `${flag}${flag ? " " : ""}${localized}`.trim();
+    });
+
+    const preview = names.length <= 3
+      ? names.join(" → ")
+      : isAr
+        ? `${names[0]} → ${names[1]} → +${names.length - 2} أخرى`
+        : `${names[0]} → ${names[1]} → +${names.length - 2} more`;
+
+    const count = isAr
+      ? `${names.length} ${names.length === 1 ? "دولة" : "دول"}`
+      : `${names.length} ${names.length === 1 ? "country" : "countries"}`;
+
+    sub.textContent = `${count} • ${preview}`;
+    sub.setAttribute("lang", isAr ? "ar" : "en");
+  }
+
   function apply() {
     if (busy) return;
     busy = true;
@@ -163,17 +190,7 @@
           .replace(/\b(\d+)\s+expense\b/gi,"$1 مصروف");
       }
 
-      const headerSub = document.getElementById("headerSub");
-      if (headerSub && isAr) {
-        headerSub.childNodes.forEach(node => {
-          if (node.nodeType !== Node.TEXT_NODE || !node.nodeValue?.trim()) return;
-          const current = node.nodeValue;
-          let next = translateEmbeddedCountries(current);
-          next = next.replace(/\b(\d+)\s+countries\b/gi,"$1 دول").replace(/\b(\d+)\s+country\b/gi,"$1 دولة");
-          if (next !== current) node.nodeValue = next;
-        });
-      }
-
+      syncHeaderRoute(isAr);
       syncDashboardWelcome(isAr);
       syncHomeQuickAdd(isAr);
       syncFloatingAdd();
