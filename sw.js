@@ -1,14 +1,16 @@
-const CACHE = "tripspend-v6.8.4-ai3";
-const APP_VERSION = "6.8.4";
+const CACHE = "tripspend-v6.8.5-lang1";
+const APP_VERSION = "6.8.5";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.8.4",
-  "./dashboard.css?v=6.8.4",
-  "./fx.js?v=6.8.4",
-  "./v5.js?v=6.8.4",
+  "./style.css?v=6.8.5",
+  "./dashboard.css?v=6.8.5",
+  "./fx.js?v=6.8.5",
+  "./v5.js?v=6.8.5",
   "./ai-v684.js?v=6.8.4-ai3",
-  "./manifest.webmanifest?v=6.8.4",
+  "./i18n.js?v=6.8.5-lang1",
+  "./lang-flag.js?v=6.8.5-lang1",
+  "./manifest.webmanifest?v=6.8.5",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -29,20 +31,27 @@ async function upgradeHtml(response) {
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) return response;
   let html = await response.text();
-  html = html.replaceAll("v6.8.1", "v6.8.4").replaceAll("?v=6.8.1", "?v=6.8.4");
+  html = html.replaceAll("v6.8.1", "v6.8.5").replaceAll("?v=6.8.1", "?v=6.8.5");
   html = html.replace(/<script[^>]+ai\.js[^>]*><\/script>\s*/gi, "");
+
   if (!html.includes("ai-v684.js")) {
     const aiBoot = `<script>window.__tsNativeMO=window.MutationObserver;window.MutationObserver=class{observe(){}disconnect(){}takeRecords(){return[]}}</script>\n<script src="./ai-v684.js?v=6.8.4-ai3"></script>\n<script>(()=>{const restore=()=>{if(window.__tsNativeMO){window.MutationObserver=window.__tsNativeMO;delete window.__tsNativeMO}};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restore,{once:true});else restore()})()</script>\n`;
     html = html.replace("</body>", aiBoot + "</body>");
   }
+
+  if (!html.includes("i18n.js")) {
+    const languageBoot = `<script src="./i18n.js?v=6.8.5-lang1"></script>\n<script src="./lang-flag.js?v=6.8.5-lang1"></script>\n`;
+    html = html.replace("</body>", languageBoot + "</body>");
+  }
+
   return htmlResponse(response, html);
 }
 
 async function upgradeAppJs(response) {
   if (!response || !response.ok) return response;
   let js = await response.text();
-  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.4";');
-  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.4-ai3");
+  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.5";');
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.5-lang1");
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("content-type", "text/javascript; charset=utf-8");
