@@ -84,9 +84,11 @@
     if (!current.trim()) return;
 
     if (isArabic()) {
-      if (!originals.has(node)) originals.set(node, current);
       const next = translateCompound(current);
-      if (next !== current) node.nodeValue = next;
+      if (next !== current) {
+        originals.set(node, current);
+        node.nodeValue = next;
+      }
       return;
     }
 
@@ -103,13 +105,8 @@
       let node;
       while ((node = walker.nextNode())) applyTextNode(node);
 
-      if (isArabic()) {
-        root.setAttribute("dir", "rtl");
-        const title = document.getElementById("modalTitle");
-        if (title && title.textContent.trim() === "Add Expense") title.textContent = "إضافة مصروف";
-      } else {
-        root.removeAttribute("dir");
-      }
+      if (isArabic()) root.setAttribute("dir", "rtl");
+      else root.removeAttribute("dir");
     } finally {
       busy = false;
     }
