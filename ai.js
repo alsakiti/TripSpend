@@ -2,7 +2,7 @@
   "use strict";
 
   const ENDPOINT_FALLBACK = "https://tripspend-ai.alsukaiti1998.workers.dev";
-  const PROVIDER = { key: "cloudflare", label: "Cloudflare AI", short: "GLM-4.7 Flash" };
+  const PROVIDER = { key: "cloudflare", label: "Cloudflare AI", short: "Llama 3.3 70B" };
   const MAX_HISTORY = 8;
   const SUPPORTED_ACTIONS = new Set([
     "add_expense", "edit_expense",
@@ -689,7 +689,7 @@
     if (!$("tripAiMessages")?.children.length) {
       addMessage("system", workerActionsReady
         ? "Ask about your trip or tell me what to add/edit. I will always ask before saving a change."
-        : "Ask me about this trip. Add/edit actions need the v6.8.1 AI Worker update.");
+        : "Ask me about this trip. Add/edit actions need the v6.8.2 AI Worker update.");
     }
     setTimeout(() => $("tripAiInput")?.focus(), 80);
   }
