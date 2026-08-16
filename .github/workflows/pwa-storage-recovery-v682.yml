@@ -1,0 +1,301 @@
+name: TripSpend Home Screen storage recovery
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch Home Screen boot recovery
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('app.js')
+          s = p.read_text()
+
+          anchor = '  const PORTABLE_IMPORT_MAX_BYTES = 100 * 1024 * 1024;\n'
+          assert anchor in s
+          if 'STORAGE_OP_TIMEOUT_MS' not in s:
+              s = s.replace(anchor, anchor + '  const STORAGE_OP_TIMEOUT_MS = 7000;\n')
+
+          anchor2 = '  let dashboardWelcomeTimer = 0;\n'
+          assert anchor2 in s
+          if 'storageRecoveryAttempts' not in s:
+              s = s.replace(anchor2, anchor2 + '  let storageRecoveryAttempts = 0;\n')
+
+          old = '''  function openStorageDB() {
+    return new Promise((resolve, reject) => {
+      if (!("indexedDB" in window)) {
+        reject(new Error("IndexedDB unavailable"));
+        return;
+      }
+
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onupgradeneeded = () => {
+        const db = request.result;
+
+        if (!db.objectStoreNames.contains(DB_STATE_STORE)) {
+          db.createObjectStore(DB_STATE_STORE, { keyPath: "key" });
+        }
+
+        if (!db.objectStoreNames.contains(DB_BACKUP_STORE)) {
+          const backups = db.createObjectStore(DB_BACKUP_STORE, { keyPath: "id" });
+          backups.createIndex("createdAt", "createdAt");
+        }
+
+        if (!db.objectStoreNames.contains(DB_META_STORE)) {
+          db.createObjectStore(DB_META_STORE, { keyPath: "key" });
+        }
+
+        if (!db.objectStoreNames.contains(DB_RECEIPT_STORE)) {
+          db.createObjectStore(DB_RECEIPT_STORE, { keyPath: "id" });
+        }
+      };
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("IndexedDB failed"));
+      request.onblocked = () => reject(new Error("IndexedDB blocked"));
+    });
+  }
+
+  function idbRequest(request) {
+    return new Promise((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error("Storage request failed"));
+    });
+  }
+
+  function txComplete(tx) {
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("Storage transaction failed"));
+      tx.onabort = () => reject(tx.error || new Error("Storage transaction aborted"));
+    });
+  }
+'''
+
+          new = '''  function storageTimeoutError(label) {
+    const error = new Error(`${label} timed out`);
+    error.name = "StorageTimeoutError";
+    return error;
+  }
+
+  function openStorageDB() {
+    return new Promise((resolve, reject) => {
+      if (!("indexedDB" in window)) {
+        reject(new Error("IndexedDB unavailable"));
+        return;
+      }
+
+      let settled = false;
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(storageTimeoutError("IndexedDB open"));
+      }, STORAGE_OP_TIMEOUT_MS);
+
+      const finishReject = error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      };
+
+      request.onupgradeneeded = () => {
+        const db = request.result;
+
+        if (!db.objectStoreNames.contains(DB_STATE_STORE)) {
+          db.createObjectStore(DB_STATE_STORE, { keyPath: "key" });
+        }
+
+        if (!db.objectStoreNames.contains(DB_BACKUP_STORE)) {
+          const backups = db.createObjectStore(DB_BACKUP_STORE, { keyPath: "id" });
+          backups.createIndex("createdAt", "createdAt");
+        }
+
+        if (!db.objectStoreNames.contains(DB_META_STORE)) {
+          db.createObjectStore(DB_META_STORE, { keyPath: "key" });
+        }
+
+        if (!db.objectStoreNames.contains(DB_RECEIPT_STORE)) {
+          db.createObjectStore(DB_RECEIPT_STORE, { keyPath: "id" });
+        }
+      };
+
+      request.onsuccess = () => {
+        const db = request.result;
+        if (settled) {
+          try { db.close(); } catch {}
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        resolve(db);
+      };
+      request.onerror = () => finishReject(request.error || new Error("IndexedDB failed"));
+      request.onblocked = () => finishReject(new Error("IndexedDB blocked"));
+    });
+  }
+
+  function idbRequest(request) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(storageTimeoutError("Storage request"));
+      }, STORAGE_OP_TIMEOUT_MS);
+      request.onsuccess = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(request.error || new Error("Storage request failed"));
+      };
+    });
+  }
+
+  function txComplete(tx) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(storageTimeoutError("Storage transaction"));
+      }, STORAGE_OP_TIMEOUT_MS);
+      tx.oncomplete = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const fail = error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      };
+      tx.onerror = () => fail(tx.error || new Error("Storage transaction failed"));
+      tx.onabort = () => fail(tx.error || new Error("Storage transaction aborted"));
+    });
+  }
+'''
+          assert old in s
+          s = s.replace(old, new)
+
+          init_anchor = '  async function initializePersistentStorage(legacyState) {\n'
+          assert init_anchor in s
+          helper = '''  function showStorageBootRecovery(boot) {
+    if (!boot) return;
+    boot.classList.remove("leaving", "hidden");
+    const card = boot.querySelector(".storage-boot-card");
+    const status = card?.querySelector("span");
+    if (status) status.textContent = "Your trip is safe. Retrying local storage…";
+
+    let button = document.getElementById("storageBootRetry");
+    if (!button && card) {
+      button = document.createElement("button");
+      button.id = "storageBootRetry";
+      button.type = "button";
+      button.textContent = "Retry";
+      button.style.cssText = "margin-top:14px;border:0;border-radius:12px;padding:11px 18px;background:#1677ff;color:white;font:700 15px system-ui;";
+      card.append(button);
+    }
+
+    if (button) {
+      button.disabled = false;
+      button.onclick = async () => {
+        button.disabled = true;
+        if (status) status.textContent = "Retrying your trip…";
+        await initializePersistentStorage(loadLegacyState());
+      };
+    }
+  }
+
+'''
+          if 'function showStorageBootRecovery' not in s:
+              s = s.replace(init_anchor, helper + init_anchor)
+
+          oldcatch = '''    } catch {
+      storageMode = "localStorage";
+      storageDB = null;
+      state = normalizeState(legacyState || blank());
+      try {
+        localStorage.setItem(KEY, JSON.stringify(state));
+      } catch {}
+    }
+
+    applyAppearance(state.preferences?.appearance || "system");
+'''
+          newcatch = '''    } catch (error) {
+      try { storageDB?.close?.(); } catch {}
+      storageDB = null;
+      const fallback = normalizeState(legacyState || blank());
+
+      if (error?.name === "StorageTimeoutError" && !meaningfulState(fallback)) {
+        storageMode = "recovery";
+        state = fallback;
+
+        if (storageRecoveryAttempts < 1) {
+          storageRecoveryAttempts += 1;
+          showStorageBootRecovery(boot);
+          window.setTimeout(() => initializePersistentStorage(loadLegacyState()), 900);
+          return;
+        }
+
+        showStorageBootRecovery(boot);
+        return;
+      }
+
+      storageMode = "localStorage";
+      state = fallback;
+      try {
+        if (meaningfulState(state)) localStorage.setItem(KEY, JSON.stringify(state));
+      } catch {}
+    }
+
+    storageRecoveryAttempts = 0;
+    applyAppearance(state.preferences?.appearance || "system");
+'''
+          assert oldcatch in s
+          s = s.replace(oldcatch, newcatch)
+
+          s = s.replace('navigator.serviceWorker.register("./sw.js?v=6.8.2", {', 'navigator.serviceWorker.register("./sw.js?v=6.8.2-pwa2", {')
+          p.write_text(s)
+
+          p = Path('index.html')
+          s = p.read_text()
+          assert '<script src="app.js?v=6.8.2"></script>' in s
+          s = s.replace('<script src="app.js?v=6.8.2"></script>', '<script src="app.js?v=6.8.2-pwa2"></script>')
+          p.write_text(s)
+
+          p = Path('sw.js')
+          s = p.read_text()
+          s = s.replace('const CACHE = "tripspend-v6.8.2-boot-recovery1";', 'const CACHE = "tripspend-v6.8.2-home-recovery2";')
+          s = s.replace('"./app.js?v=6.8.2",', '"./app.js?v=6.8.2-pwa2",')
+          p.write_text(s)
+          PY
+
+          node --check app.js
+          node --check sw.js
+
+          git config user.name "TripSpend Recovery"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/pwa-storage-recovery-v682.yml
+          git add app.js index.html sw.js
+          git commit -m "Fix Home Screen IndexedDB boot hang"
+          git push origin HEAD:main
