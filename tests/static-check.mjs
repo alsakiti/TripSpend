@@ -2,7 +2,8 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const VERSION = "7.0.1";
-const WORKER_VERSION = "7.0.0";
+const INNER_WORKER_VERSION = "7.0.0";
+const WORKER_RUNTIME_VERSION = "7.0.1";
 const read = path => fs.readFileSync(path,"utf8");
 const fail = message => { console.error(`✗ ${message}`); process.exitCode = 1; };
 const ok = message => console.log(`✓ ${message}`);
@@ -40,17 +41,26 @@ for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate"
 ok("receipt suggestions target the expense form only");
 
 const worker = read("worker/ai-worker.js");
-if (!worker.includes(`const WORKER_VERSION = "${WORKER_VERSION}"`)) fail(`AI worker version mismatch; expected ${WORKER_VERSION}`); else ok("AI worker version is intentionally independent of frontend patch version");
+if (!worker.includes(`const WORKER_VERSION = "${INNER_WORKER_VERSION}"`)) fail(`inner AI worker version mismatch; expected ${INNER_WORKER_VERSION}`); else ok("inner AI worker remains stable");
 if (!worker.includes("@cf/moondream/moondream3.1-9B-A2B")) fail("receipt vision model missing"); else ok("receipt vision model configured");
 if (!worker.includes("AI_RATE_LIMITER")) fail("rate limiter binding support missing"); else ok("rate limiter binding supported");
 if (!worker.includes("budget-forecast") || !worker.includes("trend-analysis")) fail("AI intelligence capabilities missing"); else ok("AI intelligence capabilities exposed");
 
+const workerCompat = read("worker/ai-worker-v701.js");
+if (!workerCompat.includes(`const RUNTIME_VERSION = "${WORKER_RUNTIME_VERSION}"`)) fail("AI compatibility runtime version mismatch"); else ok("AI compatibility runtime is v7.0.1");
+if (!workerCompat.includes("8001") || !workerCompat.includes("falling back to chat-only")) fail("Workers AI invalid-input fallback missing"); else ok("Workers AI invalid-input fallback is wired");
+if (!workerCompat.includes("chooseTools") || !workerCompat.includes("normalizeChatResult")) fail("Workers AI tool/response compatibility helpers missing"); else ok("Workers AI tool and response compatibility is wired");
+
+const workerPackage = JSON.parse(read("worker/package.json"));
+if (workerPackage.version !== WORKER_RUNTIME_VERSION) fail("Worker package version mismatch"); else ok("Worker package version matches runtime");
+
 const wrangler = read("worker/wrangler.toml");
 if (!wrangler.includes('name = "tripspend-ai"')) fail("wrangler Worker name mismatch"); else ok("wrangler targets tripspend-ai");
+if (!wrangler.includes('main = "ai-worker-v701.js"')) fail("wrangler does not route through AI compatibility layer"); else ok("wrangler routes through AI compatibility layer");
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
-for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
+for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js","worker/ai-worker.js","worker/ai-worker-v701.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }
