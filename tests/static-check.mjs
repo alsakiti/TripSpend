@@ -1,20 +1,22 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const VERSION = "7.0.0";
+const VERSION = "7.0.1";
+const WORKER_VERSION = "7.0.0";
 const read = path => fs.readFileSync(path,"utf8");
 const fail = message => { console.error(`✗ ${message}`); process.exitCode = 1; };
 const ok = message => console.log(`✓ ${message}`);
 
 const version = JSON.parse(read("version.json"));
-if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches v7");
+if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches app release");
 
 const manifest = JSON.parse(read("manifest.webmanifest"));
-if (!String(manifest.name).includes(VERSION)) fail("manifest name does not include v7.0.0"); else ok("manifest matches v7");
+if (!String(manifest.name).includes(VERSION)) fail(`manifest name does not include ${VERSION}`); else ok("manifest matches app release");
 
 const sw = read("sw.js");
 if (!sw.includes(`const APP_VERSION = "${VERSION}"`)) fail("service worker version mismatch"); else ok("service worker version matches");
 if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
+if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 
 const shellMatch = sw.match(/const APP_SHELL = \[([\s\S]*?)\];/);
 const shell = shellMatch?.[1] || "";
@@ -27,6 +29,10 @@ const locale = read("locale-v700.js");
 if (!locale.includes("Intl.DisplayNames")) fail("country localization is not using Intl.DisplayNames"); else ok("country localization uses Intl.DisplayNames");
 if (!locale.includes("TripSpendLocale")) fail("TripSpendLocale API missing"); else ok("TripSpendLocale API exposed");
 
+const dynamicLocale = read("locale-dynamic-v700.js");
+if (!dynamicLocale.includes("dashboardGreeting") || !dynamicLocale.includes("dashboardDate")) fail("v7.0.1 dashboard localization polish missing"); else ok("dashboard localization polish is wired");
+if (!dynamicLocale.includes("activePage === \"dashboard\"")) fail("Home floating add overlap protection missing"); else ok("Home floating add overlap protection is wired");
+
 const receipt = read("receipt-ai-v700.js");
 for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate","expenseCategory","expenseNote"]) {
   if (!receipt.includes(id)) fail(`receipt client does not reference ${id}`);
@@ -34,7 +40,7 @@ for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate"
 ok("receipt suggestions target the expense form only");
 
 const worker = read("worker/ai-worker.js");
-if (!worker.includes(`const WORKER_VERSION = "${VERSION}"`)) fail("AI worker version mismatch"); else ok("AI worker version matches");
+if (!worker.includes(`const WORKER_VERSION = "${WORKER_VERSION}"`)) fail(`AI worker version mismatch; expected ${WORKER_VERSION}`); else ok("AI worker version is intentionally independent of frontend patch version");
 if (!worker.includes("@cf/moondream/moondream3.1-9B-A2B")) fail("receipt vision model missing"); else ok("receipt vision model configured");
 if (!worker.includes("AI_RATE_LIMITER")) fail("rate limiter binding support missing"); else ok("rate limiter binding supported");
 if (!worker.includes("budget-forecast") || !worker.includes("trend-analysis")) fail("AI intelligence capabilities missing"); else ok("AI intelligence capabilities exposed");
