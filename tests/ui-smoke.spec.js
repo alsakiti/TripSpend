@@ -19,7 +19,11 @@ function seedTripState() {
     }],
     rates:{},
     people:[{id:"person-test",name:"Me",active:true,createdAt:Date.now()}],
-    stops:[{id:"stop-test",country:"Germany",startDate:"2026-08-12",endDate:"2026-08-22",currency:"EUR",budget:0,createdAt:Date.now()}],
+    stops:[
+      {id:"stop-test",country:"Germany",startDate:"2026-08-12",endDate:"2026-08-18",currency:"EUR",budget:0,createdAt:Date.now()},
+      {id:"stop-austria",country:"Austria",startDate:"2026-08-18",endDate:"2026-08-20",currency:"EUR",budget:0,createdAt:Date.now()},
+      {id:"stop-italy",country:"Italy",startDate:"2026-08-20",endDate:"2026-08-22",currency:"EUR",budget:0,createdAt:Date.now()}
+    ],
     plans:[], itinerary:[], settlements:[], tripHistory:[], preferences:{}
   };
 }
@@ -85,6 +89,10 @@ test("Arabic Home has localized welcome text and no floating add overlap", async
   await expect(page.locator("#dashboardGreeting .ts-trip-name")).toHaveAttribute("dir", "ltr");
   await expect(page.locator("#quickAdd small")).toHaveText("سجّل مصروفك خلال ثوانٍ");
   await expect(page.locator("#navAdd")).toHaveClass(/hidden/);
+  await expect(page.locator("#headerSub")).toContainText("3 دول");
+  await expect(page.locator("#headerSub")).toContainText("ألمانيا");
+  await expect(page.locator("#headerSub")).toContainText("النمسا");
+  await expect(page.locator("#headerSub")).toContainText("إيطاليا");
 
   const flagIsLeft = await visibleLanguageButton(page).evaluate(el => {
     const r = el.getBoundingClientRect();
@@ -95,6 +103,16 @@ test("Arabic Home has localized welcome text and no floating add overlap", async
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
   await page.screenshot({ path:"test-results/home-ar.png", fullPage:true });
+
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await page.waitForTimeout(150);
+  await expect(page.locator("#headerSub")).toContainText("3 countries");
+  await expect(page.locator("#headerSub")).toContainText("Germany");
+  await expect(page.locator("#headerSub")).toContainText("Austria");
+  await expect(page.locator("#headerSub")).toContainText("Italy");
+  await expect(page.locator("#headerSub")).not.toContainText("دول");
+  await expect(page.locator("#headerSub")).not.toContainText("ألمانيا");
 });
 
 test("existing trip expense cards localize dynamic Arabic text", async ({ page }) => {
