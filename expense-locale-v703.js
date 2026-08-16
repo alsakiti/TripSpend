@@ -43,6 +43,11 @@
       .replace(/\bEveryone\b/g, "الجميع");
   }
 
+  function paidLabel(value) {
+    const who = String(value || "").trim();
+    return who === "Me" ? "دفعت أنا" : `دفع ${replacePersonWords(who)}`;
+  }
+
   function translateCompound(text) {
     const raw = String(text ?? "");
     const trimmed = raw.trim();
@@ -56,14 +61,21 @@
     match = trimmed.match(/^Each share:\s*(.+)$/i);
     if (match) return raw.replace(trimmed, `حصة كل شخص: ${match[1]}`);
 
-    match = trimmed.match(/^(.+?)\s+paid\s*•\s*shared with\s+(.+)$/i);
-    if (match) {
-      const payer = replacePersonWords(match[1]);
-      const shared = replacePersonWords(match[2]);
-      return raw.replace(trimmed, `دفع ${payer} • مشترك مع ${shared}`);
+    const locale = window.TripSpendLocale;
+    const bulletParts = trimmed.split(" • ").map(part => part.trim()).filter(Boolean);
+    const paidIndex = bulletParts.findIndex(part => /\s+paid$/i.test(part));
+    const sharedIndex = bulletParts.findIndex(part => /^shared with\s+/i.test(part));
+    if (paidIndex >= 0 || sharedIndex >= 0) {
+      const localized = bulletParts.map((part, index) => {
+        const paid = part.match(/^(.+?)\s+paid$/i);
+        if (paid) return paidLabel(paid[1]);
+        const shared = part.match(/^shared with\s+(.+)$/i);
+        if (shared) return `مشترك مع ${replacePersonWords(shared[1])}`;
+        return locale?.t ? locale.t(part) : part;
+      });
+      return raw.replace(trimmed, localized.join(" • "));
     }
 
-    const locale = window.TripSpendLocale;
     let translated = locale?.t ? locale.t(trimmed) : trimmed;
 
     translated = translated
