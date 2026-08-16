@@ -1,0 +1,49 @@
+name: Apply v6.8.1 iOS zoom hotfix
+
+on:
+  push:
+    branches:
+      - hotfix/v6.8.1-ios-zoom
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/v6.8.1-ios-zoom
+
+      - name: Patch AI input size and cache
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          ai = Path('ai.js')
+          text = ai.read_text()
+          old = '.trip-ai-compose textarea{resize:none;min-height:46px;max-height:110px;border:1px solid var(--line);border-radius:15px;background:var(--surface);color:var(--text);padding:11px 12px;outline:none;font:inherit;font-size:13px}'
+          new = '.trip-ai-compose textarea{resize:none;min-height:46px;max-height:110px;border:1px solid var(--line);border-radius:15px;background:var(--surface);color:var(--text);padding:11px 12px;outline:none;font:inherit;font-size:16px;line-height:1.35}'
+          if old not in text:
+              raise SystemExit('AI textarea style marker not found')
+          ai.write_text(text.replace(old, new, 1))
+
+          sw = Path('sw.js')
+          sw_text = sw.read_text()
+          old_cache = 'const CACHE = "tripspend-v6.8.1-ai-actions1";'
+          new_cache = 'const CACHE = "tripspend-v6.8.1-ai-actions2";'
+          if old_cache not in sw_text:
+              raise SystemExit('Service worker cache marker not found')
+          sw.write_text(sw_text.replace(old_cache, new_cache, 1))
+
+          Path('.github/workflows/v681-ios-zoom.yml').unlink()
+          PY
+
+      - name: Commit hotfix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ai.js sw.js .github/workflows/v681-ios-zoom.yml
+          git commit -m "Fix iPhone AI input zoom"
+          git push
