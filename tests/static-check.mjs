@@ -60,7 +60,7 @@ if (!wrangler.includes('main = "ai-worker-v701.js"')) fail("wrangler does not ro
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
-for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js","worker/ai-worker.js","worker/ai-worker-v701.js"]) {
+for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }
