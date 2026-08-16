@@ -1,4 +1,4 @@
-const APP_VERSION = "7.0.3";
+const APP_VERSION = "7.0.4";
 const CACHE = `tripspend-v${APP_VERSION}`;
 
 const APP_SHELL = [
@@ -13,6 +13,7 @@ const APP_SHELL = [
   "./locale-v700.js",
   "./locale-dynamic-v700.js",
   "./expense-locale-v703.js",
+  "./page-locale-v704.js",
   "./setup-language-host-v700.js",
   "./receipt-capability-v700.js",
   "./receipt-ai-v700.js",
@@ -48,7 +49,7 @@ async function upgradeHtml(response) {
     "ai.js", "ai-v684.js", "i18n.js", "i18n-layout-fix.js", "i18n-audit-v690.js",
     "rtl-polish-v687.js", "lang-flag.js", "setup-lang-v688.js", "budget-labels-v689.js",
     "expense-ar-v691.js", "locale-v700.js", "locale-dynamic-v700.js", "expense-locale-v703.js",
-    "setup-language-host-v700.js", "receipt-capability-v700.js", "receipt-ai-v700.js"
+    "page-locale-v704.js", "setup-language-host-v700.js", "receipt-capability-v700.js", "receipt-ai-v700.js"
   ];
   for (const file of retired) {
     const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -69,6 +70,7 @@ window.MutationObserver=class{observe(){}disconnect(){}takeRecords(){return[]}};
     load('./locale-v700.js?v=${APP_VERSION}');
     load('./locale-dynamic-v700.js?v=${APP_VERSION}');
     load('./expense-locale-v703.js?v=${APP_VERSION}');
+    load('./page-locale-v704.js?v=${APP_VERSION}');
     load('./setup-language-host-v700.js?v=${APP_VERSION}');
     load('./receipt-capability-v700.js?v=${APP_VERSION}');
     load('./receipt-ai-v700.js?v=${APP_VERSION}');
@@ -178,8 +180,8 @@ self.addEventListener("fetch", event => {
 
   const alwaysFresh = path.endsWith("/version.json") || path.endsWith("/ai-config.json") ||
     path.endsWith("/locale-dynamic-v700.js") || path.endsWith("/expense-locale-v703.js") ||
-    path.endsWith("/setup-language-host-v700.js") || path.endsWith("/receipt-capability-v700.js") ||
-    path.endsWith("/receipt-ai-v700.js") || path.endsWith("/sw.js");
+    path.endsWith("/page-locale-v704.js") || path.endsWith("/setup-language-host-v700.js") ||
+    path.endsWith("/receipt-capability-v700.js") || path.endsWith("/receipt-ai-v700.js") || path.endsWith("/sw.js");
   if (alwaysFresh) {
     event.respondWith(networkFirst(request));
     return;
