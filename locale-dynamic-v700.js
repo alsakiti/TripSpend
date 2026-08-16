@@ -31,11 +31,101 @@
     if (el.textContent !== wanted) el.textContent = wanted;
   }
 
+  function installStyles() {
+    if (document.getElementById("tripSpendDynamicV701Styles")) return;
+    const style = document.createElement("style");
+    style.id = "tripSpendDynamicV701Styles";
+    style.textContent = `
+      body.lang-ar #languageToggleV7,
+      body.lang-ar #setupLanguageToggleV7 {
+        left: 16px !important;
+        right: auto !important;
+      }
+      body.lang-ar #dashboardDate,
+      body.lang-ar #dashboardGreeting {
+        direction: rtl !important;
+        unicode-bidi: isolate !important;
+        text-align: right !important;
+      }
+      #dashboardGreeting .ts-trip-name {
+        direction: ltr !important;
+        unicode-bidi: isolate !important;
+        display: inline-block;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function dashboardDayPart(isAr) {
+    const hour = new Date().getHours();
+    if (isAr) return hour < 12 ? "صباح الخير" : "مساء الخير";
+    return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  }
+
+  function syncDashboardWelcome(isAr) {
+    const date = document.getElementById("dashboardDate");
+    if (date) {
+      const now = new Date();
+      const value = isAr
+        ? new Intl.DateTimeFormat("ar-OM-u-nu-latn", {weekday:"long",day:"numeric",month:"long"}).format(now)
+        : new Intl.DateTimeFormat("en-GB", {weekday:"long",day:"numeric",month:"short"}).format(now).replace(/,/g,"").toUpperCase();
+      if (date.textContent !== value) date.textContent = value;
+      date.setAttribute("lang",isAr ? "ar" : "en");
+    }
+
+    const greeting = document.getElementById("dashboardGreeting");
+    if (!greeting) return;
+    const tripName = String(window.TripSpendCore?.getState?.()?.trip?.name || "").trim();
+    const prefix = dashboardDayPart(isAr);
+    const plain = tripName ? `${prefix}, ${tripName}` : prefix;
+    if (greeting.dataset.tsWelcomeKey === `${isAr ? "ar" : "en"}|${plain}`) return;
+
+    greeting.replaceChildren();
+    if (isAr) {
+      greeting.append(document.createTextNode(`${prefix}، `));
+      if (tripName) {
+        const name = document.createElement("bdi");
+        name.className = "ts-trip-name";
+        name.dir = "ltr";
+        name.lang = "en";
+        name.textContent = tripName;
+        greeting.append(name);
+      }
+    } else {
+      greeting.append(document.createTextNode(prefix));
+      if (tripName) {
+        greeting.append(document.createTextNode(", "));
+        const name = document.createElement("bdi");
+        name.className = "ts-trip-name";
+        name.dir = "ltr";
+        name.textContent = tripName;
+        greeting.append(name);
+      }
+    }
+    greeting.dataset.tsWelcomeKey = `${isAr ? "ar" : "en"}|${plain}`;
+  }
+
+  function syncHomeQuickAdd(isAr) {
+    const subtitle = document.querySelector("#quickAdd small");
+    if (subtitle) subtitle.textContent = isAr ? "سجّل مصروفك خلال ثوانٍ" : "Log a purchase in seconds";
+  }
+
+  function syncFloatingAdd() {
+    const navAdd = document.getElementById("navAdd");
+    if (!navAdd) return;
+    const mainVisible = !document.getElementById("mainView")?.classList.contains("hidden");
+    const activePage = document.querySelector(".page.active")?.id || "";
+    const hide = !mainVisible || activePage === "dashboard";
+    navAdd.classList.toggle("hidden",hide);
+    navAdd.setAttribute("aria-hidden",hide ? "true" : "false");
+  }
+
   function apply() {
     if (busy) return;
     busy = true;
     observer?.disconnect();
     try {
+      installStyles();
       const isAr = arabic();
       const pageAdd = document.getElementById("pageAdd");
       if (pageAdd) setText(pageAdd,"＋ Add","＋ إضافة");
@@ -47,12 +137,10 @@
       });
 
       const summary = document.getElementById("expenseSummary");
-      if (summary) {
-        if (isAr) {
-          summary.textContent = translateEmbeddedCountries(summary.textContent)
-            .replace(/\b(\d+)\s+expenses\b/gi,"$1 مصروفات")
-            .replace(/\b(\d+)\s+expense\b/gi,"$1 مصروف");
-        }
+      if (summary && isAr) {
+        summary.textContent = translateEmbeddedCountries(summary.textContent)
+          .replace(/\b(\d+)\s+expenses\b/gi,"$1 مصروفات")
+          .replace(/\b(\d+)\s+expense\b/gi,"$1 مصروف");
       }
 
       const headerSub = document.getElementById("headerSub");
@@ -65,9 +153,13 @@
           if (next !== current) node.nodeValue = next;
         });
       }
+
+      syncDashboardWelcome(isAr);
+      syncHomeQuickAdd(isAr);
+      syncFloatingAdd();
     } finally {
       busy = false;
-      if (observer && document.body) observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+      if (observer && document.body) observer.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["class"]});
     }
   }
 
@@ -78,7 +170,7 @@
   }
 
   function start() {
-    observer = new MutationObserver(() => { if (!busy && arabic()) queue(); });
+    observer = new MutationObserver(() => { if (!busy) queue(); });
     window.addEventListener("tripspend:language",queue);
     apply();
   }
