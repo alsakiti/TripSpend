@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const VERSION = "7.0.3";
+const VERSION = "7.0.4";
 const INNER_WORKER_VERSION = "7.0.0";
 const WORKER_RUNTIME_VERSION = "7.0.3";
 const read = path => fs.readFileSync(path,"utf8");
@@ -16,7 +16,7 @@ if (!String(manifest.name).includes(VERSION)) fail(`manifest name does not inclu
 
 const sw = read("sw.js");
 if (!sw.includes(`const APP_VERSION = "${VERSION}"`)) fail("service worker version mismatch"); else ok("service worker version matches");
-if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("expense-locale-v703.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
+if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("expense-locale-v703.js") || !sw.includes("page-locale-v704.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
 if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 
 const shellMatch = sw.match(/const APP_SHELL = \[([\s\S]*?)\];/);
@@ -40,6 +40,13 @@ for (const phrase of ["Add Expense","Expense type","Split with others","AUTO-FIL
 }
 if (!expenseLocale.includes("tripspend:language")) fail("expense locale does not react to language changes"); else ok("dynamic Add Expense localization is wired");
 
+const pageLocale = read("page-locale-v704.js");
+for (const phrase of ["TRIP PLANNER","TRIP PROGRESS","Your itinerary starts here","Trip spending","TOTAL SPENT","Where your money went","Who owes whom","Settlement history"]) {
+  if (!pageLocale.includes(phrase)) fail(`Plan/Analytics Arabic localization missing: ${phrase}`);
+}
+if (!pageLocale.includes("On pace") || !pageLocale.includes("Spending faster")) fail("dynamic analytics pace localization missing"); else ok("dynamic analytics pace localization is wired");
+if (!pageLocale.includes("tripspend:language")) fail("page locale does not react to language changes"); else ok("Plan/Analytics localization reacts to language changes");
+
 const receipt = read("receipt-ai-v700.js");
 for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate","expenseCategory","expenseNote"]) {
   if (!receipt.includes(id)) fail(`receipt client does not reference ${id}`);
@@ -53,7 +60,7 @@ if (!worker.includes("AI_RATE_LIMITER")) fail("rate limiter binding support miss
 if (!worker.includes("budget-forecast") || !worker.includes("trend-analysis")) fail("AI intelligence capabilities missing"); else ok("AI intelligence capabilities exposed");
 
 const geminiWorker = read("worker/ai-worker-v703.js");
-if (!geminiWorker.includes(`const RUNTIME_VERSION = "${WORKER_RUNTIME_VERSION}"`)) fail("Gemini runtime version mismatch"); else ok("Gemini runtime is v7.0.3");
+if (!geminiWorker.includes(`const RUNTIME_VERSION = "${WORKER_RUNTIME_VERSION}"`)) fail("Gemini runtime version mismatch"); else ok("Gemini runtime remains v7.0.3");
 if (!geminiWorker.includes('const GEMINI_MODEL = "gemini-3.5-flash-lite"')) fail("Gemini 3.5 Flash-Lite is not configured"); else ok("Gemini 3.5 Flash-Lite is configured");
 if (!geminiWorker.includes("GEMINI_API_KEY")) fail("Gemini secret binding support missing"); else ok("Gemini secret binding is supported");
 if (!geminiWorker.includes('thinkingLevel: hasTools ? "low" : "minimal"')) fail("low-latency Gemini thinking levels missing"); else ok("Gemini chat uses minimal thinking and actions use low thinking");
@@ -70,7 +77,7 @@ if (!wrangler.includes('main = "ai-worker-v703.js"')) fail("wrangler does not ro
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
-for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
+for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }
