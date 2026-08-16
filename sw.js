@@ -1,4 +1,4 @@
-const APP_VERSION = "7.0.0";
+const APP_VERSION = "7.0.1";
 const CACHE = `tripspend-v${APP_VERSION}`;
 
 const APP_SHELL = [
@@ -99,6 +99,13 @@ async function upgradeAiJs(response) {
   return responseWithText(response, js, "text/javascript; charset=utf-8");
 }
 
+async function upgradeLocaleJs(response) {
+  if (!response?.ok) return response;
+  let js = await response.text();
+  js = js.replace(/const RELEASE = "[^"]+";/, `const RELEASE = "${APP_VERSION}";`);
+  return responseWithText(response, js, "text/javascript; charset=utf-8");
+}
+
 async function networkFirst(request, transform = null, cacheKey = request) {
   try {
     const response = await fetch(request, {cache:"no-store"});
@@ -162,11 +169,14 @@ self.addEventListener("fetch", event => {
     event.respondWith(networkFirst(request, upgradeAiJs));
     return;
   }
+  if (path.endsWith("/locale-v700.js")) {
+    event.respondWith(networkFirst(request, upgradeLocaleJs));
+    return;
+  }
 
   const alwaysFresh = path.endsWith("/version.json") || path.endsWith("/ai-config.json") ||
-    path.endsWith("/locale-v700.js") || path.endsWith("/locale-dynamic-v700.js") ||
-    path.endsWith("/setup-language-host-v700.js") || path.endsWith("/receipt-capability-v700.js") ||
-    path.endsWith("/receipt-ai-v700.js") || path.endsWith("/sw.js");
+    path.endsWith("/locale-dynamic-v700.js") || path.endsWith("/setup-language-host-v700.js") ||
+    path.endsWith("/receipt-capability-v700.js") || path.endsWith("/receipt-ai-v700.js") || path.endsWith("/sw.js");
   if (alwaysFresh) {
     event.respondWith(networkFirst(request));
     return;
