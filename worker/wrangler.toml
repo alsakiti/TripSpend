@@ -1,5 +1,5 @@
 name = "tripspend-ai"
-main = "ai-worker-v701.js"
+main = "ai-worker-v702.js"
 compatibility_date = "2026-08-16"
 
 [vars]
@@ -7,6 +7,9 @@ ALLOWED_ORIGIN = "https://alsakiti.github.io"
 
 [ai]
 binding = "AI"
+
+# GEMINI_API_KEY is stored as a Cloudflare Worker secret with:
+# npx wrangler secret put GEMINI_API_KEY
 
 # Protect TripSpend AI: 30 requests per client/trip per 60 seconds.
 # namespace_id must be a positive integer unique within the Cloudflare account.
