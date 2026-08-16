@@ -39,7 +39,12 @@ if (!worker.includes("@cf/moondream/moondream3.1-9B-A2B")) fail("receipt vision 
 if (!worker.includes("AI_RATE_LIMITER")) fail("rate limiter binding support missing"); else ok("rate limiter binding supported");
 if (!worker.includes("budget-forecast") || !worker.includes("trend-analysis")) fail("AI intelligence capabilities missing"); else ok("AI intelligence capabilities exposed");
 
-for (const path of ["sw.js","locale-v700.js","receipt-ai-v700.js"]) {
+const wrangler = read("worker/wrangler.toml");
+if (!wrangler.includes('name = "tripspend-ai"')) fail("wrangler Worker name mismatch"); else ok("wrangler targets tripspend-ai");
+if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
+if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
+
+for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }
