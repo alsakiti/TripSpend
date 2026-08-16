@@ -1,0 +1,4 @@
+{
+  "endpoint": "",
+  "enabledProviders": ["openai", "anthropic", "gemini"]
+}
