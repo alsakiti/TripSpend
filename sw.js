@@ -1,16 +1,17 @@
-const CACHE = "tripspend-v6.8.5-lang1";
-const APP_VERSION = "6.8.5";
+const CACHE = "tripspend-v6.8.6-ar2";
+const APP_VERSION = "6.8.6";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.8.5",
-  "./dashboard.css?v=6.8.5",
-  "./fx.js?v=6.8.5",
-  "./v5.js?v=6.8.5",
+  "./style.css?v=6.8.6",
+  "./dashboard.css?v=6.8.6",
+  "./fx.js?v=6.8.6",
+  "./v5.js?v=6.8.6",
   "./ai-v684.js?v=6.8.4-ai3",
-  "./i18n.js?v=6.8.5-lang1",
-  "./lang-flag.js?v=6.8.5-lang1",
-  "./manifest.webmanifest?v=6.8.5",
+  "./i18n.js?v=6.8.6-ar2",
+  "./i18n-layout-fix.js?v=6.8.6-ar2",
+  "./lang-flag.js?v=6.8.6-ar2",
+  "./manifest.webmanifest?v=6.8.6",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -30,8 +31,12 @@ async function upgradeHtml(response) {
   if (!response || !response.ok) return response;
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/html")) return response;
+
   let html = await response.text();
-  html = html.replaceAll("v6.8.1", "v6.8.5").replaceAll("?v=6.8.1", "?v=6.8.5");
+  html = html
+    .replaceAll("v6.8.1", "v6.8.6")
+    .replaceAll("?v=6.8.1", "?v=6.8.6");
+
   html = html.replace(/<script[^>]+ai\.js[^>]*><\/script>\s*/gi, "");
 
   if (!html.includes("ai-v684.js")) {
@@ -40,8 +45,13 @@ async function upgradeHtml(response) {
   }
 
   if (!html.includes("i18n.js")) {
-    const languageBoot = `<script src="./i18n.js?v=6.8.5-lang1"></script>\n<script src="./lang-flag.js?v=6.8.5-lang1"></script>\n`;
-    html = html.replace("</body>", languageBoot + "</body>");
+    html = html.replace("</body>", `<script src="./i18n.js?v=6.8.6-ar2"></script>\n</body>`);
+  }
+  if (!html.includes("i18n-layout-fix.js")) {
+    html = html.replace("</body>", `<script src="./i18n-layout-fix.js?v=6.8.6-ar2"></script>\n</body>`);
+  }
+  if (!html.includes("lang-flag.js")) {
+    html = html.replace("</body>", `<script src="./lang-flag.js?v=6.8.6-ar2"></script>\n</body>`);
   }
 
   return htmlResponse(response, html);
@@ -50,8 +60,9 @@ async function upgradeHtml(response) {
 async function upgradeAppJs(response) {
   if (!response || !response.ok) return response;
   let js = await response.text();
-  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.5";');
-  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.5-lang1");
+  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.6";');
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.6-ar2");
+
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("content-type", "text/javascript; charset=utf-8");
@@ -76,6 +87,7 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const request = event.request;
   if (request.method !== "GET") return;
+
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
@@ -83,6 +95,9 @@ self.addEventListener("fetch", event => {
   const isAiConfig = url.pathname.endsWith("/ai-config.json");
   const isAppJs = url.pathname.endsWith("/app.js");
   const isEnhancedAi = url.pathname.endsWith("/ai-v684.js");
+  const isLanguageRuntime = url.pathname.endsWith("/i18n.js") ||
+    url.pathname.endsWith("/i18n-layout-fix.js") ||
+    url.pathname.endsWith("/lang-flag.js");
 
   if (request.mode === "navigate") {
     event.respondWith((async () => {
@@ -113,16 +128,21 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  if (isVersion || isAiConfig || isEnhancedAi) {
+  if (isVersion || isAiConfig || isEnhancedAi || isLanguageRuntime) {
     event.respondWith((async () => {
       try {
         const response = await fetch(request, { cache: "no-store" });
-        if (response.ok && isEnhancedAi) caches.open(CACHE).then(cache => cache.put(request, response.clone()));
+        if (response.ok && (isEnhancedAi || isLanguageRuntime)) {
+          caches.open(CACHE).then(cache => cache.put(request, response.clone()));
+        }
         return response;
       } catch {
         const cached = await caches.match(request);
         if (cached) return cached;
-        return new Response(isAiConfig ? "{}" : "", { status: 503, headers: isAiConfig ? { "Content-Type": "application/json" } : {} });
+        return new Response(isAiConfig ? "{}" : "", {
+          status: 503,
+          headers: isAiConfig ? { "Content-Type": "application/json" } : {}
+        });
       }
     })());
     return;
