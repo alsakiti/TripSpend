@@ -2,13 +2,17 @@
   "use strict";
 
   const ENDPOINT_FALLBACK = "https://tripspend-ai.alsukaiti1998.workers.dev";
-  const PROVIDER = { key: "cloudflare", label: "Cloudflare AI", short: "GLM-4.7 Flash" };
+  const PROVIDER = { key: "cloudflare", label: "Cloudflare AI", short: "Llama 3.3 70B" };
   const MAX_HISTORY = 8;
   const SUPPORTED_ACTIONS = new Set([
     "add_expense", "edit_expense",
     "add_itinerary", "edit_itinerary",
     "add_plan", "edit_plan",
-    "set_trip_budget", "set_country_budget"
+    "set_trip_budget", "set_country_budget",
+    "delete_expense", "delete_itinerary", "delete_plan",
+    "add_traveler", "edit_traveler", "delete_traveler",
+    "add_country", "edit_country", "delete_country",
+    "edit_trip", "add_settlement", "edit_settlement", "delete_settlement", "undo_last_ai_change"
   ]);
   const ITINERARY_TYPES = new Set(["Flight", "Hotel", "Activity", "Restaurant", "Transport", "Note"]);
   const CATEGORY_NAMES = new Set(["Food", "Transport", "Hotel", "Shopping", "Activities", "Flights", "Coffee", "Groceries", "Other"]);
@@ -28,6 +32,7 @@
   let endpoint = ENDPOINT_FALLBACK;
   let chatHistory = [];
   let requestController = null;
+  let lastAiSnapshot = null;
   let workerActionsReady = false;
   let pendingAction = null;
 
@@ -278,6 +283,7 @@
       const question = String(input?.value || "").trim();
       if (!question) return;
       input.value = "";
+      if (/^(undo|تراجع|تراجع عن آخر تغيير)$/i.test(question)) { addMessage("user", question); renderActionCard({ type: "undo_last_ai_change", fields: {} }); return; }
       ask(question);
     });
     modal.querySelectorAll(".trip-ai-suggestion").forEach(button => button.addEventListener("click", () => ask(button.textContent.trim())));
@@ -334,7 +340,12 @@
       add_plan: "Add planned cost",
       edit_plan: "Edit planned cost",
       set_trip_budget: "Change trip budget",
-      set_country_budget: "Change country budget"
+      set_country_budget: "Change country budget",
+      delete_expense: "Delete expense", delete_itinerary: "Delete itinerary item", delete_plan: "Delete planned cost",
+      add_traveler: "Add traveler", edit_traveler: "Edit traveler", delete_traveler: "Remove traveler",
+      add_country: "Add country", edit_country: "Edit country", delete_country: "Remove country",
+      edit_trip: "Edit trip", add_settlement: "Add settlement", edit_settlement: "Edit settlement", delete_settlement: "Delete settlement",
+      undo_last_ai_change: "Undo last AI change"
     })[type] || "Trip change";
   }
 
@@ -538,6 +549,16 @@
       if (!appState?.trip) throw new Error("Open a trip before making changes");
       const fields = action.fields && typeof action.fields === "object" ? action.fields : {};
 
+      if (action.type === "undo_last_ai_change") {
+        if (!lastAiSnapshot) throw new Error("There is no AI change to undo");
+        Object.keys(appState).forEach(key => delete appState[key]);
+        Object.assign(appState, JSON.parse(JSON.stringify(lastAiSnapshot)));
+        lastAiSnapshot = null;
+        core.save({ immediate: true }); core.render();
+        return { ok: true, message: "Last AI change undone." };
+      }
+      lastAiSnapshot = JSON.parse(JSON.stringify(appState));
+
       if (action.type === "add_expense") {
         const normalized = normalizeExpenseFields(appState, fields);
         appState.expenses.push({
@@ -655,6 +676,26 @@
         return { ok: true, message: `Planned cost updated: ${plan.title}.` };
       }
 
+      if (action.type === "delete_expense") {
+        const before=appState.expenses.length; appState.expenses=appState.expenses.filter(x=>x.id!==action.targetId); if(appState.expenses.length===before) throw new Error("I could not find that expense"); core.save({immediate:true}); core.render(); return {ok:true,message:"Expense deleted."};
+      }
+      if (action.type === "delete_itinerary") {
+        const item=appState.itinerary.find(x=>x.id===action.targetId); if(!item) throw new Error("I could not find that itinerary item"); appState.itinerary=appState.itinerary.filter(x=>x.id!==action.targetId); if(item.planId&&!appState.expenses.some(e=>e.planId===item.planId)) appState.plans=appState.plans.filter(x=>x.id!==item.planId); core.save({immediate:true}); core.render(); return {ok:true,message:"Itinerary item deleted."};
+      }
+      if (action.type === "delete_plan") {
+        if(appState.expenses.some(e=>e.planId===action.targetId)) throw new Error("That planned cost is already recorded as an expense"); const before=appState.plans.length; appState.plans=appState.plans.filter(x=>x.id!==action.targetId); if(appState.plans.length===before) throw new Error("I could not find that planned cost"); core.save({immediate:true}); core.render(); return {ok:true,message:"Planned cost deleted."};
+      }
+      if (action.type === "add_traveler") { const name=cleanText(fields.name,50); if(!name) throw new Error("Traveler name is required"); appState.people.push(core.makePerson(name)); core.save({immediate:true}); core.render(); return {ok:true,message:`Traveler added: ${name}.`}; }
+      if (action.type === "edit_traveler") { const person=appState.people.find(x=>x.id===action.targetId); if(!person) throw new Error("I could not find that traveler"); if(fields.name!=null) person.name=cleanText(fields.name,50)||person.name; if(fields.active!=null) person.active=!!fields.active; core.save({immediate:true}); core.render(); return {ok:true,message:`Traveler updated: ${person.name}.`}; }
+      if (action.type === "delete_traveler") { const person=appState.people.find(x=>x.id===action.targetId); if(!person) throw new Error("I could not find that traveler"); if(appState.expenses.some(e=>e.paidByPersonId===person.id||(e.personShares||[]).some(sh=>sh.personId===person.id))||appState.settlements.some(x=>x.fromPersonId===person.id||x.toPersonId===person.id)) throw new Error("This traveler has history. Archive them instead of deleting."); appState.people=appState.people.filter(x=>x.id!==person.id); core.save({immediate:true}); core.render(); return {ok:true,message:`Traveler removed: ${person.name}.`}; }
+      if (action.type === "add_country") { const country=cleanText(fields.country,80); if(!country) throw new Error("Country is required"); const stop={id:core.uid("stop"),country,startDate:fields.startDate||appState.trip.startDate,endDate:fields.endDate||appState.trip.endDate,currency:cleanText(fields.currency,10)||appState.trip.tripCurrency,budget:Math.max(0,Number(fields.budget||0)),createdAt:Date.now()}; appState.stops.push(stop); core.save({immediate:true}); core.render(); return {ok:true,message:`Country added: ${country}.`}; }
+      if (action.type === "edit_country") { const stop=stopByRef(appState,action.targetId||fields.stopId,fields.country,fields.startDate); if(!stop) throw new Error("I could not find that country"); if(fields.country!=null) stop.country=cleanText(fields.country,80)||stop.country; if(fields.startDate!=null) stop.startDate=fields.startDate; if(fields.endDate!=null) stop.endDate=fields.endDate; if(fields.currency!=null) stop.currency=cleanText(fields.currency,10)||stop.currency; if(fields.budget!=null) stop.budget=Math.max(0,Number(fields.budget||0)); core.save({immediate:true}); core.render(); return {ok:true,message:`Country updated: ${stop.country}.`}; }
+      if (action.type === "delete_country") { const stop=stopByRef(appState,action.targetId||fields.stopId,fields.country,fields.date); if(!stop) throw new Error("I could not find that country"); if(appState.stops.length<=1) throw new Error("A trip must keep at least one country"); if(appState.expenses.some(e=>e.stopId===stop.id)||appState.itinerary.some(e=>e.stopId===stop.id)||appState.plans.some(e=>e.stopId===stop.id)) throw new Error("That country has trip history and cannot be removed safely"); appState.stops=appState.stops.filter(x=>x.id!==stop.id); core.save({immediate:true}); core.render(); return {ok:true,message:`Country removed: ${stop.country}.`}; }
+      if (action.type === "edit_trip") { if(fields.name!=null) appState.trip.name=cleanText(fields.name,60)||appState.trip.name; if(fields.destination!=null) appState.trip.destination=cleanText(fields.destination,80)||appState.trip.destination; if(fields.startDate!=null) appState.trip.startDate=fields.startDate; if(fields.endDate!=null) appState.trip.endDate=fields.endDate; if(fields.budget!=null) appState.trip.budget=Math.max(0,Number(fields.budget||0)); core.save({immediate:true}); core.render(); return {ok:true,message:"Trip details updated."}; }
+      if (action.type === "add_settlement") { const from=personByRef(appState,fields.fromPersonId,fields.from),to=personByRef(appState,fields.toPersonId,fields.to),amount=Number(fields.amount); if(!from||!to||from.id===to.id||!(amount>0)) throw new Error("Settlement needs two travelers and a positive amount"); appState.settlements.push({id:core.uid("settlement"),fromPersonId:from.id,toPersonId:to.id,amount,date:fields.date||localDateString(),note:cleanText(fields.note,120),createdAt:Date.now()}); core.save({immediate:true}); core.render(); return {ok:true,message:`Settlement added: ${core.money(amount,appState.trip.homeCurrency)}.`}; }
+      if (action.type === "edit_settlement") { const x=appState.settlements.find(v=>v.id===action.targetId); if(!x) throw new Error("I could not find that settlement"); if(fields.amount!=null&&Number(fields.amount)>0)x.amount=Number(fields.amount); if(fields.date!=null)x.date=fields.date; if(fields.note!=null)x.note=cleanText(fields.note,120); const from=personByRef(appState,fields.fromPersonId,fields.from),to=personByRef(appState,fields.toPersonId,fields.to); if(from)x.fromPersonId=from.id;if(to)x.toPersonId=to.id;if(x.fromPersonId===x.toPersonId)throw new Error("Settlement travelers must be different"); core.save({immediate:true}); core.render(); return {ok:true,message:"Settlement updated."}; }
+      if (action.type === "delete_settlement") { const before=appState.settlements.length; appState.settlements=appState.settlements.filter(x=>x.id!==action.targetId); if(appState.settlements.length===before) throw new Error("I could not find that settlement"); core.save({immediate:true}); core.render(); return {ok:true,message:"Settlement deleted."}; }
+
       if (action.type === "set_trip_budget") {
         const amount = Number(fields.amount);
         if (!Number.isFinite(amount) || amount < 0) throw new Error("Trip budget must be zero or more");
@@ -689,7 +730,7 @@
     if (!$("tripAiMessages")?.children.length) {
       addMessage("system", workerActionsReady
         ? "Ask about your trip or tell me what to add/edit. I will always ask before saving a change."
-        : "Ask me about this trip. Add/edit actions need the v6.8.1 AI Worker update.");
+        : "Ask me about this trip. Add/edit actions need the v6.8.2 AI Worker update.");
     }
     setTimeout(() => $("tripAiInput")?.focus(), 80);
   }

@@ -256,3 +256,11 @@ html[data-theme="dark"] .dashboard-welcome-mark.trip-ai-ready::after{border-colo
   #tripAiModal:not(.hidden) .trip-ai-sheet{animation:none!important}
   .dashboard-welcome-mark.trip-ai-ready{transition:none}
 }
+
+
+/* v6.8.2 language switch */
+.language-toggle{margin-inline-start:auto;align-self:flex-start;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;min-width:54px;height:34px;padding:0 12px;font:700 13px/1 system-ui;box-shadow:0 6px 18px rgba(0,0,0,.08);cursor:pointer}
+html[dir="rtl"] body{direction:rtl;text-align:right}
+html[dir="rtl"] .bottom-nav,html[dir="rtl"] .trip-ai-compose{direction:rtl}
+html[dir="rtl"] input,html[dir="rtl"] textarea,html[dir="rtl"] select{text-align:right}
+html[dir="rtl"] .dashboard-welcome,html[dir="rtl"] .dashboard-section-head,html[dir="rtl"] .topbar{direction:rtl}
