@@ -3,7 +3,7 @@ import vm from "node:vm";
 
 const VERSION = "7.0.1";
 const INNER_WORKER_VERSION = "7.0.0";
-const WORKER_RUNTIME_VERSION = "7.0.1";
+const WORKER_RUNTIME_VERSION = "7.0.2";
 const read = path => fs.readFileSync(path,"utf8");
 const fail = message => { console.error(`✗ ${message}`); process.exitCode = 1; };
 const ok = message => console.log(`✓ ${message}`);
@@ -46,17 +46,20 @@ if (!worker.includes("@cf/moondream/moondream3.1-9B-A2B")) fail("receipt vision 
 if (!worker.includes("AI_RATE_LIMITER")) fail("rate limiter binding support missing"); else ok("rate limiter binding supported");
 if (!worker.includes("budget-forecast") || !worker.includes("trend-analysis")) fail("AI intelligence capabilities missing"); else ok("AI intelligence capabilities exposed");
 
-const workerCompat = read("worker/ai-worker-v701.js");
-if (!workerCompat.includes(`const RUNTIME_VERSION = "${WORKER_RUNTIME_VERSION}"`)) fail("AI compatibility runtime version mismatch"); else ok("AI compatibility runtime is v7.0.1");
-if (!workerCompat.includes("8001") || !workerCompat.includes("falling back to chat-only")) fail("Workers AI invalid-input fallback missing"); else ok("Workers AI invalid-input fallback is wired");
-if (!workerCompat.includes("chooseTools") || !workerCompat.includes("normalizeChatResult")) fail("Workers AI tool/response compatibility helpers missing"); else ok("Workers AI tool and response compatibility is wired");
+const geminiWorker = read("worker/ai-worker-v702.js");
+if (!geminiWorker.includes(`const RUNTIME_VERSION = "${WORKER_RUNTIME_VERSION}"`)) fail("Gemini runtime version mismatch"); else ok("Gemini runtime is v7.0.2");
+if (!geminiWorker.includes('const GEMINI_MODEL = "gemini-3.5-flash"')) fail("Gemini 3.5 Flash is not configured"); else ok("Gemini 3.5 Flash is configured");
+if (!geminiWorker.includes("GEMINI_API_KEY")) fail("Gemini secret binding support missing"); else ok("Gemini secret binding is supported");
+if (!geminiWorker.includes("general-chat") || !geminiWorker.includes("multi-turn-chat") || !geminiWorker.includes("interactive-assistant")) fail("interactive Gemini capabilities missing"); else ok("interactive Gemini capabilities are exposed");
+if (!geminiWorker.includes("functionDeclarations") || !geminiWorker.includes("chooseTools")) fail("Gemini function calling is missing"); else ok("Gemini function calling is wired");
+if (!geminiWorker.includes("cloudflare-fallback") || !geminiWorker.includes("Gemini unavailable; using Cloudflare AI fallback")) fail("Cloudflare fallback missing"); else ok("Cloudflare AI fallback is wired");
 
 const workerPackage = JSON.parse(read("worker/package.json"));
 if (workerPackage.version !== WORKER_RUNTIME_VERSION) fail("Worker package version mismatch"); else ok("Worker package version matches runtime");
 
 const wrangler = read("worker/wrangler.toml");
 if (!wrangler.includes('name = "tripspend-ai"')) fail("wrangler Worker name mismatch"); else ok("wrangler targets tripspend-ai");
-if (!wrangler.includes('main = "ai-worker-v701.js"')) fail("wrangler does not route through AI compatibility layer"); else ok("wrangler routes through AI compatibility layer");
+if (!wrangler.includes('main = "ai-worker-v702.js"')) fail("wrangler does not route through Gemini runtime"); else ok("wrangler routes through Gemini runtime");
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
