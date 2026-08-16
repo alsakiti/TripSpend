@@ -1149,3 +1149,13 @@ This release improves the responsiveness and consistency of the Home dashboard.
 - Redesigns Add Expense as a prominent, descriptive quick action.
 - Groups current-trip context and country budgets into clean, scannable surfaces.
 - Adds responsive light and dark styling for a more polished mobile dashboard.
+
+## v6.8.1 — Confirmed AI actions
+
+- TripSpend AI can prepare adds/edits for expenses, itinerary items and planned costs.
+- AI can prepare trip-budget and country-budget changes.
+- Every write is validated locally and requires an explicit confirmation tap.
+- Delete actions are not available in this release.
+- AI still excludes receipt images, backups and past-trip archives.
+- Cloudflare Worker must be updated with `worker/ai-worker.js` for action support.
+

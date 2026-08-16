@@ -1,17 +1,22 @@
-TripSpend v6.7.5 update
+TripSpend v6.8.1 update
 
-1. Extract TripSpend-v6.7.5-update.zip.
+1. Extract TripSpend-v6.8.1-update.zip.
 2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
 3. Replace existing files and commit.
-4. Wait about 1–2 minutes.
-5. Completely close TripSpend.
-6. Reopen it while online.
-7. Confirm the badge says v6.7.5.
+4. IMPORTANT: Open Cloudflare > Workers & Pages > tripspend-ai > Edit code.
+5. Replace the Worker code with worker/ai-worker.js from this package and Deploy.
+6. Keep the Workers AI binding named AI and ALLOWED_ORIGIN=https://alsakiti.github.io.
+7. Wait about 1–2 minutes for GitHub Pages.
+8. Completely close TripSpend and reopen it while online.
+9. Confirm the badge says v6.8.1.
+10. Tap the AI button and try: “Add 12 OMR dinner today.” TripSpend must show a confirmation card before saving.
 
 What changed:
-- Corrected over-budget wording in the current-country card
-- Kept the main budget label aligned with the balance it represents
-- Restored keyboard focus after closing the country-budget editor
-- Kept keyboard focus inside the editor while it is open
-- Improved country-row updates on older browsers
-- No data or calculation migration
+- TripSpend AI can prepare and confirm adds/edits for expenses
+- AI can prepare and confirm itinerary changes
+- AI can add/edit planned costs
+- AI can change trip and country budgets
+- Every write requires explicit user confirmation
+- No AI delete actions in v6.8.1
+- Receipt images, backups and past trips are still excluded from AI context
+- Existing v6.8.0 dashboard, FX, storage and trip data are preserved
