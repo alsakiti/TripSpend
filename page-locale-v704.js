@@ -64,6 +64,10 @@
     "Only outstanding group debts":"الديون الجماعية المستحقة فقط",
     "SETTLE UP":"التسوية",
     "Settlement history":"سجل التسويات",
+    "No group debts yet":"لا توجد ديون جماعية بعد",
+    "Personal expenses paid by the same person do not create debt. Shared expenses, or personal expenses paid for someone else, will appear here.":"المصروفات الشخصية التي يدفعها الشخص نفسه لا تنشئ دينًا. ستظهر هنا المصروفات المشتركة أو المصروفات الشخصية التي يدفعها شخص عن شخص آخر.",
+    "Show calculation details":"عرض تفاصيل الحساب",
+    "Hide calculation details":"إخفاء تفاصيل الحساب",
     "✓ Everyone is settled up.":"✓ تمت تسوية الجميع.",
     "Everyone is settled up ✓":"تمت تسوية الجميع ✓",
     "MORE INSIGHTS":"مزيد من التحليلات",
@@ -130,12 +134,11 @@
     m = text.match(/^(\d+)\s+expenses?$/i);
     if (m) return raw.replace(text, `${m[1]} مصروف`);
 
-    // Category rows often contain an icon next to an English category name.
-    let out = text;
+    // Category values are often rendered with the emoji before or after the English label.
     for (const [english, arabic] of Object.entries(CATEGORY)) {
-      if (new RegExp(`^${english}(\\s|$)`).test(out)) {
-        out = out.replace(new RegExp(`^${english}\\b`), arabic);
-        return raw.replace(text, out);
+      const categoryOnly = new RegExp(`^[^A-Za-z]*${english}[^A-Za-z]*$`);
+      if (categoryOnly.test(text)) {
+        return raw.replace(text, text.replace(new RegExp(`\\b${english}\\b`, "g"), arabic));
       }
     }
 
