@@ -1,0 +1,31 @@
+name: Export upload ZIP
+on:
+  push:
+    branches:
+      - package/v6.8.2-upload
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare upload files
+        run: |
+          rm -rf upload
+          mkdir -p upload
+          cp README.md UPLOAD_INSTRUCTIONS.txt ai-config.json ai.js app.js dashboard.css fx.js i18n.js index.html manifest.webmanifest style.css sw.js v5.js version.json upload/
+          cp -R icons worker upload/
+          cat > upload/UPLOAD_THIS_FOLDER.txt <<'TXT'
+          TripSpend v6.8.2 upload package
+
+          Upload the CONTENTS of this folder to the ROOT of your GitHub repository.
+          Do not upload the outer ZIP as a single file.
+          Keep your Cloudflare Worker separate.
+          TXT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TripSpend-v6.8.2-upload
+          path: upload/
+          if-no-files-found: error
+          compression-level: 9
