@@ -10,11 +10,11 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.8.3">
-  <link rel="icon" href="icons/icon-192.png?v=6.8.3">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.8.3">
-  <link rel="stylesheet" href="style.css?v=6.8.3">
-  <link rel="stylesheet" href="dashboard.css?v=6.8.3">
+  <link rel="manifest" href="manifest.webmanifest?v=6.8.1">
+  <link rel="icon" href="icons/icon-192.png?v=6.8.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.8.1">
+  <link rel="stylesheet" href="style.css?v=6.8.1">
+  <link rel="stylesheet" href="dashboard.css?v=6.8.1">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -33,7 +33,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.8.3</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.8.1</span></div>
         <div class="header-trip-title-row">
           <h1 id="headerTitle">TripSpend</h1>
           <button id="tripSwitcherTrigger" class="trip-switcher-trigger hidden" type="button" aria-label="Switch trip" title="Switch trip">⌄</button>
@@ -47,8 +47,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.8.3" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.8.3</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=6.8.1" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v6.8.1</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -259,133 +259,500 @@
                   <strong id="availableAfterPlansValue">0 OMR</strong>
                 </span>
               </div>
-              <div id="budgetAllocationLine" class="budget-allocation-line hidden"></div>
             </div>
+          </div>
 
-            <div class="daily-budget-smart">
-              <span class="daily-budget-icon" aria-hidden="true">⌁</span>
-              <div>
-                <small>Safe to spend today</small>
-                <strong id="safeToday">0 OMR</strong>
-                <span id="safeTodayDetail">Based on your remaining trip budget.</span>
-              </div>
+          <div class="metrics v6-today-metrics">
+            <div class="metric v6-today-card">
+              <small class="today-metric-label">☀️ Safe today <button id="safeTodayInfo" class="metric-info" type="button" aria-expanded="false" aria-controls="safeTodayExplanation" aria-label="How Safe today is calculated">?</button></small>
+              <strong id="safeToday">0 OMR</strong>
             </div>
+            <div class="metric v6-today-card">
+              <small>🧾 Spent today</small>
+              <strong id="spentToday">0 OMR</strong>
+            </div>
+          </div>
+          <p id="safeTodayExplanation" class="safe-today-explanation hidden">Your balance after upcoming planned costs, divided across the days left in your trip.</p>
+        </div>
+
+        <button id="quickAdd" class="primary v6-quick-add">
+          <span class="quick-add-icon" aria-hidden="true">＋</span>
+          <span><strong>Add expense</strong><small>Log a purchase in seconds</small></span>
+          <span class="quick-add-arrow" aria-hidden="true">›</span>
+        </button>
+
+        <section class="home-trip-context" aria-labelledby="homeTripContextTitle">
+          <div class="section-title v6-section-title home-context-title">
+            <div><span class="dashboard-section-kicker">WHERE YOU ARE</span><h2 id="homeTripContextTitle">Current trip</h2></div>
+          </div>
+
+          <div id="currentCountryCard" class="current-country-card v6-current-country">
+            <div class="current-country-main">
+              <span id="currentCountryStatus" class="current-country-status">CURRENT COUNTRY • AUTO BY DATE</span>
+              <strong id="currentCountryName">—</strong>
+              <small id="currentCountryDates">—</small>
+            </div>
+            <div class="current-country-side">
+              <div id="tripFlagRail" class="trip-flag-rail" aria-label="Trip countries"></div>
+              <span id="currentCountryCurrency" class="country-currency-pill">—</span>
+              <strong id="currentCountryBudgetText">No country budget</strong>
+            </div>
+            <div class="current-country-progress"><div id="currentCountryBudgetBar"></div></div>
+          </div>
+
+          <button id="v6PlanRow" class="card v6-plan-row" type="button">
+            <span class="v6-plan-icon">→</span>
+            <span class="v6-plan-copy">
+              <small id="v6PlanLabel">NEXT UP</small>
+              <strong id="v6NextCountry">—</strong>
+              <span id="v6NextCountryDates">Open trip planner</span>
+            </span>
+            <span class="v6-plan-arrow">›</span>
+          </button>
+        </section>
+
+        <section id="countryBudgetSection" class="section country-budget-section v6-country-budget-section">
+          <div class="section-title v6-section-title">
+            <div><span class="dashboard-section-kicker">YOUR ROUTE</span><h2>Country budgets</h2></div>
+            <button id="countryBudgetManage" class="link-btn" type="button">Manage</button>
+          </div>
+          <div id="countryBudgetSummary" class="country-budget-summary"></div>
+          <div id="countryBudgetList" class="country-budget-list v6-country-budget-list"></div>
+        </section>
+
+        <div id="healthBanner" class="health-banner on-track v6-health-banner">
+          <div class="health-icon" id="healthIcon">✓</div>
+          <div>
+            <strong id="healthTitle">On track</strong>
+            <span id="healthText">Your budget looks healthy.</span>
           </div>
         </div>
 
-        <section id="whereCard" class="where-card hidden" aria-label="Current country">
-          <div class="where-copy">
-            <span id="whereFlag" class="where-flag" aria-hidden="true">🌍</span>
-            <div>
-              <div class="eyebrow">WHERE YOU ARE</div>
-              <h3 id="currentCountryName">Current country</h3>
-              <p id="currentCountryDates">Trip dates</p>
-            </div>
-          </div>
-          <div class="where-stats">
-            <span><small>Spent here</small><strong id="currentCountrySpent">0 OMR</strong></span>
-            <span><small>Country budget left</small><strong id="currentCountryRemaining">—</strong></span>
-          </div>
-        </section>
+        <button id="homeTripHistoryBtn" class="card home-trip-history-btn" type="button">
+          <span class="home-trip-history-icon" aria-hidden="true">🧳</span>
+          <span class="home-trip-history-copy">
+            <strong>Trips & history</strong>
+            <small id="homeTripHistoryMeta">Switch trips or open past trips</small>
+          </span>
+          <span class="home-trip-history-arrow" aria-hidden="true">›</span>
+        </button>
 
-        <section class="dashboard-glance-grid">
-          <article class="dashboard-glance-card today-card">
-            <div class="dashboard-glance-icon" aria-hidden="true">↗</div>
-            <span class="dashboard-glance-label">SPENT TODAY</span>
-            <strong id="spentToday">0 OMR</strong>
-            <small id="spentTodayComparison">No spending yet today</small>
-          </article>
+        <!-- Compatibility targets kept hidden. Detailed views live elsewhere. -->
+        <div class="v6-compat hidden" aria-hidden="true">
+          <strong id="projectedTotal">—</strong>
+          <strong id="daysLeft">0</strong>
+          <div id="peopleSnapshot"></div>
+          <div id="smartInsights"></div>
+          <div id="recentList"></div>
+          <div id="topCategories"></div>
 
-          <article class="dashboard-glance-card trip-card">
-            <div class="dashboard-glance-icon" aria-hidden="true">⌛</div>
-            <span class="dashboard-glance-label">TRIP PROGRESS</span>
-            <strong id="tripDaysRemaining">—</strong>
-            <small id="tripProgressDetail">Trip dates</small>
-          </article>
-        </section>
+          <div id="routeChips"></div>
+          <strong id="countryCount">1</strong>
+          <strong id="upcomingCost">0</strong>
+          <strong id="committedCost">0</strong>
+          <div id="nextPlanItem"></div>
 
-        <section id="budgetHealthCard" class="budget-health-card" aria-live="polite">
-          <div class="budget-health-icon" aria-hidden="true">✓</div>
-          <div>
-            <small>BUDGET HEALTH</small>
-            <strong id="healthTitle">You're on track</strong>
-            <p id="healthCopy">Keep spending around your safe daily amount.</p>
-          </div>
-        </section>
-
-        <section id="homeUpcomingSection" class="section dashboard-section home-upcoming-section hidden">
-          <div class="dashboard-section-head">
-            <div>
-              <h3>Next up</h3>
-              <p id="homeUpcomingContext">Upcoming plan</p>
-            </div>
-            <button id="homeUpcomingViewPlan" class="dashboard-link" type="button">Open Plan</button>
-          </div>
-          <div id="homeUpcomingList" class="home-upcoming-list"></div>
-        </section>
-
-        <section class="section dashboard-section">
-          <div class="dashboard-section-head">
-            <div>
-              <h3>Trip countries</h3>
-              <p>Your country-by-country spending.</p>
-            </div>
-            <button id="homeViewPlan" class="dashboard-link" type="button">Open Plan</button>
-          </div>
-          <div id="homeRouteList" class="home-route-list"></div>
-        </section>
-
-        <section class="section dashboard-section">
-          <div class="dashboard-section-head">
-            <div>
-              <h3>Travelers</h3>
-              <p>See how everyone is doing.</p>
-            </div>
-            <button id="homeViewTravelers" class="dashboard-link" type="button">View all</button>
-          </div>
-          <div id="homePeoplePreview" class="people-preview-grid"></div>
-        </section>
-
+          <div id="dashboardPeople"></div>
+          <form id="dashboardTravelerForm">
+            <input id="dashboardTravelerName">
+            <button id="dashboardTravelerCancel" type="button"></button>
+          </form>
+          <button id="dashboardAddTraveler" type="button"></button>
+          <button id="openPeople" type="button"></button>
+          <button id="managePeople" type="button"></button>
+          <button id="seeAll" type="button"></button>
+        </div>
       </section>
 
       <section id="expenses" class="page">
         <div class="page-title">
-          <div><div class="eyebrow">MONEY</div><h2>Expenses</h2></div>
-          <div class="page-title-actions">
-            <button id="expensesAdd" class="small-primary" type="button">＋ Add expense</button>
+          <div><div class="eyebrow">HISTORY</div><h2>Expenses</h2></div>
+          <button id="pageAdd" class="small-primary">＋ Add</button>
+        </div>
+        <div class="expense-search-tools">
+          <div class="expense-search-row">
+            <input id="searchExpense" type="search" placeholder="Search note, category, country, payer…">
+            <button id="expenseFiltersToggle" class="secondary expense-filter-button" type="button">
+              Filters <span id="expenseFilterCount" class="filter-count hidden">0</span>
+            </button>
+          </div>
+
+          <div id="expenseAdvancedFilters" class="card expense-advanced-filters hidden">
+            <div class="expense-filter-grid">
+              <label>Category
+                <select id="filterCategory"><option value="">All categories</option></select>
+              </label>
+              <label>Type
+                <select id="filterType">
+                  <option value="">Personal + Shared</option>
+                  <option value="personal">Personal only</option>
+                  <option value="shared">Shared only</option>
+                </select>
+              </label>
+              <label>Country
+                <select id="filterCountry"><option value="">All countries</option></select>
+              </label>
+              <label>Traveler
+                <select id="filterPerson"><option value="">All travelers</option></select>
+              </label>
+              <label>Payment
+                <select id="filterPayment"><option value="">All payments</option></select>
+              </label>
+            </div>
+
+            <div class="expense-date-filter-grid">
+              <label>From
+                <input id="filterDateFrom" class="filter-date-input" type="date">
+              </label>
+              <label>To
+                <input id="filterDateTo" class="filter-date-input" type="date">
+              </label>
+            </div>
+
+            <div class="expense-filter-actions">
+              <button id="clearExpenseFilters" class="secondary compact-btn" type="button">Clear filters</button>
+            </div>
+          </div>
+        </div>
+        <div id="expenseSummary" class="mini-summary"></div>
+        <div id="allList" class="list"></div>
+        <div id="expenseLoadMore" class="expense-load-more"></div>
+      </section>
+
+      <section id="analytics" class="page analytics-v651">
+        <div class="page-title analytics-page-title">
+          <div>
+            <div class="eyebrow">ANALYTICS</div>
+            <h2>Trip spending</h2>
+            <p>Simple answers first. Details only when you want them.</p>
           </div>
         </div>
 
-        <div id="expenseStats" class="stats-grid"></div>
-        <div id="expenseFilters" class="filter-row"></div>
-        <input id="expenseSearch" class="search-input" type="search" placeholder="Search expenses">
-        <div id="expenseList" class="expense-list"></div>
-        <button id="loadMoreExpenses" class="secondary hidden" type="button">Load more</button>
-      </section>
+        <div class="analytics-main-card">
+          <div class="analytics-main-top">
+            <div>
+              <small>TOTAL SPENT</small>
+              <div class="analytics-total">
+                <strong id="analyticsTotalSpent">0</strong>
+                <span id="analyticsCurrency">OMR</span>
+              </div>
+            </div>
+            <span id="analyticsBudgetPct" class="analytics-budget-pill">0% of budget</span>
+          </div>
 
-      <section id="plan" class="page">
-        <div class="page-title">
-          <div><div class="eyebrow">TRIP PLAN</div><h2>Plan</h2></div>
+          <div class="analytics-progress">
+            <div id="analyticsBudgetBar"></div>
+          </div>
+
+          <div id="analyticsPace" class="analytics-pace">
+            <span>◎</span>
+            <strong>Budget pace will appear here</strong>
+          </div>
+
+          <div class="analytics-main-meta">
+            <div>
+              <small>Remaining</small>
+              <strong id="analyticsRemaining">0 OMR</strong>
+            </div>
+            <div>
+              <small>Top category</small>
+              <strong id="analyticsTopCategory">—</strong>
+            </div>
+          </div>
+
+          <div class="analytics-split">
+            <div>
+              <small>Personal</small>
+              <strong id="analyticsPersonalSpend">0 OMR</strong>
+            </div>
+            <div>
+              <small>Shared</small>
+              <strong id="analyticsSharedSpend">0 OMR</strong>
+            </div>
+            <div>
+              <small>Expenses</small>
+              <strong id="analyticsExpenseCount">0</strong>
+            </div>
+          </div>
         </div>
 
-        <section id="itinerarySection" class="section itinerary-section">
-          <div class="section-title plan-section-title">
+        <div class="analytics-quick-row">
+          <div>
+            <small>Avg / day</small>
+            <strong id="avgDay">0 OMR</strong>
+          </div>
+          <div>
+            <small>Avg expense</small>
+            <strong id="avgTransaction">0 OMR</strong>
+          </div>
+          <div>
+            <small>Largest</small>
+            <strong id="largest">0 OMR</strong>
+          </div>
+        </div>
+
+        <section class="section analytics-category-section">
+          <div class="section-title analytics-section-title">
+            <div>
+              <h2>Where your money went</h2>
+              <small id="analyticsCategoryHint">Spending by category</small>
+            </div>
+          </div>
+          <div id="categoryAnalytics" class="bars analytics-category-bars"></div>
+        </section>
+
+        <section class="section analytics-settlement-section">
+          <div class="section-title analytics-section-title">
+            <div>
+              <h2>Who owes whom</h2>
+              <small>Only outstanding group debts</small>
+            </div>
+            <span class="smart-badge">SETTLE UP</span>
+          </div>
+
+          <div class="settlement-clean-card">
+            <div id="settlementList" class="settlement-list settlement-list-primary"></div>
+
+            <button id="settlementHistoryToggle" type="button" class="secondary settlement-history-toggle hidden">
+              Settlement history
+              <span id="settlementHistoryCount" class="settlement-history-count">0</span>
+              <span id="settlementHistoryArrow">⌄</span>
+            </button>
+            <div id="settlementHistory" class="settlement-history hidden"></div>
+
+            <button id="settlementDetailsToggle" type="button" class="secondary settlement-details-toggle">
+              Show calculation details
+              <span id="settlementDetailsArrow">⌄</span>
+            </button>
+
+            <div id="settlementWarning" class="settlement-warning hidden"></div>
+
+            <div id="settlementDetails" class="settlement-details hidden">
+              <div class="settlement-divider">
+                <span>Paid vs share</span>
+              </div>
+              <div id="settlementPeopleSummary" class="settlement-people-summary"></div>
+              <div id="settlementPersonalInfo" class="settlement-personal-info hidden"></div>
+            </div>
+          </div>
+        </section>
+
+        <button id="analyticsMoreToggle" type="button" class="analytics-more-row">
+          <span>
+            <small>MORE INSIGHTS</small>
+            <strong>Payment, travelers & daily spending</strong>
+          </span>
+          <span id="analyticsMoreArrow">⌄</span>
+        </button>
+
+        <div id="analyticsMoreDetails" class="analytics-more-details hidden">
+          <div class="analytics-busiest-row">
+            <small>Highest spend day</small>
+            <strong id="biggestDay">—</strong>
+          </div>
+
+          <div class="analytics-secondary-block">
+            <div class="analytics-block-title">
+              <h3>Payment methods</h3>
+              <small>How you paid</small>
+            </div>
+            <div id="paymentAnalytics" class="bars"></div>
+          </div>
+
+          <div class="analytics-secondary-block">
+            <div class="analytics-block-title">
+              <h3>Traveler share</h3>
+              <small>Who the spending was for</small>
+            </div>
+            <div id="peopleAnalytics" class="bars"></div>
+          </div>
+
+          <div class="analytics-secondary-block">
+            <div class="analytics-block-title">
+              <h3>Daily spending</h3>
+              <small>Your recent spending days</small>
+            </div>
+            <div id="dailyAnalytics" class="bars"></div>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="people" class="page">
+        <div class="page-title">
+          <div><div class="eyebrow">GROUP</div><h2>Travelers</h2></div>
+          <button id="peopleDone" class="small-primary">Done</button>
+        </div>
+
+        <div class="card people-summary-card">
+          <div>
+            <small>Group spending</small>
+            <strong id="peopleGroupTotal">0 OMR</strong>
+          </div>
+          <div>
+            <small>Unassigned</small>
+            <strong id="peopleUnassigned">0 OMR</strong>
+          </div>
+        </div>
+
+        <form id="addPersonForm" class="card inline-person-form">
+          <label>
+            <span>Add traveler</span>
+            <input id="newPersonName" maxlength="50" placeholder="Name" required>
+          </label>
+          <button class="primary" type="submit">Add Person</button>
+        </form>
+
+        <div class="section-title people-list-title">
+          <h2>People on this trip</h2>
+          <span class="smart-badge">SPLIT READY</span>
+        </div>
+        <div id="peopleList" class="people-list"></div>
+
+        <div class="card people-help">
+          <strong>How assigning works</strong>
+          <p>Choose one traveler when adding an expense, or choose <b>Everyone equally</b> to split that expense. TripSpend saves the exact historical share for each person.</p>
+        </div>
+      </section>
+
+
+      <section id="plan" class="page plan-v651">
+        <div class="page-title plan-page-title">
+          <div>
+            <div class="eyebrow">TRIP PLANNER</div>
+            <h2>Your trip</h2>
+            <p>Plan what you are doing, then keep the cost connected to your spending.</p>
+          </div>
+          <button id="planDone" class="small-primary" type="button">Done</button>
+        </div>
+
+        <div class="plan-hero card">
+          <div class="plan-hero-top">
+            <div>
+              <small>TRIP PROGRESS</small>
+              <strong id="planTripName">Your trip</strong>
+              <span id="planTripDates">—</span>
+            </div>
+            <span id="planProgressPct" class="plan-progress-pill">0%</span>
+          </div>
+
+          <div class="plan-progress-track">
+            <div id="planProgressBar"></div>
+          </div>
+
+          <div id="planFlagRoute" class="plan-flag-route"></div>
+
+          <div class="plan-overview-row">
+            <div>
+              <small>Spent</small>
+              <strong id="plannerSpent">0</strong>
+            </div>
+            <div>
+              <small>Upcoming</small>
+              <strong id="plannerUpcoming">0</strong>
+            </div>
+            <div>
+              <small>Committed</small>
+              <strong id="plannerCommitted">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="plan-view-switcher" role="tablist" aria-label="Trip planner view">
+          <button id="planViewItinerary" class="plan-view-tab active" type="button" role="tab" aria-selected="true">
+            <span>🗓️</span> Itinerary
+          </button>
+          <button id="planViewCosts" class="plan-view-tab" type="button" role="tab" aria-selected="false">
+            <span>💳</span> Costs
+          </button>
+        </div>
+
+        <section id="planItinerarySection" class="section itinerary-section">
+          <div class="section-title plan-section-title itinerary-section-title">
             <div>
               <h2>Itinerary</h2>
-              <small>Flights, hotels, activities and transport in one place.</small>
+              <small>Flights, hotels, activities, restaurants and notes by day.</small>
             </div>
             <button id="planAddItinerary" class="small-primary" type="button">＋ Add item</button>
           </div>
+
+          <form id="itineraryForm" class="card form planner-form plan-inline-editor itinerary-form hidden">
+            <div class="plan-editor-head">
+              <strong id="itineraryFormTitle">Add itinerary item</strong>
+              <button id="itineraryCancel" class="link-btn" type="button">Cancel</button>
+            </div>
+
+            <div class="itinerary-type-row" role="group" aria-label="Itinerary type">
+              <button class="itinerary-type-chip active" data-itinerary-type="Activity" type="button">🎟️ Activity</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Flight" type="button">✈️ Flight</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Hotel" type="button">🏨 Hotel</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Restaurant" type="button">🍽️ Restaurant</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Transport" type="button">🚕 Transport</button>
+              <button class="itinerary-type-chip" data-itinerary-type="Note" type="button">📝 Note</button>
+            </div>
+            <input id="itineraryType" type="hidden" value="Activity">
+
+            <label>Title
+              <input id="itineraryTitle" maxlength="90" required placeholder="Schönbrunn Palace, hotel check-in…">
+            </label>
+
+            <div class="grid2 itinerary-date-time-grid">
+              <label class="date-field-label"><span>Date</span>
+                <div class="date-picker-card planner-single-date">
+                  <span id="itineraryDateDisplay" class="date-display">Select date</span>
+                  <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
+                  <input id="itineraryDate" class="native-date-input" type="date" required aria-label="Itinerary date">
+                </div>
+              </label>
+
+              <label>Time <small>(optional)</small>
+                <input id="itineraryTime" type="time">
+              </label>
+            </div>
+
+            <div class="grid2">
+              <label>Country
+                <select id="itineraryStop"></select>
+              </label>
+              <label>Status
+                <select id="itineraryStatus">
+                  <option value="planned">Planned</option>
+                  <option value="booked">Booked</option>
+                </select>
+              </label>
+            </div>
+
+            <label>Location <small>(optional)</small>
+              <input id="itineraryLocation" maxlength="120" placeholder="Hotel, venue, neighborhood…">
+            </label>
+
+            <div class="grid2">
+              <label>Booking reference <small>(optional)</small>
+                <input id="itineraryBookingRef" maxlength="80" placeholder="Confirmation / ticket number">
+              </label>
+              <label>Estimated cost <small id="itineraryCurrencyHint">(home currency, optional)</small>
+                <input id="itineraryAmount" type="number" min="0" step="0.001" inputmode="decimal" placeholder="0">
+              </label>
+            </div>
+
+            <label>Note <small>(optional)</small>
+              <textarea id="itineraryNote" maxlength="240" rows="3" placeholder="Reservation details, reminders, what to bring…"></textarea>
+            </label>
+
+            <button id="itinerarySaveBtn" class="primary" type="submit">Add to Itinerary</button>
+          </form>
+
+          <div id="itineraryTodaySummary" class="itinerary-today-summary hidden"></div>
           <div id="itineraryList" class="itinerary-list"></div>
         </section>
 
-        <section id="planCountrySection" class="section plan-country-section">
+        <section id="planCountrySection" class="section plan-country-section hidden">
           <div class="section-title plan-section-title">
             <div>
               <h2>Countries</h2>
-              <small>Manage the countries in this trip and their budgets.</small>
+              <small>Budget and dates at a glance.</small>
             </div>
-            <button id="planAddCountry" class="small-primary" type="button">＋ Add country</button>
+            <button id="planAddCountry" class="link-btn" type="button">＋ Add country</button>
           </div>
 
           <form id="addStopForm" class="card form planner-form plan-inline-editor hidden">
@@ -531,124 +898,404 @@
             <small class="field-hint">This is the first country in the trip. Add more countries below.</small>
           </label>
 
-          <div class="grid2">
-            <label>Trip start<input id="sStartDate" type="date" required></label>
-            <label>Trip end<input id="sEndDate" type="date" required></label>
+          <div class="multi-country-settings">
+            <div>
+              <strong>Countries in this trip</strong>
+              <span id="settingsCountrySummary">1 country</span>
+            </div>
+            <button id="settingsAddCountry" class="secondary" type="button">＋ Add another country</button>
           </div>
-
-          <label>Total trip budget<input id="sBudget" type="number" min="0" step="0.001" inputmode="decimal" required></label>
-          <label>Home currency<select id="sHomeCurrency"></select></label>
-          <label>Default payment<select id="sDefaultPayment"></select></label>
-          <button class="primary" type="submit">Save trip settings</button>
+          <div class="grid2 date-grid settings-date-grid">
+            <label class="date-field-label"><span>Start date</span>
+              <div class="date-picker-card">
+                <span id="sStartDateDisplay" class="date-display">Select date</span>
+                <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
+                <input id="sStartDate" class="native-date-input" type="date" required aria-label="Trip start date">
+              </div>
+            </label>
+            <label class="date-field-label"><span>End date</span>
+              <div class="date-picker-card">
+                <span id="sEndDateDisplay" class="date-display">Select date</span>
+                <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
+                <input id="sEndDate" class="native-date-input" type="date" required aria-label="Trip end date">
+              </div>
+            </label>
+          </div>
+          <label>Total budget<input id="sBudget" type="number" min="0" step="0.001" required></label>
+          <div class="grid2">
+            <label>Home currency<select id="sHomeCurrency"></select></label>
+            <label>Trip currency<select id="sTripCurrency"></select></label>
+          </div>
+          <label>Default payment method<select id="sDefaultPayment"></select></label>
+          <button class="primary" type="submit">Save Changes</button>
         </form>
 
-        <section class="section">
+        <div class="settings-group-label">Manage trip</div>
+        <div class="card action-card trips-action-card settings-manage-card">
+          <div><strong>Trips & history</strong><p>Finish this trip, start another one, or reopen a past trip.</p></div>
+          <button id="settingsTrips" class="secondary">Manage Trips</button>
+        </div>
+
+        <div class="card action-card settings-manage-card">
+          <div><strong>Countries & trip planner</strong><p>Manage every country, its dates, local currency, budget, and upcoming costs.</p></div>
+          <button id="settingsPlan" class="secondary">Manage Countries & Plans</button>
+        </div>
+
+        <div class="card action-card settings-manage-card">
+          <div><strong>Travelers</strong><p>Add people, rename them, and review individual spending totals.</p></div>
+          <button id="settingsPeople" class="secondary">Manage Travelers</button>
+        </div>
+
+        <div class="settings-group-label">Preferences & safety</div>
+        <div class="card appearance-card">
+          <div class="appearance-copy">
+            <span class="appearance-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 0 0 0-7.4z"/><path d="m19.2 13.5 1.5 1.2-1.8 3.1-1.9-.7a7.8 7.8 0 0 1-2.4 1.4l-.3 2h-3.6l-.3-2A7.8 7.8 0 0 1 8 17.1l-1.9.7-1.8-3.1 1.5-1.2a8 8 0 0 1 0-3L4.3 9.3l1.8-3.1 1.9.7a7.8 7.8 0 0 1 2.4-1.4l.3-2h3.6l.3 2A7.8 7.8 0 0 1 17 6.9l1.9-.7 1.8 3.1-1.5 1.2a8 8 0 0 1 0 3z"/></svg></span>
+            <div>
+              <strong>Appearance</strong>
+              <p>Follow your iPhone automatically, or choose Light or Dark.</p>
+            </div>
+          </div>
+          <div class="appearance-segment" role="group" aria-label="Appearance">
+            <button id="appearanceSystem" type="button" data-appearance="system">Auto</button>
+            <button id="appearanceLight" type="button" data-appearance="light">Light</button>
+            <button id="appearanceDark" type="button" data-appearance="dark">Dark</button>
+          </div>
+        </div>
+
+        <div class="card data-safety-card">
+          <div class="data-safety-head">
+            <div>
+              <strong>Data safety</strong>
+              <p>TripSpend saves your trip locally and keeps automatic restore points.</p>
+            </div>
+            <span id="storageModeBadge" class="smart-badge storage-mode-badge">STARTING</span>
+          </div>
+
+          <div class="storage-status-row">
+            <span class="storage-status-dot"></span>
+            <div>
+              <strong id="storageStatus">Preparing secure local storage…</strong>
+              <small id="storagePerfStatus">Checking your data…</small>
+            </div>
+          </div>
+
+          <div class="backup-head">
+            <div>
+              <strong>Restore points</strong>
+              <small>Latest, recent days, and upgrade protection.</small>
+            </div>
+            <button id="createSnapshotBtn" class="secondary compact-btn" type="button">Save Snapshot</button>
+          </div>
+
+          <div id="backupList" class="backup-list">
+            <div class="backup-empty">Restore points will appear here automatically.</div>
+          </div>
+
+          <div class="storage-usage-grid">
+            <div>
+              <small>Local storage used</small>
+              <strong id="storageUsageText">—</strong>
+            </div>
+            <div>
+              <small>Receipt photos</small>
+              <strong id="receiptUsageText">—</strong>
+            </div>
+          </div>
+          <button id="cleanReceiptStorageBtn" class="secondary data-cleanup-btn" type="button">Clean unused receipt files</button>
+        </div>
+
+        <div class="card app-update-card">
+          <div class="app-update-head">
+            <div>
+              <strong>App update</strong>
+              <p>Check the GitHub Pages version and refresh the installed app when needed.</p>
+            </div>
+            <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
+          </div>
+          <div class="app-update-versions">
+            <span><small>Current</small><strong id="currentVersionText">v6.8.1</strong></span>
+            <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
+          </div>
+          <div class="app-update-actions">
+            <button id="checkUpdateBtn" class="secondary" type="button">Check for Update</button>
+            <button id="refreshAppBtn" class="secondary" type="button">Refresh App</button>
+          </div>
+        </div>
+
+        <div class="card diagnostics-card">
+          <div class="diagnostics-head">
+            <div>
+              <strong>App health</strong>
+              <p>Quick checks for storage, database, receipts, performance and the offline app shell.</p>
+            </div>
+            <button id="runDiagnosticsBtn" class="secondary compact-btn" type="button">Run checks</button>
+          </div>
+
+          <div class="diagnostics-list">
+            <div><span>Storage</span><strong id="diagStorage">Checking…</strong></div>
+            <div><span>Database</span><strong id="diagDatabase">Checking…</strong></div>
+            <div><span>Receipts</span><strong id="diagReceipts">Checking…</strong></div>
+            <div><span>Offline app</span><strong id="diagServiceWorker">Checking…</strong></div>
+            <div><span>Data integrity</span><strong id="diagIntegrity">Checking…</strong></div>
+            <div><span>Performance</span><strong id="diagPerformance">Checking…</strong></div>
+          </div>
+          <small id="diagSummary" class="diagnostics-summary">TripSpend will run a quick check when Settings opens.</small>
+        </div>
+
+
+        <div class="settings-group-label settings-tools-label">Tools & data</div>
+        <section class="section settings-tools-section">
           <div class="section-title">
-            <div><h2>Appearance</h2><small>Choose how TripSpend looks on this device.</small></div>
+            <h2>Currency converter</h2>
+            <span id="networkBadge" class="smart-badge">CHECKING</span>
           </div>
-          <div class="appearance-options" role="group" aria-label="Appearance">
-            <button type="button" class="appearance-option" data-appearance="system">System</button>
-            <button type="button" class="appearance-option" data-appearance="light">Light</button>
-            <button type="button" class="appearance-option" data-appearance="dark">Dark</button>
+          <div class="card fx-card settings-fx-card">
+            <div class="fx-grid">
+              <label>
+                <span>Amount</span>
+                <input id="fxAmount" type="number" min="0" step="0.001" inputmode="decimal" value="1">
+              </label>
+              <label>
+                <span>From</span>
+                <select id="fxFrom"></select>
+              </label>
+              <label>
+                <span>To</span>
+                <select id="fxTo"></select>
+              </label>
+            </div>
+
+            <div class="fx-actions">
+              <button id="fxSwap" type="button" class="secondary compact-btn">⇄ Swap</button>
+              <button id="fxRefresh" type="button" class="primary compact-btn">Refresh Rate</button>
+            </div>
+
+            <div class="fx-result">
+              <div>
+                <small id="fxRateLabel">Latest rate</small>
+                <strong id="fxRateValue">—</strong>
+              </div>
+              <div>
+                <small>Converted amount</small>
+                <strong id="fxConverted">—</strong>
+              </div>
+            </div>
+
+            <p id="fxStatus" class="fx-status">Connect to the internet once to save a rate for offline use.</p>
           </div>
         </section>
 
-        <section class="section">
-          <div class="section-title"><h2>Manage trips</h2></div>
-          <button id="manageTripsBtn" class="secondary full" type="button">Manage Trips</button>
-        </section>
+        <div id="installCard" class="card action-card install-card settings-tool-card">
+          <div>
+            <strong id="installTitle">Install TripSpend</strong>
+            <p id="installText">Use it like an app from your home screen.</p>
+          </div>
+          <button id="installBtn" class="secondary">Install App</button>
+          <p id="installHelp" class="install-help hidden"></p>
+        </div>
 
-        <section class="section">
-          <div class="section-title"><h2>Travelers</h2></div>
-          <button id="managePeopleBtn" class="secondary full" type="button">Manage Travelers</button>
-        </section>
+        <div class="card action-card settings-tool-card">
+          <div><strong>Portable backup</strong><p>JSON includes trip data and receipt photos. CSV opens in Excel.</p></div>
+          <button id="exportBtn" class="secondary">Export Backup</button>
+          <button id="csvBtn" class="secondary">Export CSV</button>
+          <label class="secondary file-btn">Import Backup<input id="importFile" type="file" accept="application/json,.json" hidden></label>
+        </div>
 
-        <section class="section">
-          <div class="section-title"><h2>Countries & plans</h2></div>
-          <button id="managePlanBtn" class="secondary full" type="button">Manage Countries & Plans</button>
-        </section>
+        <div class="card action-card settings-tool-card">
+          <div><strong>Saved exchange rates</strong><p>TripSpend remembers rates you use and reuses them automatically.</p></div>
+          <div id="savedRates" class="saved-rates"></div>
+          <button id="clearRates" class="secondary">Clear Saved Rates</button>
+        </div>
 
-        <section class="section">
-          <div class="section-title"><h2>Data & safety</h2></div>
-          <button id="exportBtn" class="secondary full" type="button">Export backup</button>
-          <label class="secondary full file-button">Import backup<input id="importInput" type="file" accept="application/json,.json"></label>
-        </section>
+        <div class="card action-card danger">
+          <div><strong>Delete trip</strong><p>Clears this trip from this browser.</p></div>
+          <button id="deleteTrip" class="danger-btn">Delete Trip</button>
+        </div>
       </section>
     </section>
   </main>
 
-  <nav class="bottom-nav hidden" aria-label="Main navigation">
-    <button data-page="dashboard" class="active"><span>⌂</span><small>Home</small></button>
-    <button data-page="expenses"><span>◫</span><small>Expenses</small></button>
-    <button data-page="plan"><span>◇</span><small>Plan</small></button>
-    <button data-page="analytics"><span>◒</span><small>Analytics</small></button>
-    <button data-page="settings"><span>⚙</span><small>Settings</small></button>
+  <nav id="nav" class="nav hidden" aria-label="Main navigation">
+    <button class="nav-btn active" data-page="dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.7l8.5 6.8v9a1.5 1.5 0 0 1-1.5 1.5h-4.6v-6.2H9.6V21H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg></span><small>Home</small></button>
+    <button class="nav-btn" data-page="expenses"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-2.2-1.4-1.9 1.4-1.9-1.4-1.9 1.4-1.9-1.4L6 20.5z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><small>Expenses</small></button>
+    <button class="nav-btn" data-page="plan"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.2 9.2 4l5.6 2.2L20 4v13.8L14.8 20l-5.6-2.2L4 20z"/><path d="M9.2 4v13.8M14.8 6.2V20"/></svg></span><small>Plan</small></button>
+    <button class="nav-btn" data-page="analytics"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10h4v10zM10 20V4h4v16zM16 20v-7h4v7z"/></svg></span><small>Analytics</small></button>
+    <button class="nav-btn" data-page="settings"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.3a3.7 3.7 0 1 0 0 7.4 3.7 3.7 0 0 0 0-7.4z"/><path d="m19.2 13.5 1.5 1.2-1.8 3.1-1.9-.7a7.8 7.8 0 0 1-2.4 1.4l-.3 2h-3.6l-.3-2A7.8 7.8 0 0 1 8 17.1l-1.9.7-1.8-3.1 1.5-1.2a8 8 0 0 1 0-3L4.3 9.3l1.8-3.1 1.9.7a7.8 7.8 0 0 1 2.4-1.4l.3-2h3.6l.3 2A7.8 7.8 0 0 1 17 6.9l1.9-.7 1.8 3.1-1.5 1.2a8 8 0 0 1 0 3z"/></svg></span><small>Settings</small></button>
   </nav>
+  <button id="navAdd" class="floating-add hidden" aria-label="Add expense"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+</div>
+
+<div id="finishTripModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="finishTripTitle">
+  <div class="sheet finish-trip-sheet">
+    <div class="handle"></div>
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">TRIP COMPLETE</div>
+        <h2 id="finishTripTitle">Finish Trip</h2>
+      </div>
+      <button id="closeFinishTrip" class="icon-btn" type="button">✕</button>
+    </div>
+
+    <div class="finish-trip-identity">
+      <div id="finishTripFlags" class="finish-trip-flags"></div>
+      <strong id="finishTripName">Trip</strong>
+      <span id="finishTripDates">—</span>
+    </div>
+
+    <div class="finish-trip-summary">
+      <div><small>Budget</small><strong id="finishTripBudget">0</strong></div>
+      <div><small>Spent</small><strong id="finishTripSpent">0</strong></div>
+      <div><small id="finishTripSavedLabel">Saved</small><strong id="finishTripSaved">0</strong></div>
+      <div><small>Top category</small><strong id="finishTripTopCategory">—</strong></div>
+      <div><small>Countries</small><strong id="finishTripCountries">0</strong></div>
+      <div><small>Settlement left</small><strong id="finishTripSettlement">0</strong></div>
+    </div>
+
+    <p class="finish-trip-help">Finishing moves this trip into Past Trips. You can reopen it later with all expenses and analytics intact.</p>
+
+    <div class="finish-report-actions">
+      <button id="shareTripReportBtn" class="secondary" type="button">↗ Share Report</button>
+      <button id="printTripReportBtn" class="secondary" type="button">▤ Print / PDF</button>
+    </div>
+
+    <div class="finish-trip-actions">
+      <button id="cancelFinishTrip" class="secondary" type="button">Cancel</button>
+      <button id="confirmFinishTrip" class="primary" type="button">Finish & Archive</button>
+    </div>
+  </div>
 </div>
 
 <div id="tripSwitcherModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tripSwitcherTitle">
-  <div class="sheet compact-sheet">
+  <div class="sheet trip-switcher-sheet">
     <div class="handle"></div>
-    <div class="modal-head">
-      <div><div class="eyebrow">TRIPS</div><h2 id="tripSwitcherTitle">Switch trip</h2></div>
+    <div class="modal-head trip-switcher-head">
+      <div>
+        <div class="eyebrow">YOUR TRIPS</div>
+        <h2 id="tripSwitcherTitle">Switch trip</h2>
+      </div>
       <button id="closeTripSwitcher" class="icon-btn" type="button">✕</button>
     </div>
-    <div id="tripSwitcherList" class="trip-switcher-list"></div>
+
+    <div id="tripSwitcherCurrent" class="trip-switcher-current"></div>
+
+    <div class="trip-switcher-section-head">
+      <div>
+        <strong>Past trips</strong>
+        <small id="tripSwitcherPastCount">0 trips</small>
+      </div>
+    </div>
+
+    <div id="tripSwitcherPastList" class="trip-switcher-past-list"></div>
+
+    <div class="trip-switcher-actions">
+      <button id="tripSwitcherManageBtn" class="secondary" type="button">Manage All Trips</button>
+      <button id="tripSwitcherNewBtn" class="primary" type="button">＋ Start New Trip</button>
+    </div>
   </div>
 </div>
 
-<div id="peopleModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="peopleModalTitle">
-  <div class="sheet">
+<div id="expenseDetailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="expenseDetailTitle">
+  <div class="sheet expense-detail-sheet">
     <div class="handle"></div>
-    <div class="modal-head"><h2 id="peopleModalTitle">Travelers</h2><button id="closePeople" class="icon-btn" type="button">✕</button></div>
-    <form id="addPersonForm" class="form inline-form">
-      <input id="newPersonName" maxlength="50" required placeholder="Traveler name">
-      <button class="primary" type="submit">Add traveler</button>
-    </form>
-    <div id="peopleList" class="people-list"></div>
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">EXPENSE</div>
+        <h2 id="expenseDetailTitle">Expense details</h2>
+      </div>
+      <button id="closeExpenseDetail" class="icon-btn" type="button">✕</button>
+    </div>
+
+    <div class="expense-detail-amount">
+      <strong id="expenseDetailAmount">0 OMR</strong>
+      <span id="expenseDetailOriginal">—</span>
+    </div>
+
+    <div id="expenseDetailGrid" class="expense-detail-grid"></div>
+    <div id="expenseDetailShares" class="expense-detail-shares hidden"></div>
+
+    <div id="expenseDetailReceipt" class="expense-detail-receipt hidden">
+      <img id="expenseDetailReceiptThumb" alt="Receipt thumbnail">
+      <div>
+        <strong>Receipt attached</strong>
+        <small id="expenseDetailReceiptMeta">Stored locally</small>
+      </div>
+      <button id="viewDetailReceiptBtn" class="secondary compact-btn" type="button">View</button>
+      <label class="secondary compact-btn expense-detail-replace">
+        Replace
+        <input id="detailReceiptReplaceInput" type="file" accept="image/*" capture="environment">
+      </label>
+      <button id="removeDetailReceiptBtn" class="mini-btn delete" type="button">Remove</button>
+    </div>
+    <div id="expenseDetailNoReceipt" class="expense-detail-no-receipt">No receipt attached</div>
+
+    <div class="expense-detail-actions">
+      <button id="detailRepeatExpenseBtn" class="secondary" type="button">↻ Repeat</button>
+      <button id="detailEditExpenseBtn" class="primary" type="button">Edit Expense</button>
+      <button id="detailDeleteExpenseBtn" class="danger-btn" type="button">Delete</button>
+    </div>
   </div>
 </div>
 
-<div id="itineraryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="itineraryModalTitle">
-  <div class="sheet">
+<div id="receiptViewerModal" class="modal hidden receipt-viewer-modal" role="dialog" aria-modal="true" aria-labelledby="receiptViewerTitle">
+  <div class="sheet receipt-viewer-sheet">
     <div class="handle"></div>
-    <div class="modal-head"><h2 id="itineraryModalTitle">Itinerary item</h2><button id="closeItinerary" class="icon-btn" type="button">✕</button></div>
-    <form id="itineraryForm" class="form">
-      <input id="itineraryId" type="hidden">
-      <label>Title<input id="itineraryTitle" maxlength="100" required></label>
-      <div class="grid2">
-        <label>Type<select id="itineraryType"></select></label>
-        <label>Status<select id="itineraryStatus"><option value="planned">Planned</option><option value="booked">Booked</option></select></label>
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">RECEIPT</div>
+        <h2 id="receiptViewerTitle">Receipt</h2>
       </div>
-      <div class="grid2">
-        <label>Date<input id="itineraryDate" type="date" required></label>
-        <label>Time<input id="itineraryTime" type="time"></label>
-      </div>
-      <label>Country<select id="itineraryStop"></select></label>
-      <label>Location<input id="itineraryLocation" maxlength="140"></label>
-      <label>Booking reference<input id="itineraryBookingRef" maxlength="100"></label>
-      <label>Estimated cost<input id="itineraryAmount" type="number" min="0" step="0.001" inputmode="decimal"></label>
-      <label>Note<textarea id="itineraryNote" maxlength="220"></textarea></label>
-      <div class="modal-actions">
-        <button id="deleteItinerary" class="danger" type="button">Delete</button>
-        <button class="primary" type="submit">Save</button>
-      </div>
-    </form>
+      <button id="closeReceiptViewer" class="icon-btn" type="button">✕</button>
+    </div>
+    <div class="receipt-viewer-toolbar">
+      <button id="receiptZoomOut" class="secondary compact-btn" type="button">−</button>
+      <span id="receiptZoomLabel">100%</span>
+      <button id="receiptZoomIn" class="secondary compact-btn" type="button">＋</button>
+    </div>
+    <div id="receiptViewerStage" class="receipt-viewer-stage">
+      <img id="receiptViewerImage" alt="Receipt">
+    </div>
+    <small class="receipt-viewer-help">Pinch to zoom on iPhone, or use the − / + controls.</small>
   </div>
 </div>
 
-<div id="expenseModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <div class="handle"></div>
-    <div class="modal-head"><h2 id="expenseModalTitle">Add expense</h2><button id="closeExpense" class="icon-btn" type="button">✕</button></div>
-    <form id="expenseForm" class="form">
-      <input id="expenseId" type="hidden">
-      <div class="grid2">
-        <label>Amount<input id="expenseAmount" type="number" min="0" step="0.001" inputmode="decimal" required></label>
-        <label>Currency<select id="expenseCurrency"></select></label>
+    <div class="modal-head"><div><div class="eyebrow">TRANSACTION</div><h2 id="modalTitle">Add Expense</h2></div><button id="closeModal" class="icon-btn">✕</button></div>
+    <form id="expenseForm" class="form modal-form smart-expense-form">
+      <input id="editId" type="hidden">
+
+      <div id="expenseQuickContext" class="expense-quick-context">
+        <span id="quickCountryText">Current country</span>
+        <span id="quickPaymentText">Payment</span>
+        <span id="quickRateText">Rate ready</span>
       </div>
-      <div id="expenseHomeAmountPreview" class="home-amount-preview"></div>
-      <button id="expenseSmartSummary" type="button" class="smart-summary-row">
+
+      <label class="smart-amount-label">Amount
+        <div class="amount-row">
+          <input id="expenseAmount" type="number" min="0" step="0.001" inputmode="decimal" required placeholder="0.00">
+          <select id="expenseCurrency"></select>
+        </div>
+      </label>
+
+      <div id="conversion" class="conversion smart-conversion">≈ 0 OMR</div>
+
+      <fieldset class="expense-type-fieldset smart-type-fieldset">
+        <legend>Expense type</legend>
+        <div class="expense-type-toggle">
+          <button id="expenseTypePersonal" type="button" class="expense-type-btn active">
+            <strong>Personal</strong>
+            <small>For one traveler</small>
+          </button>
+          <button id="expenseTypeShared" type="button" class="expense-type-btn">
+            <strong>Shared</strong>
+            <small>Split with others</small>
+          </button>
+        </div>
+        <small id="expenseTypeHelp" class="expense-type-help">Counts toward trip and country budgets. If the same traveler pays for themselves, it creates no debt.</small>
+      </fieldset>
+
+      <button id="expenseAutoSummary" type="button" class="smart-expense-summary">
         <span>
           <small>AUTO-FILLED</small>
           <strong id="expenseAutoSummaryText">Personal • payer and country selected automatically</strong>
@@ -778,9 +1425,8 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.8.3-manual1"></script>
-<script src="fx.js?v=6.8.3"></script>
-<script src="v5.js?v=6.8.3"></script>
-<script src="i18n.js?v=6.8.3-manual1"></script>
+<script src="app.js?v=6.8.1"></script>
+<script src="fx.js?v=6.8.1"></script>
+<script src="v5.js?v=6.8.1"></script>
 </body>
 </html>
