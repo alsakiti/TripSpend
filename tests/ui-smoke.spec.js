@@ -1,5 +1,9 @@
 const { test, expect } = require("@playwright/test");
 
+function visibleLanguageButton(page) {
+  return page.locator("#setupLanguageToggleV7:visible, #languageToggleV7:visible");
+}
+
 async function bootV7(page) {
   await page.goto("/");
   await page.evaluate(async () => {
@@ -10,17 +14,17 @@ async function bootV7(page) {
     }
   });
   await page.reload();
-  await page.waitForSelector("#languageToggleV7", { state:"visible" });
+  await expect(visibleLanguageButton(page)).toHaveCount(1);
   await expect(page.locator(".version-badge").first()).toHaveText("v7.0.0");
 }
 
-test("setup screen is bilingual, RTL-safe and uses one flag control", async ({ page }) => {
+test("setup screen is bilingual, RTL-safe and uses one visible flag control", async ({ page }) => {
   await bootV7(page);
   await expect(page.locator("#setupView")).toBeVisible();
-  await expect(page.locator("#languageToggleV7")).toHaveCount(1);
+  await expect(visibleLanguageButton(page)).toHaveCount(1);
   await expect(page.locator("#tripName")).toHaveAttribute("placeholder", "Enter trip name");
 
-  await page.locator("#languageToggleV7").click();
+  await visibleLanguageButton(page).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.locator("#tripName")).toHaveAttribute("placeholder", "أدخل اسم الرحلة");
   await expect(page.locator("#destination")).toHaveAttribute("placeholder", "ابحث عن دولة…");
@@ -29,7 +33,7 @@ test("setup screen is bilingual, RTL-safe and uses one flag control", async ({ p
   expect(overflow).toBeLessThanOrEqual(2);
   await page.screenshot({ path:"test-results/setup-ar.png", fullPage:true });
 
-  await page.locator("#languageToggleV7").click();
+  await visibleLanguageButton(page).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
   await expect(page.locator("#tripName")).toHaveAttribute("placeholder", "Enter trip name");
 });
@@ -68,7 +72,7 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   });
   expect(clicked).toBeTruthy();
 
-  await page.locator("#languageToggleV7").click();
+  await visibleLanguageButton(page).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await page.waitForTimeout(150);
 
