@@ -11,6 +11,8 @@ const APP_SHELL = [
   "./v5.js",
   "./ai-v684.js",
   "./locale-v700.js",
+  "./setup-language-host-v700.js",
+  "./receipt-capability-v700.js",
   "./receipt-ai-v700.js",
   "./manifest.webmanifest",
   "./version.json",
@@ -40,11 +42,12 @@ async function upgradeHtml(response) {
     .replaceAll("?v=6.8.1", `?v=${APP_VERSION}`)
     .replace(/(<[^>]*class=["'][^"']*version-badge[^"']*["'][^>]*>)v\d+\.\d+\.\d+(<\/[^>]+>)/gi, `$1v${APP_VERSION}$2`);
 
-  // Retire the accumulated pre-v7 runtime patches. v7 has one locale runtime.
+  // Retire the accumulated pre-v7 runtime patches. v7 has one locale engine.
   const retired = [
     "ai.js", "ai-v684.js", "i18n.js", "i18n-layout-fix.js", "i18n-audit-v690.js",
     "rtl-polish-v687.js", "lang-flag.js", "setup-lang-v688.js", "budget-labels-v689.js",
-    "expense-ar-v691.js", "locale-v700.js", "receipt-ai-v700.js"
+    "expense-ar-v691.js", "locale-v700.js", "setup-language-host-v700.js",
+    "receipt-capability-v700.js", "receipt-ai-v700.js"
   ];
   for (const file of retired) {
     const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -59,10 +62,12 @@ window.MutationObserver=class{observe(){}disconnect(){}takeRecords(){return[]}};
 <script src="./ai-v684.js?v=${APP_VERSION}"></script>
 <script>
 (()=>{
-  const load=(src)=>{const s=document.createElement('script');s.src=src;s.defer=false;document.body.appendChild(s)};
+  const load=(src)=>{const s=document.createElement('script');s.src=src;s.async=false;document.body.appendChild(s)};
   const finish=()=>{
     if(window.__tsNativeMO){window.MutationObserver=window.__tsNativeMO;delete window.__tsNativeMO;}
     load('./locale-v700.js?v=${APP_VERSION}');
+    load('./setup-language-host-v700.js?v=${APP_VERSION}');
+    load('./receipt-capability-v700.js?v=${APP_VERSION}');
     load('./receipt-ai-v700.js?v=${APP_VERSION}');
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',finish,{once:true}); else finish();
@@ -158,13 +163,14 @@ self.addEventListener("fetch", event => {
   }
 
   const alwaysFresh = path.endsWith("/version.json") || path.endsWith("/ai-config.json") ||
-    path.endsWith("/locale-v700.js") || path.endsWith("/receipt-ai-v700.js") || path.endsWith("/sw.js");
+    path.endsWith("/locale-v700.js") || path.endsWith("/setup-language-host-v700.js") ||
+    path.endsWith("/receipt-capability-v700.js") || path.endsWith("/receipt-ai-v700.js") || path.endsWith("/sw.js");
   if (alwaysFresh) {
     event.respondWith(networkFirst(request));
     return;
   }
 
-  // Static assets: use cache immediately, refresh it quietly when online.
+  // Static assets: use cache immediately, refresh quietly when online.
   event.respondWith((async () => {
     const cached = await caches.match(request);
     const refresh = fetch(request).then(response => {
