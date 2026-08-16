@@ -1,7 +1,7 @@
 {
   "name": "tripspend-ai-worker",
   "private": true,
-  "version": "7.0.0",
+  "version": "7.0.1",
   "scripts": {
     "deploy": "npx --yes wrangler@latest deploy",
     "deploy:login": "npx --yes wrangler@latest login && npx --yes wrangler@latest deploy"
