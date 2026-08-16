@@ -55,6 +55,88 @@
   box-shadow:0 8px 24px rgba(18,104,232,.10);
   font-size:20px;
 }
+
+/* TripSpend AI — make the dashboard trigger unmistakably interactive. */
+.dashboard-welcome-mark.trip-ai-ready{
+  position:relative;
+  isolation:isolate;
+  overflow:visible;
+  cursor:pointer;
+  border-color:color-mix(in srgb,var(--brand) 28%,transparent);
+  box-shadow:0 10px 26px rgba(18,104,232,.16),0 0 0 1px rgba(18,104,232,.04);
+  animation:tripAiFloat 3.6s ease-in-out infinite;
+  transition:box-shadow .24s ease,filter .24s ease,background .24s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.dashboard-welcome-mark.trip-ai-ready::before{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  z-index:-1;
+  border-radius:21px;
+  background:rgba(18,104,232,.11);
+  opacity:.42;
+  transform:scale(.9);
+  animation:tripAiHalo 2.8s ease-in-out infinite;
+  pointer-events:none;
+}
+.dashboard-welcome-mark.trip-ai-ready::after{
+  content:"AI";
+  position:absolute;
+  top:-8px;
+  right:-10px;
+  display:grid;
+  min-width:25px;
+  height:19px;
+  padding:0 5px;
+  place-items:center;
+  border:2px solid var(--surface);
+  border-radius:999px;
+  background:linear-gradient(135deg,#1268e8,#34a8ff);
+  color:#fff;
+  box-shadow:0 5px 12px rgba(18,104,232,.28);
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.04em;
+  line-height:1;
+  pointer-events:none;
+}
+.dashboard-welcome-mark.trip-ai-ready:focus-visible{
+  outline:3px solid rgba(18,104,232,.28);
+  outline-offset:4px;
+}
+.dashboard-welcome-mark.trip-ai-ready:active{
+  animation:none;
+  transform:translateY(1px) scale(.94);
+  box-shadow:0 5px 14px rgba(18,104,232,.16);
+}
+#tripAiModal:not(.hidden){animation:tripAiFadeIn .18s ease both}
+#tripAiModal:not(.hidden) .trip-ai-sheet{animation:tripAiSheetIn .26s cubic-bezier(.2,.8,.2,1) both}
+@keyframes tripAiFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+@keyframes tripAiHalo{
+  0%,100%{opacity:.22;transform:scale(.88)}
+  50%{opacity:.5;transform:scale(1.06)}
+}
+@keyframes tripAiFadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes tripAiSheetIn{
+  from{opacity:.55;transform:translateY(18px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(hover:hover){
+  .dashboard-welcome-mark.trip-ai-ready:hover{
+    animation:none;
+    transform:translateY(-3px) scale(1.04);
+    filter:saturate(1.08);
+    box-shadow:0 16px 34px rgba(18,104,232,.22),0 0 0 5px rgba(18,104,232,.055);
+  }
+}
+
 .dashboard-refresh .v6-budget-card{
   overflow:hidden;
   border:1px solid rgba(255,255,255,.14);
@@ -153,9 +235,11 @@ html[data-theme="dark"] .dashboard-refresh .v6-budget-card{
 html[data-theme="dark"] .dashboard-refresh .v6-quick-add,
 html[data-theme="dark"] .dashboard-refresh .home-trip-context,
 html[data-theme="dark"] .dashboard-refresh .v6-country-budget-section{box-shadow:0 10px 26px rgba(0,0,0,.16)}
+html[data-theme="dark"] .dashboard-welcome-mark.trip-ai-ready::after{border-color:var(--surface)}
 @media(max-width:600px){
   .dashboard-welcome h2{font-size:22px}
   .dashboard-welcome-mark{width:42px;height:42px;flex-basis:42px;border-radius:14px}
+  .dashboard-welcome-mark.trip-ai-ready::after{top:-8px;right:-9px}
   .dashboard-refresh .home-trip-context,
   .dashboard-refresh .v6-country-budget-section{padding:13px;border-radius:19px}
 }
@@ -164,4 +248,11 @@ html[data-theme="dark"] .dashboard-refresh .v6-country-budget-section{box-shadow
   .dashboard-welcome h2{font-size:20px}
   .dashboard-refresh .v6-quick-add{grid-template-columns:38px minmax(0,1fr) auto}
   .quick-add-icon{width:38px;height:38px}
+}
+@media(prefers-reduced-motion:reduce){
+  .dashboard-welcome-mark.trip-ai-ready,
+  .dashboard-welcome-mark.trip-ai-ready::before,
+  #tripAiModal:not(.hidden),
+  #tripAiModal:not(.hidden) .trip-ai-sheet{animation:none!important}
+  .dashboard-welcome-mark.trip-ai-ready{transition:none}
 }
