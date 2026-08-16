@@ -1,4 +1,4 @@
-const CACHE = "tripspend-v6.9.0-i18n-audit1";
+const CACHE = "tripspend-v6.9.0-flags1";
 const APP_VERSION = "6.9.0";
 const APP_SHELL = [
   "./",
@@ -11,8 +11,8 @@ const APP_SHELL = [
   "./i18n.js?v=6.9.0-audit1",
   "./i18n-layout-fix.js?v=6.9.0-audit1",
   "./rtl-polish-v687.js?v=6.9.0-audit1",
-  "./lang-flag.js?v=6.9.0-audit1",
-  "./setup-lang-v688.js?v=6.9.0-audit1",
+  "./lang-flag.js?v=6.9.0-flags1",
+  "./setup-lang-v688.js?v=6.9.0-flags1",
   "./budget-labels-v689.js?v=6.9.0-audit1",
   "./i18n-audit-v690.js?v=6.9.0-audit1",
   "./manifest.webmanifest?v=6.9.0",
@@ -53,8 +53,8 @@ async function upgradeHtml(response) {
     ["i18n.js", "./i18n.js?v=6.9.0-audit1"],
     ["i18n-layout-fix.js", "./i18n-layout-fix.js?v=6.9.0-audit1"],
     ["rtl-polish-v687.js", "./rtl-polish-v687.js?v=6.9.0-audit1"],
-    ["lang-flag.js", "./lang-flag.js?v=6.9.0-audit1"],
-    ["setup-lang-v688.js", "./setup-lang-v688.js?v=6.9.0-audit1"],
+    ["lang-flag.js", "./lang-flag.js?v=6.9.0-flags1"],
+    ["setup-lang-v688.js", "./setup-lang-v688.js?v=6.9.0-flags1"],
     ["budget-labels-v689.js", "./budget-labels-v689.js?v=6.9.0-audit1"],
     ["i18n-audit-v690.js", "./i18n-audit-v690.js?v=6.9.0-audit1"]
   ];
@@ -70,7 +70,7 @@ async function upgradeAppJs(response) {
   if (!response || !response.ok) return response;
   let js = await response.text();
   js = js.replace('const APP_VERSION = "6.8.3";', `const APP_VERSION = "${APP_VERSION}";`);
-  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.9.0-i18n-audit1");
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.9.0-flags1");
 
   const headers = new Headers(response.headers);
   headers.delete("content-length");
