@@ -4942,7 +4942,50 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   setupDateDisplays();
   initDates();
-  initializePersistentStorage(legacySeedState);
+
+  let storageBootWatchdogAttempts = 0;
+
+  function startStorageBoot() {
+    initializePersistentStorage(legacySeedState);
+
+    window.setTimeout(() => {
+      const boot = $("storageBoot");
+      if (!boot || boot.classList.contains("hidden") || boot.classList.contains("leaving")) return;
+
+      const card = boot.querySelector(".storage-boot-card");
+      const status = card?.querySelector("span");
+      if (status) status.textContent = storageBootWatchdogAttempts
+        ? "Local trip storage is still busy. Tap Retry."
+        : "Local trip storage is taking longer than expected…";
+
+      let retry = document.getElementById("storageBootRetry");
+      if (!retry && card) {
+        retry = document.createElement("button");
+        retry.id = "storageBootRetry";
+        retry.type = "button";
+        retry.textContent = "Retry";
+        retry.style.cssText = "margin-top:14px;border:0;border-radius:12px;padding:11px 18px;background:#1677ff;color:#fff;font:700 15px system-ui;";
+        card.append(retry);
+      }
+
+      if (retry) {
+        retry.disabled = false;
+        retry.onclick = () => {
+          retry.disabled = true;
+          if (status) status.textContent = "Retrying your trip…";
+          storageBootWatchdogAttempts += 1;
+          startStorageBoot();
+        };
+      }
+
+      if (storageBootWatchdogAttempts < 1) {
+        storageBootWatchdogAttempts += 1;
+        window.setTimeout(startStorageBoot, 500);
+      }
+    }, 6000);
+  }
+
+  startStorageBoot();
 
   // Flush the most recent in-memory state when iOS backgrounds the PWA.
   document.addEventListener("visibilitychange", () => {
@@ -5158,7 +5201,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.8.2", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.8.2-pwa3", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

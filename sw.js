@@ -1,10 +1,10 @@
-const CACHE = "tripspend-v6.8.2-boot-recovery1";
+const CACHE = "tripspend-v6.8.2-home-recovery3";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css?v=6.8.2",
   "./dashboard.css?v=6.8.2",
-  "./app.js?v=6.8.2",
+  "./app.js?v=6.8.2-pwa3",
   "./fx.js?v=6.8.2",
   "./v5.js?v=6.8.2",
   "./ai.js?v=6.8.2",
