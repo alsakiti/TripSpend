@@ -1,0 +1,44 @@
+name: Emergency TripSpend boot recovery
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  recover:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Disable i18n startup and refresh cache
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text()
+          s = s.replace('<script src="i18n.js?v=6.8.2-hotfix1"></script>\n', '')
+          s = s.replace('<script src="i18n.js?v=6.8.2"></script>\n', '')
+          p.write_text(s)
+
+          p = Path('sw.js')
+          s = p.read_text()
+          import re
+          s = re.sub(r'const CACHE = "[^"]+";', 'const CACHE = "tripspend-v6.8.2-boot-recovery1";', s, count=1)
+          s = s.replace('  "./i18n.js?v=6.8.2-hotfix1",\n', '')
+          s = s.replace('  "./i18n.js?v=6.8.2",\n', '')
+          p.write_text(s)
+          PY
+
+          node --check app.js
+          node --check ai.js
+          node --check sw.js
+
+          git config user.name "TripSpend Recovery"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/emergency-v682-boot-recovery.yml
+          git add index.html sw.js
+          git commit -m "Emergency recovery: disable i18n startup"
+          git push origin HEAD:main
