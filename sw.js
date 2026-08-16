@@ -74,7 +74,10 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (request.mode === "navigate" || url.pathname.endsWith("/version.json")) {
+  const isVersion = url.pathname.endsWith("/version.json");
+  const isAiConfig = url.pathname.endsWith("/ai-config.json");
+
+  if (request.mode === "navigate" || isVersion || isAiConfig) {
     event.respondWith((async () => {
       try {
         const response = request.mode === "navigate"
@@ -93,7 +96,8 @@ self.addEventListener("fetch", event => {
           const cached = await caches.match("./index.html");
           return cached ? withTripSpendAI(cached) : new Response("TripSpend is unavailable offline.", { status: 503 });
         }
-        return caches.match("./version.json");
+        if (isVersion) return caches.match("./version.json");
+        return new Response("{}", { status: 503, headers: { "Content-Type": "application/json" } });
       }
     })());
     return;
