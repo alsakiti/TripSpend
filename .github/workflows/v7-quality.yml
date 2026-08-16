@@ -30,6 +30,8 @@ jobs:
           node --check ai-v684.js
           node --check sw.js
           node --check locale-v700.js
+          node --check setup-language-host-v700.js
+          node --check receipt-capability-v700.js
           node --check receipt-ai-v700.js
           node --input-type=module --check < worker/ai-worker.js
 
