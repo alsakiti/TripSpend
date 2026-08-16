@@ -1,15 +1,14 @@
-const CACHE = "tripspend-v6.8.3-manual1";
+const CACHE = "tripspend-v6.8.4-ai1";
+const APP_VERSION = "6.8.4";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.8.3",
-  "./dashboard.css?v=6.8.3",
-  "./app.js?v=6.8.3-manual1",
-  "./fx.js?v=6.8.3",
-  "./v5.js?v=6.8.3",
-  "./i18n.js?v=6.8.3-manual1",
-  "./ai.js?v=6.8.3",
-  "./manifest.webmanifest?v=6.8.3",
+  "./style.css?v=6.8.4",
+  "./dashboard.css?v=6.8.4",
+  "./fx.js?v=6.8.4",
+  "./v5.js?v=6.8.4",
+  "./ai-v684.js?v=6.8.4-ai1",
+  "./manifest.webmanifest?v=6.8.4",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -17,34 +16,35 @@ const APP_SHELL = [
   "./icons/icon-512.png"
 ];
 
-async function withTripSpendAI(response) {
-  if (!response || !response.ok) return response;
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("text/html")) return response;
-
-  const html = await response.text();
-  if (html.includes("ai.js?v=6.8.3")) {
-    return new Response(html, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    });
-  }
-
-  const injected = html.replace(
-    "</body>",
-    "<script src=\"./ai.js?v=6.8.3\"></script>\n</body>"
-  );
+function htmlResponse(response, html) {
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("content-type", "text/html; charset=utf-8");
   headers.set("cache-control", "no-store");
+  return new Response(html, { status: response.status, statusText: response.statusText, headers });
+}
 
-  return new Response(injected, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
+async function upgradeHtml(response) {
+  if (!response || !response.ok) return response;
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("text/html")) return response;
+  let html = await response.text();
+  html = html.replaceAll("v6.8.1", "v6.8.4").replaceAll("?v=6.8.1", "?v=6.8.4");
+  html = html.replace(/<script[^>]+ai\.js[^>]*><\/script>\s*/gi, "");
+  if (!html.includes("ai-v684.js")) html = html.replace("</body>", '<script src="./ai-v684.js?v=6.8.4-ai1"></script>\n</body>');
+  return htmlResponse(response, html);
+}
+
+async function upgradeAppJs(response) {
+  if (!response || !response.ok) return response;
+  let js = await response.text();
+  js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.4";');
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.4-ai1");
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.set("content-type", "text/javascript; charset=utf-8");
+  headers.set("cache-control", "no-store");
+  return new Response(js, { status: response.status, statusText: response.statusText, headers });
 }
 
 self.addEventListener("install", event => {
@@ -55,16 +55,8 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(
-      keys
-        .filter(key => key.startsWith("tripspend-") && key !== CACHE)
-        .map(key => caches.delete(key))
-    );
-
-    if (self.registration.navigationPreload) {
-      await self.registration.navigationPreload.enable().catch(() => {});
-    }
-
+    await Promise.all(keys.filter(k => k.startsWith("tripspend-") && k !== CACHE).map(k => caches.delete(k)));
+    if (self.registration.navigationPreload) await self.registration.navigationPreload.enable().catch(() => {});
     await self.clients.claim();
   })());
 });
@@ -77,40 +69,55 @@ self.addEventListener("fetch", event => {
 
   const isVersion = url.pathname.endsWith("/version.json");
   const isAiConfig = url.pathname.endsWith("/ai-config.json");
+  const isAppJs = url.pathname.endsWith("/app.js");
+  const isEnhancedAi = url.pathname.endsWith("/ai-v684.js");
 
-  if (request.mode === "navigate" || isVersion || isAiConfig) {
+  if (request.mode === "navigate") {
     event.respondWith((async () => {
       try {
-        const response = request.mode === "navigate"
-          ? ((await event.preloadResponse) || await fetch(request, { cache: "no-store" }))
-          : await fetch(request, { cache: "no-store" });
-
-        if (request.mode === "navigate" && response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put("./index.html", copy));
-          return withTripSpendAI(response);
-        }
-
-        return response;
+        const response = (await event.preloadResponse) || await fetch(request, { cache: "no-store" });
+        if (response.ok) caches.open(CACHE).then(cache => cache.put("./index.html", response.clone()));
+        return upgradeHtml(response);
       } catch {
-        if (request.mode === "navigate") {
-          const cached = await caches.match("./index.html");
-          return cached ? withTripSpendAI(cached) : new Response("TripSpend is unavailable offline.", { status: 503 });
-        }
-        if (isVersion) return caches.match("./version.json");
-        return new Response("{}", { status: 503, headers: { "Content-Type": "application/json" } });
+        const cached = await caches.match("./index.html");
+        return cached ? upgradeHtml(cached) : new Response("TripSpend is unavailable offline.", { status: 503 });
       }
     })());
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request).then(response => {
-      if (response && response.ok) {
-        const copy = response.clone();
-        caches.open(CACHE).then(cache => cache.put(request, copy));
+  if (isAppJs) {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(request, { cache: "no-store" });
+        const upgraded = await upgradeAppJs(response);
+        if (upgraded.ok) caches.open(CACHE).then(cache => cache.put(request, upgraded.clone()));
+        return upgraded;
+      } catch {
+        const cached = await caches.match(request);
+        return cached || new Response("", { status: 503 });
       }
-      return response;
-    }))
-  );
+    })());
+    return;
+  }
+
+  if (isVersion || isAiConfig || isEnhancedAi) {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(request, { cache: "no-store" });
+        if (response.ok && isEnhancedAi) caches.open(CACHE).then(cache => cache.put(request, response.clone()));
+        return response;
+      } catch {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        return new Response(isAiConfig ? "{}" : "", { status: 503, headers: isAiConfig ? { "Content-Type": "application/json" } : {} });
+      }
+    })());
+    return;
+  }
+
+  event.respondWith(caches.match(request).then(cached => cached || fetch(request).then(response => {
+    if (response && response.ok) caches.open(CACHE).then(cache => cache.put(request, response.clone()));
+    return response;
+  })));
 });
