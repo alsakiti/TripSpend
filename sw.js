@@ -1,12 +1,12 @@
-const CACHE = "tripspend-v6.9.0-flags1";
-const APP_VERSION = "6.9.0";
+const CACHE = "tripspend-v6.9.1-expense1";
+const APP_VERSION = "6.9.1";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.9.0",
-  "./dashboard.css?v=6.9.0",
-  "./fx.js?v=6.9.0",
-  "./v5.js?v=6.9.0",
+  "./style.css?v=6.9.1",
+  "./dashboard.css?v=6.9.1",
+  "./fx.js?v=6.9.1",
+  "./v5.js?v=6.9.1",
   "./ai-v684.js?v=6.8.4-ai3",
   "./i18n.js?v=6.9.0-audit1",
   "./i18n-layout-fix.js?v=6.9.0-audit1",
@@ -15,7 +15,8 @@ const APP_SHELL = [
   "./setup-lang-v688.js?v=6.9.0-flags1",
   "./budget-labels-v689.js?v=6.9.0-audit1",
   "./i18n-audit-v690.js?v=6.9.0-audit1",
-  "./manifest.webmanifest?v=6.9.0",
+  "./expense-ar-v691.js?v=6.9.1-expense1",
+  "./manifest.webmanifest?v=6.9.1",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -56,7 +57,8 @@ async function upgradeHtml(response) {
     ["lang-flag.js", "./lang-flag.js?v=6.9.0-flags1"],
     ["setup-lang-v688.js", "./setup-lang-v688.js?v=6.9.0-flags1"],
     ["budget-labels-v689.js", "./budget-labels-v689.js?v=6.9.0-audit1"],
-    ["i18n-audit-v690.js", "./i18n-audit-v690.js?v=6.9.0-audit1"]
+    ["i18n-audit-v690.js", "./i18n-audit-v690.js?v=6.9.0-audit1"],
+    ["expense-ar-v691.js", "./expense-ar-v691.js?v=6.9.1-expense1"]
   ];
 
   for (const [marker, src] of languageScripts) {
@@ -70,7 +72,7 @@ async function upgradeAppJs(response) {
   if (!response || !response.ok) return response;
   let js = await response.text();
   js = js.replace('const APP_VERSION = "6.8.3";', `const APP_VERSION = "${APP_VERSION}";`);
-  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.9.0-flags1");
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.9.1-expense1");
 
   const headers = new Headers(response.headers);
   headers.delete("content-length");
@@ -110,7 +112,8 @@ self.addEventListener("fetch", event => {
     url.pathname.endsWith("/lang-flag.js") ||
     url.pathname.endsWith("/setup-lang-v688.js") ||
     url.pathname.endsWith("/budget-labels-v689.js") ||
-    url.pathname.endsWith("/i18n-audit-v690.js");
+    url.pathname.endsWith("/i18n-audit-v690.js") ||
+    url.pathname.endsWith("/expense-ar-v691.js");
 
   if (request.mode === "navigate") {
     event.respondWith((async () => {
