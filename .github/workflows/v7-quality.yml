@@ -35,6 +35,7 @@ jobs:
           node --check receipt-capability-v700.js
           node --check receipt-ai-v700.js
           node --input-type=module --check < worker/ai-worker.js
+          node --input-type=module --check < worker/ai-worker-v701.js
 
       - name: Release consistency checks
         run: node tests/static-check.mjs
