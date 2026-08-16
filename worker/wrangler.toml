@@ -1,0 +1,19 @@
+name = "tripspend-ai"
+main = "ai-worker.js"
+compatibility_date = "2026-08-16"
+
+[vars]
+ALLOWED_ORIGIN = "https://alsakiti.github.io"
+
+[ai]
+binding = "AI"
+
+# Protect TripSpend AI: 30 requests per client/trip per 60 seconds.
+# namespace_id must be a positive integer unique within the Cloudflare account.
+[[ratelimits]]
+name = "AI_RATE_LIMITER"
+namespace_id = "7001"
+
+[ratelimits.simple]
+limit = 30
+period = 60
