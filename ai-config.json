@@ -1,4 +1,4 @@
 {
   "endpoint": "https://tripspend-ai.alsukaiti1998.workers.dev",
-  "enabledProviders": ["openai"]
+  "enabledProviders": ["cloudflare"]
 }
