@@ -1,4 +1,4 @@
-const CACHE = "tripspend-v6.8.4-ai1";
+const CACHE = "tripspend-v6.8.4-ai2";
 const APP_VERSION = "6.8.4";
 const APP_SHELL = [
   "./",
@@ -7,7 +7,7 @@ const APP_SHELL = [
   "./dashboard.css?v=6.8.4",
   "./fx.js?v=6.8.4",
   "./v5.js?v=6.8.4",
-  "./ai-v684.js?v=6.8.4-ai1",
+  "./ai-v684.js?v=6.8.4-ai2",
   "./manifest.webmanifest?v=6.8.4",
   "./version.json",
   "./icons/icon-96.png",
@@ -31,7 +31,10 @@ async function upgradeHtml(response) {
   let html = await response.text();
   html = html.replaceAll("v6.8.1", "v6.8.4").replaceAll("?v=6.8.1", "?v=6.8.4");
   html = html.replace(/<script[^>]+ai\.js[^>]*><\/script>\s*/gi, "");
-  if (!html.includes("ai-v684.js")) html = html.replace("</body>", '<script src="./ai-v684.js?v=6.8.4-ai1"></script>\n</body>');
+  if (!html.includes("ai-v684.js")) {
+    const aiBoot = `<script>window.__tsNativeMO=window.MutationObserver;window.MutationObserver=class{observe(){}disconnect(){}takeRecords(){return[]}}</script>\n<script src="./ai-v684.js?v=6.8.4-ai2"></script>\n<script>window.MutationObserver=window.__tsNativeMO;delete window.__tsNativeMO</script>\n`;
+    html = html.replace("</body>", aiBoot + "</body>");
+  }
   return htmlResponse(response, html);
 }
 
@@ -39,7 +42,7 @@ async function upgradeAppJs(response) {
   if (!response || !response.ok) return response;
   let js = await response.text();
   js = js.replace('const APP_VERSION = "6.8.3";', 'const APP_VERSION = "6.8.4";');
-  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.4-ai1");
+  js = js.replace(/\.\/sw\.js\?v=[^"']+/g, "./sw.js?v=6.8.4-ai2");
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.set("content-type", "text/javascript; charset=utf-8");
