@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.8.2";
+  const APP_VERSION = "6.8.3";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -1273,6 +1273,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     }
   }
 
+  const STORAGE_TIMEOUT_MS = 5500;
+
+  function storageTimeoutError(label) {
+    const error = new Error(`${label} timed out`);
+    error.name = "StorageTimeoutError";
+    return error;
+  }
+
   function openStorageDB() {
     return new Promise((resolve, reject) => {
       if (!("indexedDB" in window)) {
@@ -1280,7 +1288,20 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         return;
       }
 
+      let settled = false;
       const request = indexedDB.open(DB_NAME, DB_VERSION);
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(storageTimeoutError("IndexedDB open"));
+      }, STORAGE_TIMEOUT_MS);
+
+      const fail = error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      };
 
       request.onupgradeneeded = () => {
         const db = request.result;
@@ -1303,24 +1324,68 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         }
       };
 
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error("IndexedDB failed"));
-      request.onblocked = () => reject(new Error("IndexedDB blocked"));
+      request.onsuccess = () => {
+        const db = request.result;
+        if (settled) {
+          try { db.close(); } catch {}
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        resolve(db);
+      };
+      request.onerror = () => fail(request.error || new Error("IndexedDB failed"));
+      request.onblocked = () => fail(new Error("IndexedDB blocked"));
     });
   }
 
   function idbRequest(request) {
     return new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error("Storage request failed"));
+      let settled = false;
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(storageTimeoutError("Storage request"));
+      }, STORAGE_TIMEOUT_MS);
+
+      request.onsuccess = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(request.result);
+      };
+      request.onerror = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(request.error || new Error("Storage request failed"));
+      };
     });
   }
 
   function txComplete(tx) {
     return new Promise((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error || new Error("Storage transaction failed"));
-      tx.onabort = () => reject(tx.error || new Error("Storage transaction aborted"));
+      let settled = false;
+      const timer = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(storageTimeoutError("Storage transaction"));
+      }, STORAGE_TIMEOUT_MS);
+
+      tx.oncomplete = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const fail = error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      };
+      tx.onerror = () => fail(tx.error || new Error("Storage transaction failed"));
+      tx.onabort = () => fail(tx.error || new Error("Storage transaction aborted"));
     });
   }
 
@@ -1793,20 +1858,64 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       }
 
       storageMode = "indexeddb";
-      storagePersistent = await requestPersistentStorage();
+      storagePersistent = false;
 
-      await idbWriteMeta("storageVersion", 1);
-      await idbWriteMeta("lastAppVersion", APP_VERSION);
+      // Do not hold the Home Screen app on its loading screen while iOS
+      // evaluates persistence or writes non-essential metadata. The trip
+      // state is already loaded at this point.
+      requestPersistentStorage()
+        .then(value => {
+          storagePersistent = !!value;
+          renderStoragePanel();
+        })
+        .catch(() => {});
+
+      idbWriteMeta("storageVersion", 1).catch(() => {});
+      idbWriteMeta("lastAppVersion", APP_VERSION).catch(() => {});
 
       // Once IndexedDB is confirmed, remove the old full-state copy.
       localStorage.removeItem(KEY);
-    } catch {
-      storageMode = "localStorage";
+    } catch (error) {
+      try { storageDB?.close?.(); } catch {}
       storageDB = null;
-      state = normalizeState(legacyState || blank());
-      try {
-        localStorage.setItem(KEY, JSON.stringify(state));
-      } catch {}
+      const fallback = normalizeState(legacyState || blank());
+
+      if (error?.name === "StorageTimeoutError" && !meaningfulState(fallback)) {
+        storageMode = "recovery";
+        state = fallback;
+        applyAppearance(state.preferences?.appearance || "system");
+
+        if (boot) {
+          const card = boot.querySelector(".storage-boot-card");
+          const status = card?.querySelector("span");
+          if (status) status.textContent = "Trip storage is not responding. Your saved data has not been deleted.";
+
+          let retry = document.getElementById("storageBootRetry");
+          if (!retry && card) {
+            retry = document.createElement("button");
+            retry.id = "storageBootRetry";
+            retry.type = "button";
+            retry.textContent = "Retry";
+            retry.style.cssText = "margin-top:14px;border:0;border-radius:12px;padding:11px 18px;background:#1677ff;color:#fff;font:700 15px system-ui;";
+            card.append(retry);
+          }
+          if (retry) {
+            retry.disabled = false;
+            retry.onclick = () => {
+              retry.disabled = true;
+              if (status) status.textContent = "Retrying your trip…";
+              initializePersistentStorage(loadLegacyState());
+            };
+          }
+        }
+        return;
+      }
+
+      storageMode = "localStorage";
+      state = fallback;
+      if (meaningfulState(state)) {
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+      }
     }
 
     applyAppearance(state.preferences?.appearance || "system");
@@ -4943,49 +5052,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   setupDateDisplays();
   initDates();
 
-  let storageBootWatchdogAttempts = 0;
-
-  function startStorageBoot() {
-    initializePersistentStorage(legacySeedState);
-
-    window.setTimeout(() => {
-      const boot = $("storageBoot");
-      if (!boot || boot.classList.contains("hidden") || boot.classList.contains("leaving")) return;
-
-      const card = boot.querySelector(".storage-boot-card");
-      const status = card?.querySelector("span");
-      if (status) status.textContent = storageBootWatchdogAttempts
-        ? "Local trip storage is still busy. Tap Retry."
-        : "Local trip storage is taking longer than expected…";
-
-      let retry = document.getElementById("storageBootRetry");
-      if (!retry && card) {
-        retry = document.createElement("button");
-        retry.id = "storageBootRetry";
-        retry.type = "button";
-        retry.textContent = "Retry";
-        retry.style.cssText = "margin-top:14px;border:0;border-radius:12px;padding:11px 18px;background:#1677ff;color:#fff;font:700 15px system-ui;";
-        card.append(retry);
-      }
-
-      if (retry) {
-        retry.disabled = false;
-        retry.onclick = () => {
-          retry.disabled = true;
-          if (status) status.textContent = "Retrying your trip…";
-          storageBootWatchdogAttempts += 1;
-          startStorageBoot();
-        };
-      }
-
-      if (storageBootWatchdogAttempts < 1) {
-        storageBootWatchdogAttempts += 1;
-        window.setTimeout(startStorageBoot, 500);
-      }
-    }, 6000);
-  }
-
-  startStorageBoot();
+  initializePersistentStorage(legacySeedState);
 
   // Flush the most recent in-memory state when iOS backgrounds the PWA.
   document.addEventListener("visibilitychange", () => {
@@ -5201,7 +5268,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.8.2-pwa3", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=6.8.3-manual1", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

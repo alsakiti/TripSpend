@@ -1,22 +1,25 @@
-TripSpend v6.8.1 update
+TripSpend v6.8.3 — MANUAL GITHUB UPLOAD
 
-1. Extract TripSpend-v6.8.1-update.zip.
-2. Upload EVERYTHING inside it to the root of your TripSpend GitHub repository.
-3. Replace existing files and commit.
-4. IMPORTANT: Open Cloudflare > Workers & Pages > tripspend-ai > Edit code.
-5. Replace the Worker code with worker/ai-worker.js from this package and Deploy.
-6. Keep the Workers AI binding named AI and ALLOWED_ORIGIN=https://alsakiti.github.io.
-7. Wait about 1–2 minutes for GitHub Pages.
-8. Completely close TripSpend and reopen it while online.
-9. Confirm the badge says v6.8.1.
-10. Tap the AI button and try: “Add 12 OMR dinner today.” TripSpend must show a confirmation card before saving.
+1. Unzip this file on your phone/computer.
+2. Open your GitHub repository: alsakiti/TripSpend.
+3. Make sure you are on the main branch and at the ROOT of the repository.
+4. Choose Add file -> Upload files.
+5. Upload the FILES INSIDE this folder (and the icons folder), replacing matching files.
+6. Commit the upload to main.
+7. Wait for GitHub Pages deployment to finish.
+8. Fully close the TripSpend Home Screen app and open it again while online.
 
-What changed:
-- TripSpend AI can prepare and confirm adds/edits for expenses
-- AI can prepare and confirm itinerary changes
-- AI can add/edit planned costs
-- AI can change trip and country budgets
-- Every write requires explicit user confirmation
-- No AI delete actions in v6.8.1
-- Receipt images, backups and past trips are still excluded from AI context
-- Existing v6.8.0 dashboard, FX, storage and trip data are preserved
+IMPORTANT:
+- Do NOT clear Safari/site data.
+- Do NOT delete the Home Screen app while recovering local trip data.
+- This package does NOT deploy or change your Cloudflare Worker. Your existing Worker remains separate.
+
+INCLUDED IN v6.8.3:
+- English / Arabic dashboard language switch.
+- Arabic RTL layout and expanded Arabic UI translations.
+- Arabic-capable TripSpend AI UI (the Cloudflare Worker must also support Arabic).
+- Expanded AI action client: add/edit/delete expenses, plans, itinerary, travelers, countries, settlements, trip edits, budgets, and undo.
+- Confirmation remains required before AI changes are saved.
+- iPhone AI input stays at 16px to prevent Safari focus zoom.
+- Home Screen startup protection: IndexedDB operations now time out safely instead of leaving the app on “Loading your trip…” forever.
+- If Home Screen storage does not respond, TripSpend shows a Retry option without deleting the database.

@@ -1,14 +1,15 @@
-const CACHE = "tripspend-v6.8.2-home-recovery3";
+const CACHE = "tripspend-v6.8.3-manual1";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=6.8.2",
-  "./dashboard.css?v=6.8.2",
-  "./app.js?v=6.8.2-pwa3",
-  "./fx.js?v=6.8.2",
-  "./v5.js?v=6.8.2",
-  "./ai.js?v=6.8.2",
-  "./manifest.webmanifest?v=6.8.2",
+  "./style.css?v=6.8.3",
+  "./dashboard.css?v=6.8.3",
+  "./app.js?v=6.8.3-manual1",
+  "./fx.js?v=6.8.3",
+  "./v5.js?v=6.8.3",
+  "./i18n.js?v=6.8.3-manual1",
+  "./ai.js?v=6.8.3",
+  "./manifest.webmanifest?v=6.8.3",
   "./version.json",
   "./icons/icon-96.png",
   "./icons/icon-180.png",
@@ -22,7 +23,7 @@ async function withTripSpendAI(response) {
   if (!contentType.includes("text/html")) return response;
 
   const html = await response.text();
-  if (html.includes("ai.js?v=6.8.2")) {
+  if (html.includes("ai.js?v=6.8.3")) {
     return new Response(html, {
       status: response.status,
       statusText: response.statusText,
@@ -32,7 +33,7 @@ async function withTripSpendAI(response) {
 
   const injected = html.replace(
     "</body>",
-    "<script src=\"./ai.js?v=6.8.2\"></script>\n</body>"
+    "<script src=\"./ai.js?v=6.8.3\"></script>\n</body>"
   );
   const headers = new Headers(response.headers);
   headers.delete("content-length");
