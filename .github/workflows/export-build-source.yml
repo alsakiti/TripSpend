@@ -1,0 +1,40 @@
+name: Export TripSpend Build Source
+
+on:
+  push:
+    branches:
+      - build/v6.8.1-artifacts
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact branch source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Verify source revision
+        run: |
+          echo "SOURCE_SHA=$(git rev-parse HEAD)"
+          test -f app.js
+          test -f ai.js
+          test -f worker/ai-worker.js
+
+      - name: Prepare clean source folder
+        run: |
+          mkdir -p /tmp/tripspend-source
+          rsync -a --exclude='.git' --exclude='.github' ./ /tmp/tripspend-source/
+
+      - name: Upload exact source
+        uses: actions/upload-artifact@v4
+        with:
+          name: tripspend-source
+          path: /tmp/tripspend-source
+          include-hidden-files: false
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 1
