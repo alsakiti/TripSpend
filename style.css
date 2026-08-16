@@ -103,7 +103,6 @@
   .person-row-actions{grid-column:2}
   .people-summary-card{grid-template-columns:1fr}
 }
-
 @media(prefers-color-scheme:dark){
   :root{--accent:#1677ff;--accent2:#2d8cff}
   .primary,.small-primary,.nav-add{color:#fff}

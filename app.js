@@ -41,6 +41,7 @@
   let expenseCountryFilterSignature = "";
   let expenseSearchTimer = 0;
   let homeBudgetDetailsOpen = false;
+  let dashboardWelcomeTimer = 0;
 
 
   const KEY = "tripspend.v1";
@@ -2328,6 +2329,31 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       day: "numeric"
     }).toUpperCase();
     greeting.textContent = `${dayPart}${state.trip?.name ? `, ${state.trip.name}` : ""}`;
+    scheduleDashboardWelcomeRefresh(now);
+  }
+
+  function scheduleDashboardWelcomeRefresh(now = new Date()) {
+    clearTimeout(dashboardWelcomeTimer);
+    if (document.hidden || !state.trip) return;
+
+    const nextBoundary = new Date(now);
+    if (now.getHours() < 12) {
+      nextBoundary.setHours(12, 0, 0, 0);
+    } else if (now.getHours() < 18) {
+      nextBoundary.setHours(18, 0, 0, 0);
+    } else {
+      nextBoundary.setDate(nextBoundary.getDate() + 1);
+      nextBoundary.setHours(0, 0, 0, 0);
+    }
+
+    dashboardWelcomeTimer = window.setTimeout(
+      renderDashboardWelcome,
+      Math.max(1000, nextBoundary.getTime() - now.getTime() + 50)
+    );
+  }
+
+  function refreshDashboardWelcome() {
+    if (!document.hidden && state.trip) renderDashboardWelcome();
   }
 
   function toHome(amount, currency, rate) {
@@ -4923,7 +4949,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if (document.hidden && storageMode === "indexeddb" && pendingStorageSnapshot) {
       flushPendingSave();
     }
+    if (document.hidden) {
+      clearTimeout(dashboardWelcomeTimer);
+    } else {
+      refreshDashboardWelcome();
+    }
   });
+
+  window.addEventListener("focus", refreshDashboardWelcome);
 
   window.addEventListener("pagehide", () => {
     if (storageMode === "indexeddb" && pendingStorageSnapshot) {
