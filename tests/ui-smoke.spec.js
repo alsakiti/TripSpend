@@ -48,7 +48,17 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.3");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.4");
+}
+
+async function openPageByEnglishLabel(page, label) {
+  const clicked = await page.evaluate(text => {
+    const candidates = [...document.querySelectorAll("button,a")];
+    const target = candidates.find(el => el.textContent.trim() === text);
+    target?.click();
+    return !!target;
+  }, label);
+  expect(clicked).toBeTruthy();
 }
 
 test("setup screen is bilingual, RTL-safe and keeps Arabic flag on the left", async ({ page }) => {
@@ -123,13 +133,7 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   await bootV7(page);
   await page.waitForSelector("#mainView:not(.hidden)");
 
-  const clicked = await page.evaluate(() => {
-    const candidates = [...document.querySelectorAll("button,a")];
-    const target = candidates.find(el => el.textContent.trim() === "Expenses");
-    target?.click();
-    return !!target;
-  });
-  expect(clicked).toBeTruthy();
+  await openPageByEnglishLabel(page, "Expenses");
 
   await visibleLanguageButton(page).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
@@ -187,4 +191,64 @@ test("Arabic Add Expense sheet fully localizes static and dynamic copy", async (
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
   await page.screenshot({ path:"test-results/add-expense-ar.png", fullPage:true });
+});
+
+test("Arabic Plan page localizes planner, progress and empty itinerary", async ({ page }) => {
+  await seedTrip(page);
+  await bootV7(page);
+  await page.waitForSelector("#mainView:not(.hidden)");
+  await openPageByEnglishLabel(page, "Plan");
+  await expect(page.locator("#plan")).toHaveClass(/active/);
+
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await page.waitForTimeout(300);
+
+  let planText = await page.locator("#plan").innerText();
+  for (const arabic of ["مخطط الرحلة","رحلتك","تقدم الرحلة","القادم","الملتزم به","التكاليف","يبدأ برنامج رحلتك من هنا","إضافة أول عنصر"]) {
+    expect(planText).toContain(arabic);
+  }
+  for (const english of ["TRIP PLANNER","Your trip","TRIP PROGRESS","Upcoming","Committed","Costs","Your itinerary starts here","Add first item"]) {
+    expect(planText).not.toContain(english);
+  }
+  await page.screenshot({ path:"test-results/plan-ar.png", fullPage:true });
+
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await page.waitForTimeout(200);
+  planText = await page.locator("#plan").innerText();
+  expect(planText).toContain("TRIP PLANNER");
+  expect(planText).toContain("TRIP PROGRESS");
+  expect(planText).toContain("Your itinerary starts here");
+});
+
+test("Arabic Analytics page localizes summary, categories and settlements", async ({ page }) => {
+  await seedTrip(page);
+  await bootV7(page);
+  await page.waitForSelector("#mainView:not(.hidden)");
+  await openPageByEnglishLabel(page, "Analytics");
+  await expect(page.locator("#analytics")).toHaveClass(/active/);
+
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await page.waitForTimeout(350);
+
+  let analyticsText = await page.locator("#analytics").innerText();
+  for (const arabic of ["إنفاق الرحلة","إجمالي المصروف","أعلى فئة","متوسط المصروف","أين ذهبت أموالك","الطعام","من يدين لمن","سجل التسويات","مزيد من التحليلات"]) {
+    expect(analyticsText).toContain(arabic);
+  }
+  for (const english of ["Trip spending","TOTAL SPENT","Top category","Avg expense","Where your money went","Who owes whom","Settlement history","MORE INSIGHTS"]) {
+    expect(analyticsText).not.toContain(english);
+  }
+  expect(analyticsText).not.toMatch(/\bFood\b/);
+  expect(analyticsText).not.toContain("On pace");
+  await page.screenshot({ path:"test-results/analytics-ar.png", fullPage:true });
+
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await page.waitForTimeout(200);
+  analyticsText = await page.locator("#analytics").innerText();
+  expect(analyticsText).toContain("Trip spending");
+  expect(analyticsText).toContain("TOTAL SPENT");
+  expect(analyticsText).toContain("Where your money went");
 });
