@@ -1,5 +1,5 @@
 name = "tripspend-ai"
-main = "ai-worker-v702.js"
+main = "ai-worker-v703.js"
 compatibility_date = "2026-08-16"
 
 [vars]
