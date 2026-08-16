@@ -1,18 +1,18 @@
 (() => {
   "use strict";
 
-  const FLAG = { en: "🇬🇧", ar: "🇴🇲" };
+  const LABEL = { en: "EN", ar: "AR" };
   let mounted = false;
 
   function currentLanguage() {
     return window.TripSpendI18n?.language?.() === "ar" ? "ar" : "en";
   }
 
-  function updateFlag() {
+  function updateLabel() {
     const button = document.getElementById("languageToggle");
     if (!button) return false;
     const lang = currentLanguage();
-    button.textContent = FLAG[lang];
+    button.textContent = LABEL[lang];
     button.setAttribute("aria-label", lang === "ar" ? "Switch to English" : "التبديل إلى العربية");
     button.setAttribute("title", lang === "ar" ? "English" : "العربية");
     return true;
@@ -35,7 +35,8 @@
           border-radius:14px;background:rgba(255,255,255,.78);
           -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
           box-shadow:0 6px 18px rgba(25,40,70,.08);
-          font-size:23px;line-height:1;cursor:pointer;
+          font-size:14px;font-weight:800;letter-spacing:.02em;line-height:1;cursor:pointer;
+          direction:ltr!important;unicode-bidi:isolate!important;
           -webkit-tap-highlight-color:transparent;
         }
         #languageToggle.language-toggle:active{transform:scale(.95)}
@@ -47,7 +48,7 @@
     }
 
     if (button.parentElement !== topbar) topbar.appendChild(button);
-    updateFlag();
+    updateLabel();
     mounted = true;
     return true;
   }
@@ -63,7 +64,7 @@
 
   window.addEventListener("tripspend:language", () => {
     if (!mounted) mount();
-    updateFlag();
+    updateLabel();
   });
 
   if (document.readyState === "loading") {
