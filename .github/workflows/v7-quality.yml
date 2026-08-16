@@ -1,0 +1,58 @@
+name: TripSpend Quality
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+
+      - name: JavaScript syntax checks
+        run: |
+          node --check app.js
+          node --check v5.js
+          node --check fx.js
+          node --check ai-v684.js
+          node --check sw.js
+          node --check locale-v700.js
+          node --check receipt-ai-v700.js
+          node --input-type=module --check < worker/ai-worker.js
+
+      - name: Release consistency checks
+        run: node tests/static-check.mjs
+
+      - name: Install Playwright
+        run: npm install --no-save @playwright/test@1.62.0
+
+      - name: Install Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run UI smoke tests
+        run: npx playwright test --workers=1
+        env:
+          CI: "true"
+
+      - name: Upload UI report and screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: tripspend-ui-quality
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
