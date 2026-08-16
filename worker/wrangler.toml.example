@@ -1,0 +1,9 @@
+name = "tripspend-ai"
+main = "ai-worker.js"
+compatibility_date = "2026-08-16"
+
+[vars]
+ALLOWED_ORIGIN = "https://alsakiti.github.io"
+
+[ai]
+binding = "AI"
