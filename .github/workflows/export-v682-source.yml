@@ -1,0 +1,22 @@
+name: Export TripSpend v6.8.2 Source
+
+on:
+  push:
+    branches:
+      - build/v6.8.2-source
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare source
+        run: |
+          rm -rf .git
+          rm -f .github/workflows/export-v682-source.yml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tripspend-v682-source
+          path: .
+          include-hidden-files: true
+          retention-days: 1
