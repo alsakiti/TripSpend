@@ -74,13 +74,21 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
 
   await visibleLanguageButton(page).click();
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await page.waitForTimeout(150);
+  await page.waitForTimeout(250);
+
+  await expect(page.locator("#pageAdd")).toContainText("إضافة");
+  await expect(page.locator("#headerSub")).toContainText("ألمانيا");
+  await expect(page.locator("#expenseSummary")).toContainText("مصروف");
 
   const visibleText = await page.locator("body").innerText();
   expect(visibleText).toContain("المصروفات");
   expect(visibleText).toContain("عشاء");
   expect(visibleText).toContain("الطعام");
+  expect(visibleText).toContain("تكرار");
   expect(visibleText).not.toContain("Paid by Me");
+  expect(visibleText).not.toContain("Germany");
+  expect(visibleText).not.toMatch(/\bRepeat\b/);
+  expect(visibleText).not.toMatch(/\b1 expense\b/);
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
