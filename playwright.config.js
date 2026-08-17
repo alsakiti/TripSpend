@@ -2,7 +2,7 @@ const { defineConfig } = require("@playwright/test");
 
 module.exports = defineConfig({
   testDir: "./tests",
-  testMatch: "**/ui-smoke.spec.js",
+  testMatch: "**/*.spec.js",
   timeout: 45000,
   expect: { timeout: 8000 },
   workers: process.env.CI ? 1 : undefined,
