@@ -10,7 +10,11 @@ async function bootV7(page) {
     }
   });
   await page.reload();
-  await page.waitForSelector(".ts-setup-stage, #mainView:not(.hidden)");
+  await page.waitForFunction(() => {
+    const main = document.querySelector("#mainView:not(.hidden)");
+    const setup = document.querySelector("#setupView:not(.hidden) .ts-setup-stage");
+    return !!(main || setup);
+  });
 }
 
 function seedTripState() {
@@ -43,7 +47,6 @@ test("new trip setup uses the premium 3-step onboarding and final preview", asyn
   await page.locator("#destination").fill("Germany");
   await page.locator("#startDate").fill("2026-08-12");
   await page.locator("#endDate").fill("2026-08-22");
-  await page.locator("#tripCurrency").selectOption("EUR");
   await page.locator("#tsSetupNext").click();
 
   await expect(page.locator('.ts-setup-panel[data-setup-step="2"]')).toBeVisible();
@@ -56,6 +59,7 @@ test("new trip setup uses the premium 3-step onboarding and final preview", asyn
   await page.locator("#budget").fill("1000");
   await page.locator("#ownerName").fill("Me");
   await page.locator("#homeCurrency").selectOption("OMR");
+  await page.locator("#tripCurrency").selectOption("EUR");
   await page.locator("#setupDefaultPayment").selectOption("Apple Pay");
   await page.locator("#tsSetupNext").click();
 
@@ -71,8 +75,7 @@ test("new trip setup uses the premium 3-step onboarding and final preview", asyn
 
   await page.locator('.ts-setup-panel[data-setup-step="4"] button[type="submit"]').click();
   await page.waitForSelector("#mainView:not(.hidden)");
-  const payment = await page.evaluate(() => window.TripSpendCore?.getState?.().trip?.defaultPayment);
-  expect(payment).toBe("Apple Pay");
+  await expect.poll(() => page.evaluate(() => window.TripSpendCore?.getState?.().trip?.defaultPayment)).toBe("Apple Pay");
 });
 
 test("More Insights button truly collapses and expands the Analytics cards", async ({ page }) => {
