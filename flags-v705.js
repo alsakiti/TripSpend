@@ -4,6 +4,7 @@
   const RELEASE = "7.0.5";
   const FLAG_RE = /[\u{1F1E6}-\u{1F1FF}]{2}/gu;
   const CDN_BASE = "https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/flags/4x3";
+  const WINDOWS_RE = /Windows NT/i;
   let scheduled = false;
 
   function flagCode(flag) {
@@ -17,6 +18,22 @@
     return letters.every(Boolean) ? letters.join("") : "";
   }
 
+  function needsSvgFallback() {
+    return WINDOWS_RE.test(navigator.userAgent || "");
+  }
+
+  function renderNativeFlag(wrap, flag) {
+    wrap.replaceChildren(document.createTextNode(flag));
+    wrap.classList.add("ts-country-flag-native");
+    wrap.classList.remove("ts-country-flag-svg", "ts-country-flag-failed");
+  }
+
+  function renderCodeFallback(wrap, code) {
+    wrap.replaceChildren(document.createTextNode(code.toUpperCase()));
+    wrap.classList.add("ts-country-flag-failed");
+    wrap.classList.remove("ts-country-flag-svg", "ts-country-flag-native");
+  }
+
   function makeFlag(flag) {
     const code = flagCode(flag);
     if (!code) return document.createTextNode(flag);
@@ -26,17 +43,26 @@
     wrap.dataset.countryCode = code.toUpperCase();
     wrap.setAttribute("aria-hidden", "true");
 
+    // Apple, Android and most modern non-Windows platforms already render
+    // regional-indicator flags correctly. Using the native glyph there keeps
+    // the PWA fully reliable and avoids blank third-party images.
+    if (!needsSvgFallback()) {
+      renderNativeFlag(wrap, flag);
+      return wrap;
+    }
+
+    // Windows intentionally displays many regional-indicator pairs as letters,
+    // so use a real SVG there. If the network asset is unavailable, show a
+    // compact ISO badge rather than an empty flag placeholder.
     const img = document.createElement("img");
     img.src = `${CDN_BASE}/${code}.svg`;
     img.alt = "";
-    img.loading = "lazy";
+    img.loading = "eager";
     img.decoding = "async";
     img.referrerPolicy = "no-referrer";
-    img.addEventListener("error", () => {
-      wrap.classList.add("ts-country-flag-failed");
-      wrap.textContent = code.toUpperCase();
-    }, { once:true });
-
+    img.addEventListener("load", () => wrap.classList.add("ts-country-flag-loaded"), { once:true });
+    img.addEventListener("error", () => renderCodeFallback(wrap, code), { once:true });
+    wrap.classList.add("ts-country-flag-svg");
     wrap.append(img);
     return wrap;
   }
@@ -100,6 +126,17 @@
         box-shadow:0 0 0 1px color-mix(in srgb,var(--line) 58%,transparent);
         background:color-mix(in srgb,var(--surface2) 88%,transparent);
       }
+      .ts-country-flag-v705.ts-country-flag-native{
+        overflow:visible;
+        border-radius:0;
+        background:transparent;
+        box-shadow:none;
+        font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif;
+        font-size:18px;
+        line-height:16px;
+        letter-spacing:-1px;
+        white-space:nowrap;
+      }
       .ts-country-flag-v705 img{
         display:block;
         width:100%;
@@ -107,13 +144,16 @@
         object-fit:cover;
       }
       .ts-country-flag-v705.ts-country-flag-failed{
+        border:1px solid color-mix(in srgb,var(--muted) 34%,var(--line));
         color:var(--muted);
+        background:color-mix(in srgb,var(--surface2) 94%,transparent);
+        box-shadow:none;
         font-size:7px;
         font-weight:850;
         letter-spacing:.02em;
       }
 
-      /* Setup country search: always show a real, consistently sized flag. */
+      /* Setup country search */
       #destinationOptions .ts-country-flag-v705,
       #setupExtraCountryOptions .ts-country-flag-v705{
         width:26px;
@@ -122,8 +162,13 @@
         margin-inline-end:8px;
         vertical-align:middle;
       }
+      #destinationOptions .ts-country-flag-native,
+      #setupExtraCountryOptions .ts-country-flag-native{
+        font-size:20px;
+        line-height:18px;
+      }
 
-      /* Switch Trip route flags use one common visual size on every platform. */
+      /* Switch Trip route flags */
       .trip-switcher-modal .ts-country-flag-v705,
       .trip-switcher-sheet .ts-country-flag-v705,
       #tripSwitcherModal .ts-country-flag-v705,
@@ -135,8 +180,13 @@
         flex-basis:25px;
         margin-inline-end:3px;
       }
+      .trip-switcher-modal .ts-country-flag-native,
+      #tripSwitcherModal .ts-country-flag-native{
+        font-size:19px;
+        line-height:17px;
+      }
 
-      /* Country lists and route previews remain compact instead of oversized tiles. */
+      /* Country lists and route previews remain compact. */
       #settings .settings-country-flag .ts-country-flag-v705,
       #settings .ts-country-flag-v705{
         width:26px;
@@ -153,6 +203,7 @@
 
       @media(max-width:420px){
         .ts-country-flag-v705{width:23px;height:15px;flex-basis:23px}
+        .ts-country-flag-v705.ts-country-flag-native{font-size:18px;line-height:15px}
         #destinationOptions .ts-country-flag-v705,
         #setupExtraCountryOptions .ts-country-flag-v705{width:25px;height:17px;flex-basis:25px}
       }
@@ -193,6 +244,7 @@
     version:RELEASE,
     upgrade,
     flagCode,
-    source:CDN_BASE
+    needsSvgFallback,
+    source:needsSvgFallback() ? CDN_BASE : "native-emoji"
   };
 })();
