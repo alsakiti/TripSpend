@@ -23,8 +23,8 @@ for (const marker of ["upgradeVisualJs","upgradeSettingsJs","upgradeFlagsJs","up
   if (!sw.includes(marker)) fail(`v7.0.6 performance transform missing: ${marker}`);
 }
 if (!sw.includes('document.querySelector(".page.active")?.id !== "settings"')) fail("Settings localization work is not page-gated"); else ok("Settings work is deferred and page-gated");
-if (!sw.includes('window.addEventListener("tripspend:render", scheduleUpgrade);\\n')) ok("flag full-document render rescans are removed at runtime");
-else fail("flag render rescans are still enabled");
+if (!sw.includes('js = js.replace(\'    window.addEventListener("tripspend:render", scheduleUpgrade);\\n\', "");')) fail("flag render rescan removal transform is missing");
+else ok("flag full-document render rescans are removed at runtime");
 
 const shellMatch = sw.match(/const APP_SHELL = \[([\s\S]*?)\];/);
 const shell = shellMatch?.[1] || "";
