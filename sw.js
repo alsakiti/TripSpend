@@ -1,5 +1,5 @@
 const APP_VERSION = "7.0.6";
-const CACHE = `tripspend-v${APP_VERSION}`;
+const CACHE = `tripspend-v${APP_VERSION}-r2`;
 
 const APP_SHELL = [
   "./",
@@ -308,6 +308,10 @@ self.addEventListener("fetch", event => {
   const path = url.pathname;
   if (path.endsWith("/app.js")) {
     event.respondWith(networkFirst(request, upgradeAppJs));
+    return;
+  }
+  if (path.endsWith("/fx.js")) {
+    event.respondWith(networkFirst(request));
     return;
   }
   if (path.endsWith("/ai-v684.js")) {
