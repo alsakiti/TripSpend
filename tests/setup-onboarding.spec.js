@@ -78,7 +78,7 @@ test("new trip setup uses the premium 3-step onboarding and final preview", asyn
   await expect.poll(() => page.evaluate(() => window.TripSpendCore?.getState?.().trip?.defaultPayment)).toBe("Apple Pay");
 });
 
-test("More Insights button truly collapses and expands the Analytics cards", async ({ page }) => {
+test("More Insights starts collapsed and truly expands and collapses the Analytics cards", async ({ page }) => {
   await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seedTripState());
   await bootV7(page);
   await page.waitForSelector("#mainView:not(.hidden)");
@@ -87,11 +87,6 @@ test("More Insights button truly collapses and expands the Analytics cards", asy
   const toggle = page.locator("#analyticsMoreToggle");
   const details = page.locator("#analyticsMoreDetails");
   await expect(toggle).toBeVisible();
-  await expect(details).toBeVisible();
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-
-  await toggle.click();
-  await expect(details).toHaveClass(/hidden/);
   await expect(details).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
@@ -99,4 +94,9 @@ test("More Insights button truly collapses and expands the Analytics cards", asy
   await expect(details).not.toHaveClass(/hidden/);
   await expect(details).toBeVisible();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+  await toggle.click();
+  await expect(details).toHaveClass(/hidden/);
+  await expect(details).toBeHidden();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
 });
