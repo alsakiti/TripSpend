@@ -68,4 +68,23 @@ test("Switch Trip flags swipe horizontally and Start New Trip uses premium onboa
   await expect(page.locator(".ts-setup-progress")).toBeVisible();
   await expect(page.locator("#mainView")).toHaveClass(/hidden/);
   await expect(page.locator("body")).toHaveClass(/ts-setup-onboarding-active/);
+
+  // Regression: hiding the legacy country-number cell must not collapse Step 1
+  // into its old 27px grid column on iPhone-sized screens.
+  const destinationBox = await page.locator("#destination").boundingBox();
+  expect(destinationBox).not.toBeNull();
+  expect(destinationBox.width).toBeGreaterThan(240);
+
+  const dateCards = page.locator('.ts-setup-panel[data-setup-step="1"] .primary-country-dates .date-picker-card');
+  await expect(dateCards).toHaveCount(2);
+  const dateBoxes = await dateCards.evaluateAll(elements => elements.map(el => {
+    const r = el.getBoundingClientRect();
+    return {width:Math.round(r.width), height:Math.round(r.height), top:Math.round(r.top)};
+  }));
+  expect(dateBoxes[0].width).toBeGreaterThan(110);
+  expect(dateBoxes[1].width).toBeGreaterThan(110);
+  expect(Math.abs(dateBoxes[0].top - dateBoxes[1].top)).toBeLessThanOrEqual(2);
+
+  const setupStageOverflow = await page.locator(".ts-setup-stage").evaluate(el => el.scrollWidth - el.clientWidth);
+  expect(setupStageOverflow).toBeLessThanOrEqual(1);
 });
