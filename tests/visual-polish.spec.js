@@ -5,8 +5,12 @@ function seedState() {
     trip:{id:"trip-visual",name:"Europe",destination:"Germany",startDate:"2026-08-12",endDate:"2026-08-22",budget:1000,homeCurrency:"OMR",tripCurrency:"EUR",defaultPayment:"Credit Card"},
     expenses:[
       {id:"e1",amount:17.767,currency:"OMR",rate:1,homeAmount:17.767,category:"Food",paymentMethod:"Credit Card",date:"2026-08-12",note:"Lunch",expenseType:"personal",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:17.767}],planId:"",receiptId:"",createdAt:1},
-      {id:"e2",amount:12,currency:"OMR",rate:1,homeAmount:12,category:"Food",paymentMethod:"Cash",date:"2026-08-16",note:"Dinner",expenseType:"personal",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:12}],planId:"",receiptId:"",createdAt:2},
-      {id:"e3",amount:22,currency:"OMR",rate:1,homeAmount:22,category:"Food",paymentMethod:"Credit Card",date:"2026-08-17",note:"Shared meal",expenseType:"shared",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:11},{personId:"hu",amount:11}],planId:"",receiptId:"",createdAt:3}
+      {id:"e2",amount:8.23,currency:"OMR",rate:1,homeAmount:8.23,category:"Transport",paymentMethod:"Credit Card",date:"2026-08-13",note:"Taxi",expenseType:"personal",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:8.23}],planId:"",receiptId:"",createdAt:2},
+      {id:"e3",amount:6.21,currency:"OMR",rate:1,homeAmount:6.21,category:"Food",paymentMethod:"Credit Card",date:"2026-08-14",note:"Lunch",expenseType:"personal",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:6.21}],planId:"",receiptId:"",createdAt:3},
+      {id:"e4",amount:3.98,currency:"OMR",rate:1,homeAmount:3.98,category:"Coffee",paymentMethod:"Credit Card",date:"2026-08-15",note:"Coffee",expenseType:"personal",paidByPersonId:"me",stopId:"de",personShares:[{personId:"hu",amount:3.98}],planId:"",receiptId:"",createdAt:4},
+      {id:"e5",amount:12,currency:"OMR",rate:1,homeAmount:12,category:"Food",paymentMethod:"Credit Card",date:"2026-08-16",note:"Dinner",expenseType:"personal",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:12}],planId:"",receiptId:"",createdAt:5},
+      {id:"e6",amount:22,currency:"OMR",rate:1,homeAmount:22,category:"Food",paymentMethod:"Credit Card",date:"2026-08-17",note:"Shared meal",expenseType:"shared",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:17.558},{personId:"hu",amount:4.442}],planId:"",receiptId:"",createdAt:6},
+      {id:"e7",amount:9.24,currency:"OMR",rate:1,homeAmount:9.24,category:"Transport",paymentMethod:"Credit Card",date:"2026-08-18",note:"Taxi",expenseType:"personal",paidByPersonId:"me",stopId:"at",personShares:[{personId:"me",amount:9.24}],planId:"",receiptId:"",createdAt:7}
     ],
     rates:{},
     people:[{id:"me",name:"Me",active:true,createdAt:1},{id:"hu",name:"Hu",active:true,createdAt:2}],
@@ -39,28 +43,42 @@ async function openTab(page, label) {
   }, label);
 }
 
-test("Analytics uses real graphical views and Settings shows Gemini with scaled flags", async ({ page }) => {
+test("Analytics matches the premium reference graphics and Settings keeps Gemini/flags polished", async ({ page }) => {
   await boot(page);
-
   await openTab(page, "Analytics");
   await expect(page.locator("#analytics")).toHaveClass(/active/);
-  await expect(page.locator("#paymentAnalytics")).toHaveClass(/ts-payment-legend/);
-  await expect(page.locator("#paymentAnalytics > .ts-payment-stack")).toBeVisible();
-  await expect(page.locator("#peopleAnalytics")).toHaveClass(/ts-traveler-legend/);
-  await expect(page.locator("#peopleAnalytics .ts-traveler-ring")).toBeVisible();
-  await expect(page.locator("#dailyAnalytics")).toHaveClass(/ts-daily-chart/);
-  await expect(page.locator("#dailyAnalytics .daily")).toHaveCount(3);
 
-  const dailyTrack = await page.locator("#dailyAnalytics .daily .bar-track").first().evaluate(el => {
-    const style = getComputedStyle(el);
-    return {width:parseFloat(style.width),height:parseFloat(style.height)};
+  await expect(page.locator("#analyticsMoreToggle")).toBeVisible();
+  await expect(page.locator("#analyticsMoreDetails")).toBeVisible();
+  await expect(page.locator("#paymentAnalytics")).toHaveClass(/ts-payment-reference/);
+  await expect(page.locator("#paymentAnalytics .ts-payment-row")).toHaveCount(1);
+  await expect(page.locator("#paymentAnalytics .ts-payment-icon")).toBeVisible();
+  await expect(page.locator("#paymentAnalytics .ts-reference-progress")).toBeVisible();
+
+  await expect(page.locator("#peopleAnalytics")).toHaveClass(/ts-traveler-reference/);
+  await expect(page.locator("#peopleAnalytics .ts-traveler-row")).toHaveCount(2);
+  await expect(page.locator("#peopleAnalytics .ts-traveler-avatar")).toHaveCount(2);
+
+  await expect(page.locator("#dailyAnalytics")).toHaveClass(/ts-daily-reference/);
+  await expect(page.locator("#dailyAnalytics svg")).toBeVisible();
+  await expect(page.locator("#dailyAnalytics svg path")).toHaveCount(1);
+  await expect(page.locator("#dailyAnalytics .ts-daily-summary")).toBeVisible();
+  await expect(page.locator("#dailyAnalytics")).toContainText("79.427 OMR");
+  await expect(page.locator("#dailyAnalytics")).toContainText("11.347 OMR");
+  await expect(page.locator(".ts-period-pill")).toContainText("Last 7 days");
+
+  const chartBox = await page.locator("#dailyAnalytics .ts-daily-chart-shell").evaluate(el => {
+    const r = el.getBoundingClientRect();
+    return { width:r.width, height:r.height };
   });
-  expect(dailyTrack.height).toBeGreaterThan(dailyTrack.width * 4);
+  expect(chartBox.width).toBeGreaterThan(250);
+  expect(chartBox.height).toBeGreaterThan(180);
+
+  await page.screenshot({path:"test-results/analytics-reference.png",fullPage:true});
 
   await openTab(page, "Settings");
   await expect(page.locator("#settings")).toHaveClass(/active/);
   await page.waitForTimeout(1200);
-
   await expect(page.locator("#tripAiSettingsCard")).toContainText("Google Gemini");
   await expect(page.locator("#tripAiSettingsCard")).toContainText("Gemini 3.5 Flash-Lite");
   await expect(page.locator("#tripAiSettingsCard")).not.toContainText("Cloudflare AI");
@@ -81,6 +99,4 @@ test("Analytics uses real graphical views and Settings shows Gemini with scaled 
   });
   expect(flagBox.width).toBeLessThanOrEqual(32);
   expect(flagBox.height).toBeLessThanOrEqual(26);
-
-  await page.screenshot({path:"test-results/visual-polish-settings.png",fullPage:true});
 });
