@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const VERSION = "7.0.5";
+const VERSION = "7.0.6";
 const INNER_WORKER_VERSION = "7.0.0";
 const WORKER_RUNTIME_VERSION = "7.0.3";
 const read = path => fs.readFileSync(path,"utf8");
@@ -19,6 +19,12 @@ if (!sw.includes(`const APP_VERSION = "${VERSION}"`)) fail("service worker versi
 if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("expense-locale-v703.js") || !sw.includes("page-locale-v704.js") || !sw.includes("settings-polish-v704.js") || !sw.includes("visual-polish-v704.js") || !sw.includes("setup-onboarding-v704.js") || !sw.includes("flags-v705.js") || !sw.includes("ui-fixes-v705.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
 if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 if (!sw.includes('label: "Google Gemini"') || !sw.includes('short: "Gemini 3.5 Flash-Lite"')) fail("Gemini-first AI label transform missing"); else ok("AI settings identify Gemini as the primary model");
+for (const marker of ["upgradeVisualJs","upgradeSettingsJs","upgradeFlagsJs","upgradeUiFixesJs","upgradeSetupJs","upgradeReceiptJs","requestIdleCallback","STORAGE_SAVE_DELAY = 220","canvas.toBlob","observeClass","tsV706Signature"]) {
+  if (!sw.includes(marker)) fail(`v7.0.6 performance transform missing: ${marker}`);
+}
+if (!sw.includes('document.querySelector(".page.active")?.id !== "settings"')) fail("Settings localization work is not page-gated"); else ok("Settings work is deferred and page-gated");
+if (!sw.includes('window.addEventListener("tripspend:render", scheduleUpgrade);\\n')) ok("flag full-document render rescans are removed at runtime");
+else fail("flag render rescans are still enabled");
 
 const shellMatch = sw.match(/const APP_SHELL = \[([\s\S]*?)\];/);
 const shell = shellMatch?.[1] || "";
@@ -72,13 +78,13 @@ if (!setupOnboarding.includes("TripSpendSetupOnboarding")) fail("setup onboardin
 
 const flags = read("flags-v705.js");
 for (const marker of ["TripSpendFlags","ts-country-flag-v705","destinationOptions","setupExtraCountryOptions","flag-icons@7.3.2/flags/4x3","Regional_Indicator"].filter(Boolean)) {
-  if (!flags.includes(marker) && marker !== "Regional_Indicator") fail(`v7.0.5 flag runtime marker missing: ${marker}`);
+  if (!flags.includes(marker) && marker !== "Regional_Indicator") fail(`flag runtime marker missing: ${marker}`);
 }
 if (!flags.includes("0x1F1E6") || !flags.includes("object-fit:cover")) fail("SVG flag conversion or consistent scaling missing"); else ok("country flags use standardized SVG rendering and sizing");
 
 const uiFixes = read("ui-fixes-v705.js");
 for (const marker of ["forcePremiumSetup","ts-setup-onboarding-form","ts-swipe-flags-v705","overflow-x:auto","touch-action:pan-x","TripSpendUiFixes"]) {
-  if (!uiFixes.includes(marker)) fail(`v7.0.5 UI fix marker missing: ${marker}`);
+  if (!uiFixes.includes(marker)) fail(`UI fix marker missing: ${marker}`);
 }
 if (!uiFixes.includes('main.classList.add("hidden")')) fail("new-trip flow does not force the premium setup shell"); else ok("all new-trip entry points can activate premium onboarding");
 if (!uiFixes.includes("scroll-snap-type:x proximity")) fail("Switch Trip flag strip is not swipe-friendly"); else ok("Switch Trip route flags support horizontal swiping");
