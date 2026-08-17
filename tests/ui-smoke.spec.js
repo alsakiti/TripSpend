@@ -243,7 +243,8 @@ test("Arabic Analytics page localizes redesigned insights, categories and debt e
   expect(analyticsText).not.toContain("Personal expenses paid by the same person do not create debt");
   expect(analyticsText).not.toMatch(/\bFood\b/);
   expect(analyticsText).not.toContain("On pace");
-  await expect(page.locator("#navAdd")).toHaveClass(/hidden/);
+  await expect(page.locator("body")).toHaveClass(/ts-no-floating-add/);
+  await expect(page.locator("#navAdd")).toBeHidden();
   await page.screenshot({ path:"test-results/analytics-ar.png", fullPage:true });
 
   await visibleLanguageButton(page).click();
