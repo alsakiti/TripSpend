@@ -1,13 +1,30 @@
 (() => {
   "use strict";
 
+  const APP_RELEASE = "7.0.6";
   const APP_KEY = "tripspend.v1";
   const FX_KEY = "tripspend.fxcache.v1";
   const API = "https://api.frankfurter.dev/v2/rate";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
+  const FIRST_LOAD_RUNTIME = [
+    "ai-v684.js",
+    "locale-v700.js",
+    "locale-dynamic-v700.js",
+    "expense-locale-v703.js",
+    "page-locale-v704.js",
+    "settings-polish-v704.js",
+    "visual-polish-v704.js",
+    "setup-language-host-v700.js",
+    "setup-onboarding-v704.js",
+    "flags-v705.js",
+    "ui-fixes-v705.js",
+    "receipt-capability-v700.js",
+    "receipt-ai-v700.js"
+  ];
   const $ = id => document.getElementById(id);
   let conversionRequestId = 0;
   let pageSyncQueued = false;
+  let firstLoadBootStarted = false;
 
   function appState() {
     try { return JSON.parse(localStorage.getItem(APP_KEY) || "{}"); }
@@ -163,8 +180,6 @@
 
     if (!(amount >= 0)) return;
 
-    // Avoid unnecessary API requests while the user types. A recently fetched
-    // rate is reused for up to six hours; Refresh Rate always forces a new check.
     const cached = saved(from, to);
     const sixHours = 6 * 60 * 60 * 1000;
     const cacheIsRecent = cached?.fetchedAt && (Date.now() - Number(cached.fetchedAt) < sixHours);
@@ -182,8 +197,6 @@
         info = await fetchRate(from, to, { allowCache: true });
       }
 
-      // Currency changes and typing can start overlapping lookups. Ignore an
-      // older response rather than allowing it to overwrite the newest pair.
       if (requestId !== conversionRequestId || $("fxFrom")?.value !== from || $("fxTo")?.value !== to) return;
 
       const currentAmount = Number(amountEl.value || 0);
@@ -260,6 +273,38 @@
     });
   }
 
+  function scriptAlreadyLoaded(file) {
+    return [...document.scripts].some(script => {
+      try { return new URL(script.src, location.href).pathname.endsWith(`/${file}`); }
+      catch { return false; }
+    });
+  }
+
+  function loadRuntimeScript(file) {
+    return new Promise(resolve => {
+      if (scriptAlreadyLoaded(file)) return resolve();
+      const script = document.createElement("script");
+      script.src = `./${file}?v=${APP_RELEASE}`;
+      script.async = false;
+      script.addEventListener("load", resolve, { once:true });
+      script.addEventListener("error", resolve, { once:true });
+      document.body.appendChild(script);
+    });
+  }
+
+  async function bootstrapFirstVisitRuntime() {
+    if (firstLoadBootStarted || navigator.serviceWorker?.controller) return;
+    firstLoadBootStarted = true;
+
+    // index.html is intentionally still compatible with the legacy shell. On a
+    // browser's first uncontrolled navigation the service worker has not yet had
+    // a chance to upgrade that HTML, so load the same current runtime modules
+    // directly. Controlled/repeat visits skip this path and use sw.js instead.
+    document.querySelectorAll(".version-badge").forEach(el => { el.textContent = `v${APP_RELEASE}`; });
+    for (const file of FIRST_LOAD_RUNTIME) await loadRuntimeScript(file);
+    window.dispatchEvent(new CustomEvent("tripspend:first-load-runtime", { detail:{ version:APP_RELEASE } }));
+  }
+
   function wire() {
     if (!$("fxFrom")) return;
 
@@ -298,27 +343,30 @@
     window.addEventListener("tripspend:page", () => queueVisibleRefresh({ forceCurrencies:true }));
     window.addEventListener("tripspend:render", () => queueVisibleRefresh());
 
-    // The converter lives inside the collapsed Advanced settings section.
-    // Opening that section is the first moment it should do conversion work.
     document.addEventListener("click", event => {
       if (!event.target?.closest?.("#settingsAdvanced > summary")) return;
       window.setTimeout(() => queueVisibleRefresh({ forceCurrencies:true }), 0);
     });
 
-    // If Settings/Advanced is already open at boot, show cached/live output.
     queueVisibleRefresh();
   }
 
   window.TripSpendFX = {
+    version:APP_RELEASE,
     fetchRate,
     saved,
     refresh: () => refreshVisibleFx({ forceNetwork:true, forceCurrencies:true }),
-    visible: fxCardVisible
+    visible: fxCardVisible,
+    bootstrapFirstVisitRuntime
   };
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", wire, { once:true });
+    document.addEventListener("DOMContentLoaded", () => {
+      wire();
+      bootstrapFirstVisitRuntime();
+    }, { once:true });
   } else {
     wire();
+    bootstrapFirstVisitRuntime();
   }
 })();
