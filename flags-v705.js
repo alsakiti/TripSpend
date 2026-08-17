@@ -44,8 +44,8 @@
     wrap.setAttribute("aria-hidden", "true");
 
     // Apple, Android and most modern non-Windows platforms already render
-    // regional-indicator flags correctly. Using the native glyph there keeps
-    // the PWA fully reliable and avoids blank third-party images.
+    // regional-indicator flags correctly. Keep those native glyphs at their
+    // natural width so iOS never crops a flag inside a fixed rectangle.
     if (!needsSvgFallback()) {
       renderNativeFlag(wrap, flag);
       return wrap;
@@ -127,15 +127,22 @@
         background:color-mix(in srgb,var(--surface2) 88%,transparent);
       }
       .ts-country-flag-v705.ts-country-flag-native{
-        overflow:visible;
-        border-radius:0;
-        background:transparent;
-        box-shadow:none;
+        display:inline-block!important;
+        width:auto!important;
+        min-width:0!important;
+        height:auto!important;
+        flex:0 0 auto!important;
+        overflow:visible!important;
+        border-radius:0!important;
+        background:transparent!important;
+        box-shadow:none!important;
         font-family:"Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif;
-        font-size:18px;
-        line-height:16px;
-        letter-spacing:-1px;
-        white-space:nowrap;
+        font-size:20px;
+        line-height:1!important;
+        letter-spacing:normal!important;
+        white-space:nowrap!important;
+        text-align:center;
+        vertical-align:-3px;
       }
       .ts-country-flag-v705 img{
         display:block;
@@ -164,8 +171,9 @@
       }
       #destinationOptions .ts-country-flag-native,
       #setupExtraCountryOptions .ts-country-flag-native{
-        font-size:20px;
-        line-height:18px;
+        font-size:22px;
+        margin-inline-end:8px;
+        vertical-align:-4px;
       }
 
       /* Switch Trip route flags */
@@ -181,9 +189,14 @@
         margin-inline-end:3px;
       }
       .trip-switcher-modal .ts-country-flag-native,
-      #tripSwitcherModal .ts-country-flag-native{
-        font-size:19px;
-        line-height:17px;
+      .trip-switcher-sheet .ts-country-flag-native,
+      #tripSwitcherModal .ts-country-flag-native,
+      #tripSwitcherSheet .ts-country-flag-native,
+      .trip-card .ts-country-flag-native,
+      .trip-switcher-card .ts-country-flag-native{
+        font-size:22px;
+        margin-inline-end:5px;
+        vertical-align:-4px;
       }
 
       /* Country lists and route previews remain compact. */
@@ -193,6 +206,10 @@
         height:18px;
         flex-basis:26px;
       }
+      #settings .settings-country-flag .ts-country-flag-native,
+      #settings .ts-country-flag-native{
+        font-size:21px;
+      }
       .ts-setup-preview-route .ts-country-flag-v705,
       #tsSetupPrimaryRoute .ts-country-flag-v705,
       #setupRouteList .ts-country-flag-v705{
@@ -200,12 +217,21 @@
         height:16px;
         flex-basis:24px;
       }
+      .ts-setup-preview-route .ts-country-flag-native,
+      #tsSetupPrimaryRoute .ts-country-flag-native,
+      #setupRouteList .ts-country-flag-native{
+        font-size:20px;
+      }
 
       @media(max-width:420px){
-        .ts-country-flag-v705{width:23px;height:15px;flex-basis:23px}
-        .ts-country-flag-v705.ts-country-flag-native{font-size:18px;line-height:15px}
-        #destinationOptions .ts-country-flag-v705,
-        #setupExtraCountryOptions .ts-country-flag-v705{width:25px;height:17px;flex-basis:25px}
+        .ts-country-flag-v705:not(.ts-country-flag-native){width:23px;height:15px;flex-basis:23px}
+        .ts-country-flag-v705.ts-country-flag-native{font-size:20px}
+        #destinationOptions .ts-country-flag-v705:not(.ts-country-flag-native),
+        #setupExtraCountryOptions .ts-country-flag-v705:not(.ts-country-flag-native){width:25px;height:17px;flex-basis:25px}
+        #destinationOptions .ts-country-flag-native,
+        #setupExtraCountryOptions .ts-country-flag-native{font-size:21px}
+        #tripSwitcherModal .ts-country-flag-native,
+        #tripSwitcherSheet .ts-country-flag-native{font-size:21px}
       }
     `;
     document.head.append(style);
