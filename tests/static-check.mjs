@@ -33,6 +33,15 @@ for (const old of ["i18n.js","i18n-layout-fix.js","i18n-audit-v690.js","rtl-poli
 }
 ok("legacy localization patches are retired from APP_SHELL");
 
+const fx = read("fx.js");
+for (const marker of ["const APP_RELEASE = \"7.0.6\"","fxCardVisible","bootstrapFirstVisitRuntime","navigator.serviceWorker?.controller","FIRST_LOAD_RUNTIME","settingsAdvanced > summary"]) {
+  if (!fx.includes(marker)) fail(`FX/first-load reliability marker missing: ${marker}`);
+}
+if (!fx.includes('if (fxCardVisible()) convertSection(true)') || !fx.includes('if (!amountEl || !fxCardVisible()) return')) fail("hidden FX converter can still perform background conversion work");
+else ok("FX conversion work is gated to the visible Settings card");
+if (!fx.includes("tripspend:first-load-runtime")) fail("fresh uncontrolled visits do not bootstrap the current runtime");
+else ok("fresh visits bootstrap the v7.0.6 runtime before service-worker control");
+
 const locale = read("locale-v700.js");
 if (!locale.includes("Intl.DisplayNames")) fail("country localization is not using Intl.DisplayNames"); else ok("country localization uses Intl.DisplayNames");
 if (!locale.includes("TripSpendLocale")) fail("TripSpendLocale API missing"); else ok("TripSpendLocale API exposed");
@@ -88,6 +97,11 @@ for (const marker of ["forcePremiumSetup","ts-setup-onboarding-form","ts-swipe-f
 }
 if (!uiFixes.includes('main.classList.add("hidden")')) fail("new-trip flow does not force the premium setup shell"); else ok("all new-trip entry points can activate premium onboarding");
 if (!uiFixes.includes("scroll-snap-type:x proximity")) fail("Switch Trip flag strip is not swipe-friendly"); else ok("Switch Trip route flags support horizontal swiping");
+for (const marker of [".fx-result>div{background:var(--surface2)!important}",".fx-status.good{color:var(--ok)!important}",".fx-status.bad{color:var(--bad)!important}"]) {
+  if (!uiFixes.includes(marker)) fail(`FX theme repair missing: ${marker}`);
+}
+if (!uiFixes.includes('strip.setAttribute("role", "img")') || !uiFixes.includes("strip.tabIndex = 0")) fail("swipeable route flags are not keyboard/screen-reader friendly");
+else ok("swipeable route flags expose usable accessibility semantics");
 
 const receipt = read("receipt-ai-v700.js");
 for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate","expenseCategory","expenseNote"]) {
@@ -119,7 +133,7 @@ if (!wrangler.includes('main = "ai-worker-v703.js"')) fail("wrangler does not ro
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
-for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","settings-polish-v704.js","visual-polish-v704.js","setup-language-host-v700.js","setup-onboarding-v704.js","flags-v705.js","ui-fixes-v705.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
+for (const path of ["sw.js","fx.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","settings-polish-v704.js","visual-polish-v704.js","setup-language-host-v700.js","setup-onboarding-v704.js","flags-v705.js","ui-fixes-v705.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }
