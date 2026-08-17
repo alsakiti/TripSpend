@@ -7,7 +7,67 @@
     if (document.getElementById("receiptCapabilityV700Styles")) return;
     const style = document.createElement("style");
     style.id = "receiptCapabilityV700Styles";
-    style.textContent = `body:not([data-receipt-ai-ready="1"]) #receiptAiScanBtn{display:none!important}`;
+    style.textContent = `
+      body:not([data-receipt-ai-ready="1"]) #receiptAiScanBtn{display:none!important}
+
+      /* v7.0.4 receipt typography hotfix: keep receipt controls at the same
+         compact scale as the rest of TripSpend, especially on iOS. */
+      .receipt-field-head .receipt-add-btn,
+      .receipt-field-head .receipt-ai-scan-btn,
+      #receiptAiScanBtn{
+        width:auto!important;
+        min-height:36px!important;
+        padding:0 11px!important;
+        border-radius:11px!important;
+        font-size:11px!important;
+        line-height:1.1!important;
+        font-weight:800!important;
+        letter-spacing:0!important;
+        white-space:nowrap!important;
+        text-size-adjust:100%!important;
+        -webkit-text-size-adjust:100%!important;
+      }
+
+      .expense-detail-receipt #viewDetailReceiptBtn,
+      .expense-detail-receipt .expense-detail-replace,
+      .expense-detail-receipt #removeDetailReceiptBtn{
+        width:auto!important;
+        min-height:34px!important;
+        padding:0 10px!important;
+        border-radius:10px!important;
+        font-size:10.5px!important;
+        line-height:1.1!important;
+        font-weight:800!important;
+        letter-spacing:0!important;
+        white-space:nowrap!important;
+        text-size-adjust:100%!important;
+        -webkit-text-size-adjust:100%!important;
+      }
+
+      .expense-detail-receipt .expense-detail-replace{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        margin:0!important;
+      }
+
+      @media(max-width:600px){
+        .receipt-field-head .receipt-add-btn,
+        .receipt-field-head .receipt-ai-scan-btn,
+        #receiptAiScanBtn{
+          min-height:34px!important;
+          padding:0 10px!important;
+          font-size:10.5px!important;
+        }
+        .expense-detail-receipt #viewDetailReceiptBtn,
+        .expense-detail-receipt .expense-detail-replace,
+        .expense-detail-receipt #removeDetailReceiptBtn{
+          min-height:32px!important;
+          padding:0 9px!important;
+          font-size:10px!important;
+        }
+      }
+    `;
     document.head.appendChild(style);
   }
 
