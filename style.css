@@ -7933,3 +7933,227 @@ body.modal-open{
   .country-budget-editor-actions{grid-template-columns:1fr}
   .country-budget-editor-actions .secondary{order:2}
 }
+
+/* =========================================================
+   v7.0.4 — Analytics, type scale, and mobile-safe actions
+   ========================================================= */
+
+/* Reserve the complete floating action zone, not only the bottom navigation. */
+.page.active{
+  padding-bottom:calc(164px + env(safe-area-inset-bottom));
+  scroll-padding-bottom:calc(164px + env(safe-area-inset-bottom));
+}
+#settings.page.active,
+#analytics.page.active,
+#people.page.active,
+#trips.page.active{
+  padding-bottom:calc(116px + env(safe-area-inset-bottom));
+}
+.floating-add{
+  right:max(16px,calc((100vw - 740px)/2 + 16px));
+  bottom:calc(max(10px,env(safe-area-inset-bottom)) + 82px);
+}
+
+/* A restrained, consistent readable type floor for interactive and supporting UI. */
+.form label,
+.action-card p,
+.field-hint,
+.mini-summary,
+.bar-meta,
+.daily,
+.expense-main span,
+.expense-side span,
+.settlement-help,
+.receipt-viewer-help{
+  font-size:max(12px, .75rem)!important;
+  line-height:1.45;
+}
+button,
+input,
+select,
+textarea{
+  font-size:max(13px, .8125rem);
+}
+.nav-btn small{
+  font-size:10.5px!important;
+  line-height:1.2;
+}
+html[dir="rtl"] body{
+  letter-spacing:normal;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Arabic","Geeza Pro","Segoe UI",Tahoma,Arial,sans-serif;
+}
+html[dir="rtl"] .eyebrow,
+html[dir="rtl"] .smart-badge,
+html[dir="rtl"] .analytics-main-top small{
+  letter-spacing:0!important;
+  word-spacing:normal!important;
+  text-transform:none!important;
+}
+
+/* Analytics: calm surfaces, generous rhythm, and charts that read as content. */
+.analytics-v651{
+  max-width:700px;
+  margin-inline:auto;
+}
+.analytics-v651 .analytics-page-title{
+  margin-bottom:20px;
+}
+.analytics-v651 .analytics-page-title h2{
+  font-size:clamp(27px,5vw,34px)!important;
+  letter-spacing:-.035em;
+}
+.analytics-v651 .analytics-page-title p{
+  max-width:42ch;
+  margin-top:7px;
+  font-size:13.5px!important;
+  line-height:1.5;
+}
+.analytics-v651 .analytics-main-card{
+  padding:22px;
+  border:1px solid color-mix(in srgb,var(--brand) 18%,var(--line));
+  border-radius:24px;
+  box-shadow:0 18px 46px rgba(15,23,42,.10);
+}
+.analytics-v651 .analytics-main-top{
+  align-items:flex-start;
+}
+.analytics-v651 .analytics-main-top small{
+  font-size:11px!important;
+}
+.analytics-v651 .analytics-total strong{
+  font-size:clamp(36px,8vw,48px)!important;
+  line-height:1.05;
+}
+.analytics-v651 .analytics-progress{
+  height:8px!important;
+  margin:20px 0 14px!important;
+  background:rgba(255,255,255,.13)!important;
+}
+.analytics-v651 .analytics-pace{
+  min-height:44px;
+  padding:10px 12px;
+  border-radius:13px;
+}
+.analytics-v651 .analytics-pace strong{
+  font-size:12.5px!important;
+  line-height:1.4;
+}
+.analytics-v651 .analytics-main-meta{
+  gap:10px;
+  margin-top:14px;
+}
+.analytics-v651 .analytics-main-meta>div,
+.analytics-v651 .analytics-split>div{
+  min-width:0;
+  padding:13px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  background:rgba(255,255,255,.055);
+}
+.analytics-v651 .analytics-main-meta small,
+.analytics-v651 .analytics-split small{
+  font-size:11px!important;
+}
+.analytics-v651 .analytics-main-meta strong,
+.analytics-v651 .analytics-split strong{
+  margin-top:5px;
+  overflow-wrap:anywhere;
+  font-size:14px!important;
+}
+.analytics-v651 .analytics-quick-row{
+  gap:10px;
+  margin:12px 0 22px;
+}
+.analytics-v651 .analytics-quick-row>div{
+  min-height:82px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--surface);
+}
+.analytics-v651 .analytics-quick-row small{
+  font-size:11px!important;
+}
+.analytics-v651 .analytics-quick-row strong{
+  margin-top:7px;
+  font-size:14px!important;
+}
+.analytics-v651 .analytics-category-section,
+.analytics-v651 .analytics-settlement-section,
+.analytics-v651 .analytics-secondary-block{
+  margin-top:13px!important;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:var(--surface);
+  box-shadow:none;
+}
+.analytics-v651 .analytics-section-title h2,
+.analytics-v651 .analytics-block-title h3{
+  font-size:17px!important;
+  letter-spacing:-.02em;
+}
+.analytics-v651 .analytics-section-title small,
+.analytics-v651 .analytics-block-title small{
+  margin-top:4px;
+  font-size:12px!important;
+  line-height:1.4;
+}
+.analytics-v651 .bar-row{
+  gap:8px;
+}
+.analytics-v651 .bars{
+  gap:17px;
+}
+.analytics-v651 .bar-meta{
+  align-items:baseline;
+  font-size:12.5px!important;
+}
+.analytics-v651 .bar-track{
+  height:7px!important;
+  background:color-mix(in srgb,var(--surface2) 88%,transparent)!important;
+}
+.analytics-v651 .analytics-more-row{
+  display:none!important;
+}
+.analytics-v651 .analytics-more-details{
+  display:grid!important;
+  gap:13px;
+  margin-top:13px;
+}
+.analytics-v651 .analytics-busiest-row{
+  min-height:64px;
+  padding:14px 16px;
+  border:1px solid color-mix(in srgb,var(--brand) 15%,var(--line));
+  border-radius:17px;
+  background:color-mix(in srgb,var(--brand-soft) 32%,var(--surface));
+}
+.analytics-v651 .settlement-clean-card{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+html[data-theme="dark"] .analytics-v651 .analytics-category-section,
+html[data-theme="dark"] .analytics-v651 .analytics-settlement-section,
+html[data-theme="dark"] .analytics-v651 .analytics-secondary-block{
+  border-color:#2b394d;
+  background:#121c2a;
+}
+
+@media(max-width:600px){
+  .analytics-v651 .analytics-main-card{padding:18px;border-radius:21px}
+  .analytics-v651 .analytics-main-meta{grid-template-columns:1fr 1fr}
+  .analytics-v651 .analytics-split{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .analytics-v651 .analytics-split>div{padding:11px 8px}
+  .analytics-v651 .analytics-quick-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .analytics-v651 .analytics-quick-row>div{padding:12px 9px}
+  .analytics-v651 .analytics-category-section,
+  .analytics-v651 .analytics-settlement-section,
+  .analytics-v651 .analytics-secondary-block{padding:15px;border-radius:18px}
+  .floating-add{right:14px}
+}
+@media(max-width:370px){
+  .analytics-v651 .analytics-quick-row{grid-template-columns:1fr}
+  .analytics-v651 .analytics-quick-row>div{min-height:68px}
+}
