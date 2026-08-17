@@ -100,9 +100,6 @@ async function upgradeAppJs(response) {
   js = js.replace(/\.\/sw\.js\?v=[^"']+/g, `./sw.js?v=${APP_VERSION}`);
   js = js.replace("const STORAGE_SAVE_DELAY = 140;", "const STORAGE_SAVE_DELAY = 220;");
 
-  // Keep Settings navigation responsive: render the form immediately, then run
-  // storage diagnostics when the browser has an idle slice instead of blocking
-  // the page transition on IndexedDB/statistics work.
   const settingsPattern = /([ \t]+)fillSettings\(\);\n\1renderAppearanceControls\(\);\n\1renderRates\(\);\n\1renderStoragePanel\(\);\n\1renderUpdateSettings\(latestVersionKnown \? "online" : "checking"\);\n\1runDiagnostics\(\);/g;
   js = js.replace(settingsPattern, (_match, indent) => [
     `${indent}fillSettings();`,
@@ -146,7 +143,6 @@ async function upgradeVisualJs(response) {
   if (!response?.ok) return response;
   let js = await response.text();
   js = js.replace(/const RELEASE = "[^"]+";/, `const RELEASE = "${APP_VERSION}";`);
-  js = js.replace("let scheduled = 0;", "let scheduled = 0;\n  let insightsInitialized = false;");
 
   js = js.replace(
     /function polishMoreInsights\(\) \{[\s\S]*?\n  \}\n\n  function polishAiCard/,
@@ -154,10 +150,6 @@ async function upgradeVisualJs(response) {
     const toggle = $("analyticsMoreToggle");
     const details = $("analyticsMoreDetails");
     if (!toggle || !details) return;
-    if (!insightsInitialized) {
-      details.classList.remove("hidden");
-      insightsInitialized = true;
-    }
     const open = !details.classList.contains("hidden");
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     const arrow = $("analyticsMoreArrow");
@@ -240,6 +232,7 @@ async function upgradeSetupJs(response) {
   let js = await response.text();
   js = js.replace(/const RELEASE = "[^"]+";/, `const RELEASE = "${APP_VERSION}";`);
   js = js.replace("let analyticsInsightsOpen = true;", "let analyticsInsightsOpen = true;\n  let afterChangeTimer = 0;");
+  js = js.replace('analyticsInsightsOpen = !details.classList.contains("hidden");', 'analyticsInsightsOpen = false;');
   js = js.replace(
     `  function afterAppChange() {\n    window.setTimeout(() => {\n      ensureSetupBuilt();\n      repairAnalyticsToggle();\n      applyAnalyticsToggleState();\n    }, 90);\n  }`,
     `  function afterAppChange() {\n    clearTimeout(afterChangeTimer);\n    afterChangeTimer = window.setTimeout(() => {\n      ensureSetupBuilt();\n      repairAnalyticsToggle();\n      applyAnalyticsToggleState();\n    }, 45);\n  }`
