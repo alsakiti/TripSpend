@@ -16,7 +16,7 @@ if (!String(manifest.name).includes(VERSION)) fail(`manifest name does not inclu
 
 const sw = read("sw.js");
 if (!sw.includes(`const APP_VERSION = "${VERSION}"`)) fail("service worker version mismatch"); else ok("service worker version matches");
-if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("expense-locale-v703.js") || !sw.includes("page-locale-v704.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
+if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("expense-locale-v703.js") || !sw.includes("page-locale-v704.js") || !sw.includes("settings-polish-v704.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
 if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 
 const shellMatch = sw.match(/const APP_SHELL = \[([\s\S]*?)\];/);
@@ -46,6 +46,13 @@ for (const phrase of ["TRIP PLANNER","TRIP PROGRESS","Your itinerary starts here
 }
 if (!pageLocale.includes("On pace") || !pageLocale.includes("Spending faster")) fail("dynamic analytics pace localization missing"); else ok("dynamic analytics pace localization is wired");
 if (!pageLocale.includes("tripspend:language")) fail("page locale does not react to language changes"); else ok("Plan/Analytics localization reacts to language changes");
+
+const settingsPolish = read("settings-polish-v704.js");
+for (const marker of ["settings-simple-form","settings-country-list-compact","settings-save-dock","settings-advanced","ts-no-floating-add"]) {
+  if (!settingsPolish.includes(marker)) fail(`simplified Settings marker missing: ${marker}`);
+}
+if (!settingsPolish.includes('["settings", "analytics", "trips", "people"]')) fail("floating add suppression is missing on non-add pages"); else ok("floating add is suppressed on Settings and Analytics");
+if (!settingsPolish.includes("TripSpendSettingsPolish")) fail("settings polish API missing"); else ok("simplified Settings runtime is exposed");
 
 const receipt = read("receipt-ai-v700.js");
 for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate","expenseCategory","expenseNote"]) {
@@ -77,7 +84,7 @@ if (!wrangler.includes('main = "ai-worker-v703.js"')) fail("wrangler does not ro
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
-for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
+for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","settings-polish-v704.js","setup-language-host-v700.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }
