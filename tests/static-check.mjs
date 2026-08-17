@@ -16,7 +16,7 @@ if (!String(manifest.name).includes(VERSION)) fail(`manifest name does not inclu
 
 const sw = read("sw.js");
 if (!sw.includes(`const APP_VERSION = "${VERSION}"`)) fail("service worker version mismatch"); else ok("service worker version matches");
-if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("expense-locale-v703.js") || !sw.includes("page-locale-v704.js") || !sw.includes("settings-polish-v704.js") || !sw.includes("visual-polish-v704.js") || !sw.includes("setup-onboarding-v704.js") || !sw.includes("flags-v705.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
+if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("expense-locale-v703.js") || !sw.includes("page-locale-v704.js") || !sw.includes("settings-polish-v704.js") || !sw.includes("visual-polish-v704.js") || !sw.includes("setup-onboarding-v704.js") || !sw.includes("flags-v705.js") || !sw.includes("ui-fixes-v705.js")) fail("v7 runtime modules missing from service worker"); else ok("v7 runtime modules are wired");
 if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 if (!sw.includes('label: "Google Gemini"') || !sw.includes('short: "Gemini 3.5 Flash-Lite"')) fail("Gemini-first AI label transform missing"); else ok("AI settings identify Gemini as the primary model");
 
@@ -76,6 +76,13 @@ for (const marker of ["TripSpendFlags","ts-country-flag-v705","destinationOption
 }
 if (!flags.includes("0x1F1E6") || !flags.includes("object-fit:cover")) fail("SVG flag conversion or consistent scaling missing"); else ok("country flags use standardized SVG rendering and sizing");
 
+const uiFixes = read("ui-fixes-v705.js");
+for (const marker of ["forcePremiumSetup","ts-setup-onboarding-form","ts-swipe-flags-v705","overflow-x:auto","touch-action:pan-x","TripSpendUiFixes"]) {
+  if (!uiFixes.includes(marker)) fail(`v7.0.5 UI fix marker missing: ${marker}`);
+}
+if (!uiFixes.includes('main.classList.add("hidden")')) fail("new-trip flow does not force the premium setup shell"); else ok("all new-trip entry points can activate premium onboarding");
+if (!uiFixes.includes("scroll-snap-type:x proximity")) fail("Switch Trip flag strip is not swipe-friendly"); else ok("Switch Trip route flags support horizontal swiping");
+
 const receipt = read("receipt-ai-v700.js");
 for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate","expenseCategory","expenseNote"]) {
   if (!receipt.includes(id)) fail(`receipt client does not reference ${id}`);
@@ -106,7 +113,7 @@ if (!wrangler.includes('main = "ai-worker-v703.js"')) fail("wrangler does not ro
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
-for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","settings-polish-v704.js","visual-polish-v704.js","setup-language-host-v700.js","setup-onboarding-v704.js","flags-v705.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
+for (const path of ["sw.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","settings-polish-v704.js","visual-polish-v704.js","setup-language-host-v700.js","setup-onboarding-v704.js","flags-v705.js","ui-fixes-v705.js","receipt-capability-v700.js","receipt-ai-v700.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }
