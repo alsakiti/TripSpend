@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.5";
+  const RELEASE = "7.0.6";
   const $ = id => document.getElementById(id);
   let scheduled = false;
 
@@ -18,9 +18,8 @@
     if (!form || form.classList.contains("ts-setup-onboarding-form")) return;
 
     // Starting a new trip from Trips/Switch Trip can leave mainView visible for
-    // one render. The onboarding runtime intentionally refused to build in that
-    // state. Hide the inactive app shell first, then ask the existing premium
-    // onboarding runtime to build the same flow used on a fresh install.
+    // one render. Hide the inactive app shell first, then let the premium setup
+    // runtime build the same flow used on a fresh install.
     const main = $("mainView");
     if (main && !main.classList.contains("hidden")) main.classList.add("hidden");
 
@@ -40,11 +39,15 @@
 
     root.querySelectorAll?.(selectors.join(",")).forEach(strip => {
       strip.classList.add("ts-swipe-flags-v705");
-      strip.setAttribute("role", "list");
-      strip.setAttribute("aria-label", "Trip countries");
-      strip.querySelectorAll(".ts-country-flag-v705").forEach(flag => {
-        flag.setAttribute("role", "listitem");
-      });
+      strip.setAttribute("role", "img");
+      strip.tabIndex = 0;
+      const codes = [...strip.querySelectorAll(".ts-country-flag-v705")]
+        .map(flag => flag.dataset.countryCode)
+        .filter(Boolean)
+        .join(", ");
+      const isArabic = (document.documentElement.lang || "").toLowerCase().startsWith("ar");
+      strip.setAttribute("aria-label", `${isArabic ? "دول الرحلة" : "Trip countries"}${codes ? `: ${codes}` : ""}`);
+      strip.querySelectorAll(".ts-country-flag-v705").forEach(flag => flag.removeAttribute("role"));
     });
   }
 
@@ -53,6 +56,11 @@
     const style = document.createElement("style");
     style.id = "tripSpendUiFixesV705Styles";
     style.textContent = `
+      /* Repair legacy FX variables that no longer exist in the active theme. */
+      .fx-result>div{background:var(--surface2)!important}
+      .fx-status.good{color:var(--ok)!important}
+      .fx-status.bad{color:var(--bad)!important}
+
       /* Keep long Switch Trip routes usable instead of squeezing/cropping flags. */
       #tripSwitcherModal .trip-switcher-current-identity,
       #tripSwitcherSheet .trip-switcher-current-identity,
@@ -79,8 +87,13 @@
         scroll-snap-type:x proximity;
         scroll-padding-inline:2px;
         direction:ltr!important;
+        outline:none;
       }
       .ts-swipe-flags-v705::-webkit-scrollbar{display:none!important}
+      .ts-swipe-flags-v705:focus-visible{
+        border-radius:8px;
+        box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 56%,transparent);
+      }
       .ts-swipe-flags-v705 .ts-country-flag-v705{
         flex:0 0 auto!important;
         scroll-snap-align:start;
@@ -131,7 +144,7 @@
         }
       }
     `;
-    document.head.append(style);
+    document.head.appendChild(style);
   }
 
   function apply() {
