@@ -2,6 +2,7 @@
   "use strict";
 
   const APP_RELEASE = "7.0.6";
+  const FIRST_LOAD_RUNTIME = "tripspend:first-load-runtime";
   const APP_KEY = "tripspend.v1";
   const FX_KEY = "tripspend.fxcache.v1";
   const API = "https://api.frankfurter.dev/v2/rate";
@@ -269,11 +270,8 @@
     if (firstLoadBootStarted || navigator.serviceWorker?.controller || appState()?.trip) return;
     firstLoadBootStarted = true;
 
-    // Do not inject the full runtime during DOMContentLoaded: doing so can hold
-    // the browser's load event open. Let the first navigation finish, wait for
-    // the newly-installed worker to claim the page, then reload once into the
-    // service-worker-upgraded v7.0.6 shell.
     document.querySelectorAll(".version-badge").forEach(el => { el.textContent = `v${APP_RELEASE}`; });
+    window.dispatchEvent(new CustomEvent(FIRST_LOAD_RUNTIME, { detail:{ version:APP_RELEASE, mode:"worker-reload" } }));
     if (!("serviceWorker" in navigator)) return;
 
     navigator.serviceWorker.addEventListener("controllerchange", reloadWhenControlled, { once:true });
