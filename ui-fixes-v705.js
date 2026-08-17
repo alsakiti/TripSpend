@@ -86,11 +86,49 @@
         scroll-snap-align:start;
       }
 
-      @media(max-width:390px){
+      /* Premium setup Step 1: hiding the legacy country number must also remove
+         its grid column. Otherwise iPhone auto-places the real form into the
+         old 27px column and collapses Country + From/To controls. */
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .setup-primary-country{
+        display:block!important;
+        grid-template-columns:1fr!important;
+        width:100%!important;
+        min-width:0!important;
+      }
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .setup-country-content{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr)!important;
+        width:100%!important;
+        min-width:0!important;
+      }
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .country-combobox,
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .country-combobox input,
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{
+        width:100%!important;
+        min-width:0!important;
+      }
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+        gap:12px!important;
+      }
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .date-field-label,
+      #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .date-picker-card{
+        width:100%!important;
+        min-width:0!important;
+      }
+
+      @media(max-width:420px){
         .ts-swipe-flags-v705{max-width:128px!important;gap:7px!important}
+        #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{
+          gap:10px!important;
+        }
       }
       @media(max-width:350px){
         .ts-swipe-flags-v705{max-width:105px!important}
+        #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{
+          grid-template-columns:1fr!important;
+        }
       }
     `;
     document.head.append(style);
