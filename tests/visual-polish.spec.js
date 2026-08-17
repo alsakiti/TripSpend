@@ -60,8 +60,9 @@ test("Analytics matches the premium reference graphics and Settings keeps Gemini
   await expect(page.locator("#peopleAnalytics .ts-traveler-avatar")).toHaveCount(2);
 
   await expect(page.locator("#dailyAnalytics")).toHaveClass(/ts-daily-reference/);
-  await expect(page.locator("#dailyAnalytics svg")).toBeVisible();
-  await expect(page.locator("#dailyAnalytics svg path")).toHaveCount(1);
+  const chart = page.locator("#dailyAnalytics .ts-daily-chart-shell > svg");
+  await expect(chart).toBeVisible();
+  await expect(page.locator("#dailyAnalytics .ts-daily-chart-shell > svg > path")).toHaveCount(1);
   await expect(page.locator("#dailyAnalytics .ts-daily-summary")).toBeVisible();
   await expect(page.locator("#dailyAnalytics")).toContainText("79.427 OMR");
   await expect(page.locator("#dailyAnalytics")).toContainText("11.347 OMR");
