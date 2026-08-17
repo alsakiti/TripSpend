@@ -293,13 +293,12 @@
   }
 
   async function bootstrapFirstVisitRuntime() {
-    if (firstLoadBootStarted || navigator.serviceWorker?.controller) return;
+    if (firstLoadBootStarted || navigator.serviceWorker?.controller || appState()?.trip) return;
     firstLoadBootStarted = true;
 
-    // index.html is intentionally still compatible with the legacy shell. On a
-    // browser's first uncontrolled navigation the service worker has not yet had
-    // a chance to upgrade that HTML, so load the same current runtime modules
-    // directly. Controlled/repeat visits skip this path and use sw.js instead.
+    // The legacy HTML shell only needs this bridge for a true first/no-trip
+    // visit. Existing trips immediately move to service-worker control instead,
+    // avoiding duplicate runtime work during ordinary app launches.
     document.querySelectorAll(".version-badge").forEach(el => { el.textContent = `v${APP_RELEASE}`; });
     for (const file of FIRST_LOAD_RUNTIME) await loadRuntimeScript(file);
     window.dispatchEvent(new CustomEvent("tripspend:first-load-runtime", { detail:{ version:APP_RELEASE } }));
@@ -308,8 +307,6 @@
   function wire() {
     if (!$("fxFrom")) return;
 
-    // Populate controls without doing a network request at app startup. The
-    // converter only wakes when its Settings card is actually visible.
     syncTripCurrencies(true);
     setNetworkBadge();
 
