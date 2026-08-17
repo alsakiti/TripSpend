@@ -38,7 +38,7 @@ test.describe("iPhone flag rendering", () => {
   test("country picker keeps native flags visible without clipping", async ({ page }) => {
     await waitForServiceWorker(page);
     await expect(page.locator("#setupView")).toBeVisible();
-    await expect(page.locator(".version-badge").first()).toHaveText("v7.0.5");
+    await expect(page.locator(".version-badge").first()).toHaveText("v7.0.6");
 
     await page.locator("#destination").fill("om");
     await expect(page.locator("#destinationOptions")).not.toHaveClass(/hidden/);
@@ -78,7 +78,6 @@ test.describe("iPhone flag rendering", () => {
     const flags = page.locator("#tripSwitcherModal .ts-country-flag-v705");
     await expect.poll(async () => flags.count()).toBeGreaterThanOrEqual(3);
 
-    const firstThree = flags.nth(0).or(flags.nth(1)).or(flags.nth(2));
     const data = await flags.evaluateAll(elements => elements.slice(0, 3).map(el => {
       const css = getComputedStyle(el);
       const r = el.getBoundingClientRect();
