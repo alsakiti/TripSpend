@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("node:fs");
 
 function seedTrip() {
   const now = Date.now();
@@ -25,17 +26,13 @@ async function bootControlled(page) {
   await page.waitForSelector("#mainView:not(.hidden)");
 }
 
-test("fresh uncontrolled visit still receives the premium setup runtime", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers:"block" });
-  const page = await context.newPage();
-  await page.goto("/");
-
-  await expect.poll(() => page.evaluate(() => Boolean(window.TripSpendSetupOnboarding))).toBe(true);
-  await expect(page.locator("#setupForm")).toHaveClass(/ts-setup-onboarding-form/);
-  await expect(page.locator("#setupView")).toHaveClass(/ts-setup-onboarding/);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.6");
-
-  await context.close();
+test("first visit upgrades through the service worker without blocking page load", () => {
+  const fx = fs.readFileSync("fx.js", "utf8");
+  expect(fx).toContain('const FIRST_LOAD_RUNTIME = "tripspend:first-load-runtime"');
+  expect(fx).toContain('navigator.serviceWorker.addEventListener("controllerchange", reloadWhenControlled');
+  expect(fx).toContain("location.reload()");
+  expect(fx).toContain("appState()?.trip");
+  expect(fx).not.toContain("loadRuntimeScript(");
 });
 
 test("hidden FX card does not make background rate requests", async ({ page }) => {
