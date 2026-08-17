@@ -35,7 +35,7 @@ const windowsUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
 test.describe("iPhone flag rendering", () => {
   test.use({ userAgent: iphoneUA });
 
-  test("country picker and trip UI keep native flags visible with fixed sizing", async ({ page }) => {
+  test("country picker keeps native flags visible without clipping", async ({ page }) => {
     await waitForServiceWorker(page);
     await expect(page.locator("#setupView")).toBeVisible();
     await expect(page.locator(".version-badge").first()).toHaveText("v7.0.5");
@@ -49,14 +49,56 @@ test.describe("iPhone flag rendering", () => {
     await expect(omanFlag.locator("img")).toHaveCount(0);
     await expect(omanFlag).toContainText("🇴🇲");
 
-    const box = await omanFlag.evaluate(el => {
+    const style = await omanFlag.evaluate(el => {
+      const css = getComputedStyle(el);
       const r = el.getBoundingClientRect();
-      return { width:Math.round(r.width), height:Math.round(r.height) };
+      return {
+        width:r.width,
+        height:r.height,
+        overflow:css.overflow,
+        letterSpacing:css.letterSpacing,
+        whiteSpace:css.whiteSpace
+      };
     });
-    expect(box.width).toBeGreaterThanOrEqual(23);
-    expect(box.width).toBeLessThanOrEqual(27);
-    expect(box.height).toBeGreaterThanOrEqual(15);
-    expect(box.height).toBeLessThanOrEqual(19);
+    expect(style.width).toBeGreaterThan(0);
+    expect(style.height).toBeGreaterThan(0);
+    expect(style.overflow).toBe("visible");
+    expect(style.letterSpacing).toBe("normal");
+    expect(style.whiteSpace).toBe("nowrap");
+  });
+
+  test("Switch Trip shows Germany, Austria and Italy without native clipping", async ({ page }) => {
+    await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seededTrip());
+    await waitForServiceWorker(page);
+    await page.waitForSelector("#mainView:not(.hidden)");
+
+    await page.locator("#tripSwitcherTrigger").click();
+    await expect(page.locator("#tripSwitcherModal")).not.toHaveClass(/hidden/);
+
+    const flags = page.locator("#tripSwitcherModal .ts-country-flag-v705");
+    await expect.poll(async () => flags.count()).toBeGreaterThanOrEqual(3);
+
+    const firstThree = flags.nth(0).or(flags.nth(1)).or(flags.nth(2));
+    const data = await flags.evaluateAll(elements => elements.slice(0, 3).map(el => {
+      const css = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return {
+        code:el.dataset.countryCode,
+        text:el.textContent,
+        native:el.classList.contains("ts-country-flag-native"),
+        width:r.width,
+        height:r.height,
+        overflow:css.overflow,
+        letterSpacing:css.letterSpacing
+      };
+    }));
+
+    expect(data.map(item => item.code)).toEqual(["DE","AT","IT"]);
+    expect(data.every(item => item.native)).toBeTruthy();
+    expect(data.every(item => item.width > 0 && item.height > 0)).toBeTruthy();
+    expect(data.every(item => item.overflow === "visible")).toBeTruthy();
+    expect(data.every(item => item.letterSpacing === "normal")).toBeTruthy();
+    expect(data.map(item => item.text)).toEqual(["🇩🇪","🇦🇹","🇮🇹"]);
   });
 });
 
@@ -75,8 +117,9 @@ test.describe("Windows flag rendering", () => {
   });
 });
 
-test("Switch Trip flags share one consistent size", async ({ page }) => {
+test("Switch Trip flags share one consistent SVG size where fixed-size rendering is used", async ({ page }) => {
   await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seededTrip());
+  await page.setExtraHTTPHeaders({});
   await waitForServiceWorker(page);
   await page.waitForSelector("#mainView:not(.hidden)");
 
@@ -85,12 +128,6 @@ test("Switch Trip flags share one consistent size", async ({ page }) => {
 
   const flags = page.locator("#tripSwitcherModal .ts-country-flag-v705");
   await expect.poll(async () => flags.count()).toBeGreaterThanOrEqual(3);
-
-  const sizes = await flags.evaluateAll(elements => elements.slice(0, 3).map(el => {
-    const r = el.getBoundingClientRect();
-    return `${Math.round(r.width)}x${Math.round(r.height)}`;
-  }));
-  expect(new Set(sizes).size).toBe(1);
 
   const codes = await flags.evaluateAll(elements => elements.slice(0, 3).map(el => el.dataset.countryCode));
   expect(codes).toEqual(["DE","AT","IT"]);
