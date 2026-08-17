@@ -6,25 +6,11 @@
   const FX_KEY = "tripspend.fxcache.v1";
   const API = "https://api.frankfurter.dev/v2/rate";
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
-  const FIRST_LOAD_RUNTIME = [
-    "ai-v684.js",
-    "locale-v700.js",
-    "locale-dynamic-v700.js",
-    "expense-locale-v703.js",
-    "page-locale-v704.js",
-    "settings-polish-v704.js",
-    "visual-polish-v704.js",
-    "setup-language-host-v700.js",
-    "setup-onboarding-v704.js",
-    "flags-v705.js",
-    "ui-fixes-v705.js",
-    "receipt-capability-v700.js",
-    "receipt-ai-v700.js"
-  ];
   const $ = id => document.getElementById(id);
   let conversionRequestId = 0;
   let pageSyncQueued = false;
   let firstLoadBootStarted = false;
+  let firstLoadReloadQueued = false;
 
   function appState() {
     try { return JSON.parse(localStorage.getItem(APP_KEY) || "{}"); }
@@ -273,35 +259,25 @@
     });
   }
 
-  function scriptAlreadyLoaded(file) {
-    return [...document.scripts].some(script => {
-      try { return new URL(script.src, location.href).pathname.endsWith(`/${file}`); }
-      catch { return false; }
-    });
+  function reloadWhenControlled() {
+    if (firstLoadReloadQueued || !navigator.serviceWorker?.controller) return;
+    firstLoadReloadQueued = true;
+    window.setTimeout(() => location.reload(), 120);
   }
 
-  function loadRuntimeScript(file) {
-    return new Promise(resolve => {
-      if (scriptAlreadyLoaded(file)) return resolve();
-      const script = document.createElement("script");
-      script.src = `./${file}?v=${APP_RELEASE}`;
-      script.async = false;
-      script.addEventListener("load", resolve, { once:true });
-      script.addEventListener("error", resolve, { once:true });
-      document.body.appendChild(script);
-    });
-  }
-
-  async function bootstrapFirstVisitRuntime() {
+  function bootstrapFirstVisitRuntime() {
     if (firstLoadBootStarted || navigator.serviceWorker?.controller || appState()?.trip) return;
     firstLoadBootStarted = true;
 
-    // The legacy HTML shell only needs this bridge for a true first/no-trip
-    // visit. Existing trips immediately move to service-worker control instead,
-    // avoiding duplicate runtime work during ordinary app launches.
+    // Do not inject the full runtime during DOMContentLoaded: doing so can hold
+    // the browser's load event open. Let the first navigation finish, wait for
+    // the newly-installed worker to claim the page, then reload once into the
+    // service-worker-upgraded v7.0.6 shell.
     document.querySelectorAll(".version-badge").forEach(el => { el.textContent = `v${APP_RELEASE}`; });
-    for (const file of FIRST_LOAD_RUNTIME) await loadRuntimeScript(file);
-    window.dispatchEvent(new CustomEvent("tripspend:first-load-runtime", { detail:{ version:APP_RELEASE } }));
+    if (!("serviceWorker" in navigator)) return;
+
+    navigator.serviceWorker.addEventListener("controllerchange", reloadWhenControlled, { once:true });
+    navigator.serviceWorker.ready.then(reloadWhenControlled).catch(()=>{});
   }
 
   function wire() {
