@@ -59,10 +59,10 @@ if (!(style.includes(".analytics-v651 .analytics-more-details") && style.include
 if (!settingsPolish.includes("TripSpendSettingsPolish")) fail("settings polish API missing"); else ok("simplified Settings runtime is exposed");
 
 const visualPolish = read("visual-polish-v704.js");
-for (const marker of ["ts-payment-stack","ts-traveler-ring","ts-daily-chart","Google Gemini","Gemini 3.5 Flash-Lite","settings-country-flag"]) {
+for (const marker of ["ts-payment-reference","ts-traveler-reference","ts-daily-reference","ts-daily-summary","smoothPath","Google Gemini","Gemini 3.5 Flash-Lite","settings-country-flag"]) {
   if (!visualPolish.includes(marker)) fail(`visual polish marker missing: ${marker}`);
 }
-if (!visualPolish.includes("TripSpendVisualPolish")) fail("visual polish API missing"); else ok("real Analytics graphics and visual polish are wired");
+if (!visualPolish.includes("TripSpendVisualPolish")) fail("visual polish API missing"); else ok("reference-style Analytics graphics and visual polish are wired");
 
 const receipt = read("receipt-ai-v700.js");
 for (const id of ["receiptInput","expenseAmount","expenseCurrency","expenseDate","expenseCategory","expenseNote"]) {
