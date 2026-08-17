@@ -233,6 +233,10 @@ test("Arabic Analytics page localizes redesigned insights, categories and debt e
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await page.waitForTimeout(350);
 
+  const insightsDetails = page.locator("#analyticsMoreDetails");
+  if (await insightsDetails.isHidden()) await page.locator("#analyticsMoreToggle").click();
+  await expect(insightsDetails).toBeVisible();
+
   let analyticsText = await page.locator("#analytics").innerText();
   for (const arabic of ["إنفاق الرحلة","إجمالي المصروف","أعلى فئة","متوسط المصروف","أين ذهبت أموالك","الطعام","من يدين لمن","لا توجد ديون جماعية بعد","عرض تفاصيل الحساب","أعلى يوم إنفاقًا","طرق الدفع","حصة المسافرين","الإنفاق اليومي"]) {
     expect(analyticsText).toContain(arabic);
