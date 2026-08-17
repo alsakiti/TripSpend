@@ -50,8 +50,14 @@ test("Analytics matches the premium reference graphics and Settings keeps Gemini
   await openTab(page, "Analytics");
   await expect(page.locator("#analytics")).toHaveClass(/active/);
 
-  await expect(page.locator("#analyticsMoreToggle")).toBeVisible();
-  await expect(page.locator("#analyticsMoreDetails")).toBeVisible();
+  const insightsToggle = page.locator("#analyticsMoreToggle");
+  const insightsDetails = page.locator("#analyticsMoreDetails");
+  await expect(insightsToggle).toBeVisible();
+  await expect(insightsDetails).toBeHidden();
+  await insightsToggle.click();
+  await expect(insightsDetails).toBeVisible();
+  await expect(insightsToggle).toHaveAttribute("aria-expanded", "true");
+
   await expect(page.locator("#paymentAnalytics")).toHaveClass(/ts-payment-reference/);
   await expect(page.locator("#paymentAnalytics .ts-payment-row")).toHaveCount(1);
   await expect(page.locator("#paymentAnalytics .ts-payment-icon")).toBeVisible();
