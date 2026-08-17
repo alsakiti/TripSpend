@@ -1,5 +1,7 @@
 const { test, expect } = require("@playwright/test");
 
+test.use({ timezoneId:"Asia/Muscat" });
+
 function seedState() {
   return {
     trip:{id:"trip-visual",name:"Europe",destination:"Germany",startDate:"2026-08-12",endDate:"2026-08-22",budget:1000,homeCurrency:"OMR",tripCurrency:"EUR",defaultPayment:"Credit Card"},
