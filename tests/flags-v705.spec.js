@@ -29,26 +29,50 @@ function seededTrip() {
   };
 }
 
-test("country picker renders real SVG flags instead of regional-letter glyphs", async ({ page }) => {
-  await waitForServiceWorker(page);
-  await expect(page.locator("#setupView")).toBeVisible();
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.5");
+const iphoneUA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+const windowsUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 
-  await page.locator("#destination").fill("om");
-  await expect(page.locator("#destinationOptions")).not.toHaveClass(/hidden/);
+test.describe("iPhone flag rendering", () => {
+  test.use({ userAgent: iphoneUA });
 
-  const omanFlag = page.locator('#destinationOptions .ts-country-flag-v705[data-country-code="OM"]');
-  await expect(omanFlag).toBeVisible();
-  await expect(omanFlag.locator("img")).toHaveAttribute("src", /flag-icons@7\.3\.2\/flags\/4x3\/om\.svg$/);
+  test("country picker and trip UI keep native flags visible with fixed sizing", async ({ page }) => {
+    await waitForServiceWorker(page);
+    await expect(page.locator("#setupView")).toBeVisible();
+    await expect(page.locator(".version-badge").first()).toHaveText("v7.0.5");
 
-  const box = await omanFlag.evaluate(el => {
-    const r = el.getBoundingClientRect();
-    return { width:Math.round(r.width), height:Math.round(r.height) };
+    await page.locator("#destination").fill("om");
+    await expect(page.locator("#destinationOptions")).not.toHaveClass(/hidden/);
+
+    const omanFlag = page.locator('#destinationOptions .ts-country-flag-v705[data-country-code="OM"]');
+    await expect(omanFlag).toBeVisible();
+    await expect(omanFlag).toHaveClass(/ts-country-flag-native/);
+    await expect(omanFlag.locator("img")).toHaveCount(0);
+    await expect(omanFlag).toContainText("🇴🇲");
+
+    const box = await omanFlag.evaluate(el => {
+      const r = el.getBoundingClientRect();
+      return { width:Math.round(r.width), height:Math.round(r.height) };
+    });
+    expect(box.width).toBeGreaterThanOrEqual(23);
+    expect(box.width).toBeLessThanOrEqual(27);
+    expect(box.height).toBeGreaterThanOrEqual(15);
+    expect(box.height).toBeLessThanOrEqual(19);
   });
-  expect(box.width).toBeGreaterThanOrEqual(23);
-  expect(box.width).toBeLessThanOrEqual(27);
-  expect(box.height).toBeGreaterThanOrEqual(15);
-  expect(box.height).toBeLessThanOrEqual(19);
+});
+
+test.describe("Windows flag rendering", () => {
+  test.use({ userAgent: windowsUA });
+
+  test("country picker uses SVG fallback instead of regional-letter glyphs", async ({ page }) => {
+    await waitForServiceWorker(page);
+    await page.locator("#destination").fill("om");
+    await expect(page.locator("#destinationOptions")).not.toHaveClass(/hidden/);
+
+    const omanFlag = page.locator('#destinationOptions .ts-country-flag-v705[data-country-code="OM"]');
+    await expect(omanFlag).toBeVisible();
+    await expect(omanFlag).toHaveClass(/ts-country-flag-svg/);
+    await expect(omanFlag.locator("img")).toHaveAttribute("src", /flag-icons@7\.3\.2\/flags\/4x3\/om\.svg$/);
+  });
 });
 
 test("Switch Trip flags share one consistent size", async ({ page }) => {
