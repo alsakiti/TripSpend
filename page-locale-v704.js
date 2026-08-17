@@ -231,3 +231,213 @@
 
   window.TripSpendPageLocale = { release:RELEASE, apply };
 })();
+
+/* v7.0.4 typography normalization: retire legacy 7–10px UI text without scaling primary headings. */
+(() => {
+  "use strict";
+
+  const STYLE_ID = "tripSpendTypographyAuditV704";
+
+  function installTypography() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      html {
+        -webkit-text-size-adjust: 100% !important;
+        text-size-adjust: 100% !important;
+      }
+
+      /* Home / dashboard microcopy */
+      .dashboard-date,
+      .dashboard-section-kicker,
+      .current-country-status,
+      .v6-country-chip .country-budget-row-top small,
+      .country-budget-planned,
+      .country-money-grid small {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+      .v6-country-chip .country-budget-row-top strong {
+        font-size: 12px !important;
+      }
+
+      /* Expenses and expense cards */
+      #expenseSummary {
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+      }
+      .expense-main > span {
+        font-size: 11.5px !important;
+        line-height: 1.4 !important;
+      }
+      .expense-side span {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+      .expense-receipt-badge {
+        font-size: 10px !important;
+      }
+      .receipt-field-head small {
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+      }
+
+      /* Plan: retain hierarchy, remove tiny legacy labels */
+      .plan-flag-stop small,
+      .plan-overview-row small,
+      .plan-v651 .stop-metrics small {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+      .plan-v651 .planned-status-pill {
+        font-size: 10px !important;
+      }
+
+      /* Analytics */
+      .analytics-main-top small,
+      .analytics-main-meta small {
+        font-size: 11px !important;
+        line-height: 1.35 !important;
+      }
+      .analytics-main-meta strong {
+        font-size: 15px !important;
+      }
+      .analytics-split small {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+      .analytics-split strong {
+        font-size: 13.5px !important;
+      }
+      .analytics-quick-row small {
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+      }
+      .analytics-quick-row strong {
+        font-size: 14.5px !important;
+      }
+      .analytics-v651 .analytics-section-title small {
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+      }
+      .analytics-v651 .analytics-category-bars .bar-meta {
+        font-size: 14px !important;
+      }
+      .analytics-pace strong {
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+      }
+      .analytics-more-row small {
+        font-size: 10.5px !important;
+      }
+      .analytics-busiest-row small {
+        font-size: 11px !important;
+      }
+      .analytics-secondary-block .daily {
+        font-size: 12.5px !important;
+      }
+
+      /* Settlement / debt details */
+      .analytics-v651 .settlement-details-toggle,
+      .analytics-v651 .settlement-history-toggle {
+        font-size: 14px !important;
+      }
+      .settlement-history-count {
+        font-size: 10px !important;
+      }
+      .settlement-history-row strong {
+        font-size: 12.5px !important;
+        line-height: 1.3 !important;
+      }
+      .settlement-history-row small {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+
+      /* Expense details and receipt metadata */
+      .expense-detail-amount span {
+        font-size: 11.5px !important;
+      }
+      .expense-detail-item small {
+        font-size: 10.5px !important;
+      }
+      .expense-detail-item strong {
+        font-size: 12px !important;
+      }
+      .expense-detail-shares > strong {
+        font-size: 11.5px !important;
+      }
+      .expense-detail-shares > div {
+        font-size: 10.5px !important;
+      }
+      .expense-detail-receipt > div strong {
+        font-size: 11.5px !important;
+      }
+      .expense-detail-receipt > div small,
+      .expense-detail-no-receipt {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+      .receipt-viewer-help {
+        font-size: 10px !important;
+        line-height: 1.4 !important;
+      }
+
+      /* Settings and diagnostics */
+      .settings-group-label {
+        font-size: 11px !important;
+      }
+      .settings-manage-card > div p,
+      .settings-tool-card > div p,
+      .appearance-copy p,
+      .data-safety-head p,
+      .app-update-head p,
+      .diagnostics-head p {
+        font-size: 11.5px !important;
+        line-height: 1.4 !important;
+      }
+      .storage-status-row small,
+      .backup-head small,
+      .storage-usage-grid small,
+      .app-update-versions small,
+      .diagnostics-list span,
+      .diagnostics-list strong,
+      .diagnostics-summary {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+
+      /* Trip history / setup metadata */
+      .home-trip-history-copy small,
+      .trip-history-card-head small,
+      .setup-route-item small,
+      .setup-traveler-item small,
+      .setup-simple-heading span,
+      .date-field-label > span small {
+        font-size: 10.5px !important;
+        line-height: 1.35 !important;
+      }
+      .trip-history-metrics small {
+        font-size: 10.5px !important;
+      }
+      .trip-history-metrics strong {
+        font-size: 12px !important;
+      }
+
+      /* Navigation labels were slightly undersized compared with the page UI. */
+      .nav-btn small,
+      .bottom-nav small {
+        font-size: 11.5px !important;
+        line-height: 1.2 !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", installTypography, { once:true });
+  } else {
+    installTypography();
+  }
+})();
