@@ -222,7 +222,7 @@ test("Arabic Plan page localizes planner, progress and empty itinerary", async (
   expect(planText).toContain("Your itinerary starts here");
 });
 
-test("Arabic Analytics page localizes summary, categories and debt empty state", async ({ page }) => {
+test("Arabic Analytics page localizes redesigned insights, categories and debt empty state", async ({ page }) => {
   await seedTrip(page);
   await bootV7(page);
   await page.waitForSelector("#mainView:not(.hidden)");
@@ -234,15 +234,17 @@ test("Arabic Analytics page localizes summary, categories and debt empty state",
   await page.waitForTimeout(350);
 
   let analyticsText = await page.locator("#analytics").innerText();
-  for (const arabic of ["إنفاق الرحلة","إجمالي المصروف","أعلى فئة","متوسط المصروف","أين ذهبت أموالك","الطعام","من يدين لمن","لا توجد ديون جماعية بعد","عرض تفاصيل الحساب","مزيد من التحليلات"]) {
+  for (const arabic of ["إنفاق الرحلة","إجمالي المصروف","أعلى فئة","متوسط المصروف","أين ذهبت أموالك","الطعام","من يدين لمن","لا توجد ديون جماعية بعد","عرض تفاصيل الحساب","أعلى يوم إنفاقًا","طرق الدفع","حصة المسافرين","الإنفاق اليومي"]) {
     expect(analyticsText).toContain(arabic);
   }
-  for (const english of ["Trip spending","TOTAL SPENT","Top category","Avg expense","Where your money went","Who owes whom","No group debts yet","Show calculation details","MORE INSIGHTS"]) {
+  for (const english of ["Trip spending","TOTAL SPENT","Top category","Avg expense","Where your money went","Who owes whom","No group debts yet","Show calculation details","MORE INSIGHTS","Payment methods","Traveler share","Daily spending"]) {
     expect(analyticsText).not.toContain(english);
   }
   expect(analyticsText).not.toContain("Personal expenses paid by the same person do not create debt");
   expect(analyticsText).not.toMatch(/\bFood\b/);
   expect(analyticsText).not.toContain("On pace");
+  await expect(page.locator("body")).toHaveClass(/ts-no-floating-add/);
+  await expect(page.locator("#navAdd")).toBeHidden();
   await page.screenshot({ path:"test-results/analytics-ar.png", fullPage:true });
 
   await visibleLanguageButton(page).click();
@@ -253,4 +255,7 @@ test("Arabic Analytics page localizes summary, categories and debt empty state",
   expect(analyticsText).toContain("TOTAL SPENT");
   expect(analyticsText).toContain("Where your money went");
   expect(analyticsText).toContain("No group debts yet");
+  expect(analyticsText).toContain("Payment methods");
+  expect(analyticsText).toContain("Traveler share");
+  expect(analyticsText).toContain("Daily spending");
 });

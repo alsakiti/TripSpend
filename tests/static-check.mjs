@@ -48,10 +48,13 @@ if (!pageLocale.includes("On pace") || !pageLocale.includes("Spending faster")) 
 if (!pageLocale.includes("tripspend:language")) fail("page locale does not react to language changes"); else ok("Plan/Analytics localization reacts to language changes");
 
 const settingsPolish = read("settings-polish-v704.js");
+const style = read("style.css");
 for (const marker of ["settings-simple-form","settings-country-list-compact","settings-save-dock","settings-advanced","ts-no-floating-add"]) {
   if (!settingsPolish.includes(marker)) fail(`simplified Settings marker missing: ${marker}`);
 }
 if (!settingsPolish.includes('["settings", "analytics", "trips", "people"]')) fail("floating add suppression is missing on non-add pages"); else ok("floating add is suppressed on Settings and Analytics");
+if (!style.includes("padding-bottom:calc(164px + env(safe-area-inset-bottom))")) fail("active page FAB clearance is missing"); else ok("active pages reserve the floating action zone");
+if (!(style.includes(".analytics-v651 .analytics-more-details") && style.includes("display:grid!important"))) fail("analytics detail cards are not scan-ready"); else ok("analytics insights use scan-friendly cards");
 if (!settingsPolish.includes("TripSpendSettingsPolish")) fail("settings polish API missing"); else ok("simplified Settings runtime is exposed");
 
 const receipt = read("receipt-ai-v700.js");
