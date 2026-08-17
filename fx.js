@@ -7,6 +7,7 @@
   const CURS = ["OMR","AED","SAR","QAR","KWD","BHD","USD","EUR","GBP","THB","IDR","JPY","MYR","SGD","INR","TRY","CHF","AUD","CAD","NZD","CNY","KRW","PHP","VND"];
   const $ = id => document.getElementById(id);
   let conversionRequestId = 0;
+  let pageSyncQueued = false;
 
   function appState() {
     try { return JSON.parse(localStorage.getItem(APP_KEY) || "{}"); }
@@ -21,7 +22,8 @@
   }
 
   function saveCache(cache) {
-    localStorage.setItem(FX_KEY, JSON.stringify(cache));
+    try { localStorage.setItem(FX_KEY, JSON.stringify(cache)); }
+    catch {}
   }
 
   function pairKey(from, to) {
@@ -118,6 +120,14 @@
       : "You are offline and there is no saved rate for this currency pair yet.");
   }
 
+  function fxCardVisible() {
+    const card = document.querySelector(".settings-fx-card");
+    if (!card) return false;
+    if (document.querySelector(".page.active")?.id !== "settings") return false;
+    const style = getComputedStyle(card);
+    return style.display !== "none" && style.visibility !== "hidden" && card.getClientRects().length > 0;
+  }
+
   function setNetworkBadge() {
     const badge = $("networkBadge");
     if (!badge) return;
@@ -142,19 +152,19 @@
 
   async function convertSection(forceNetwork = false) {
     const amountEl = $("fxAmount");
-    if (!amountEl) return;
+    if (!amountEl || !fxCardVisible()) return;
 
     const amount = Number(amountEl.value || 0);
-    const from = $("fxFrom").value;
-    const to = $("fxTo").value;
+    const from = $("fxFrom")?.value;
+    const to = $("fxTo")?.value;
     const status = $("fxStatus");
+    if (!from || !to || !status) return;
     const requestId = ++conversionRequestId;
 
     if (!(amount >= 0)) return;
 
     // Avoid unnecessary API requests while the user types. A recently fetched
-    // rate is reused for up to six hours; the Refresh Rate button always asks
-    // the service for the newest available reference rate.
+    // rate is reused for up to six hours; Refresh Rate always forces a new check.
     const cached = saved(from, to);
     const sixHours = 6 * 60 * 60 * 1000;
     const cacheIsRecent = cached?.fetchedAt && (Date.now() - Number(cached.fetchedAt) < sixHours);
@@ -174,10 +184,9 @@
 
       // Currency changes and typing can start overlapping lookups. Ignore an
       // older response rather than allowing it to overwrite the newest pair.
-      if (requestId !== conversionRequestId || $("fxFrom").value !== from || $("fxTo").value !== to) return;
+      if (requestId !== conversionRequestId || $("fxFrom")?.value !== from || $("fxTo")?.value !== to) return;
 
       const currentAmount = Number(amountEl.value || 0);
-
       $("fxRateValue").textContent = `1 ${from} = ${rateDecimals(info.rate)} ${to}`;
       $("fxConverted").textContent = formatAmount(currentAmount * Number(info.rate), to);
 
@@ -199,7 +208,7 @@
       $("fxRateValue").textContent = "—";
       $("fxConverted").textContent = "—";
       status.className = "fx-status bad";
-      status.textContent = err.message || "Exchange rate unavailable.";
+      status.textContent = err?.message || "Exchange rate unavailable.";
     }
   }
 
@@ -231,64 +240,84 @@
         status.textContent = `Using your saved offline rate${info.date ? ` (${info.date})` : ""}.`;
       }
     } catch (err) {
-      status.textContent = err.message || "No exchange rate is available.";
+      status.textContent = err?.message || "No exchange rate is available.";
     }
+  }
+
+  function refreshVisibleFx({ forceNetwork = false, forceCurrencies = false } = {}) {
+    if (!fxCardVisible()) return;
+    syncTripCurrencies(forceCurrencies);
+    setNetworkBadge();
+    convertSection(forceNetwork);
+  }
+
+  function queueVisibleRefresh(options = {}) {
+    if (pageSyncQueued) return;
+    pageSyncQueued = true;
+    requestAnimationFrame(() => {
+      pageSyncQueued = false;
+      refreshVisibleFx(options);
+    });
   }
 
   function wire() {
     if (!$("fxFrom")) return;
 
+    // Populate controls without doing a network request at app startup. The
+    // converter only wakes when its Settings card is actually visible.
     syncTripCurrencies(true);
     setNetworkBadge();
 
-    $("fxAmount").addEventListener("input", () => convertSection(false));
-    $("fxFrom").addEventListener("change", () => convertSection(false));
-    $("fxTo").addEventListener("change", () => convertSection(false));
+    $("fxAmount")?.addEventListener("input", () => convertSection(false));
+    $("fxFrom")?.addEventListener("change", () => convertSection(false));
+    $("fxTo")?.addEventListener("change", () => convertSection(false));
 
-    $("fxSwap").addEventListener("click", () => {
+    $("fxSwap")?.addEventListener("click", () => {
       const a = $("fxFrom").value;
       $("fxFrom").value = $("fxTo").value;
       $("fxTo").value = a;
       convertSection(false);
     });
 
-    $("fxRefresh").addEventListener("click", () => convertSection(true));
+    $("fxRefresh")?.addEventListener("click", () => convertSection(true));
     $("useLiveRate")?.addEventListener("click", useRateInExpense);
 
     window.addEventListener("online", () => {
       setNetworkBadge();
-      convertSection(true);
+      if (fxCardVisible()) convertSection(true);
     });
     window.addEventListener("offline", () => {
       setNetworkBadge();
-      convertSection(false);
+      if (fxCardVisible()) convertSection(false);
     });
 
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        syncTripCurrencies(false);
-        setNetworkBadge();
-      }
+      if (!document.hidden && fxCardVisible()) queueVisibleRefresh();
     });
 
-    const mainView = $("mainView");
-    if (mainView) {
-      new MutationObserver(() => {
-        if (!mainView.classList.contains("hidden")) {
-          syncTripCurrencies(true);
-          convertSection(false);
-        }
-      }).observe(mainView, { attributes: true, attributeFilter: ["class"] });
-    }
+    window.addEventListener("tripspend:page", () => queueVisibleRefresh({ forceCurrencies:true }));
+    window.addEventListener("tripspend:render", () => queueVisibleRefresh());
 
-    // First render: use a cached rate immediately; refresh online in the background.
-    convertSection(false);
+    // The converter lives inside the collapsed Advanced settings section.
+    // Opening that section is the first moment it should do conversion work.
+    document.addEventListener("click", event => {
+      if (!event.target?.closest?.("#settingsAdvanced > summary")) return;
+      window.setTimeout(() => queueVisibleRefresh({ forceCurrencies:true }), 0);
+    });
+
+    // If Settings/Advanced is already open at boot, show cached/live output.
+    queueVisibleRefresh();
   }
 
-  window.TripSpendFX = { fetchRate, saved };
+  window.TripSpendFX = {
+    fetchRate,
+    saved,
+    refresh: () => refreshVisibleFx({ forceNetwork:true, forceCurrencies:true }),
+    visible: fxCardVisible
+  };
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", wire);
+    document.addEventListener("DOMContentLoaded", wire, { once:true });
   } else {
     wire();
   }
