@@ -43,17 +43,11 @@
     wrap.dataset.countryCode = code.toUpperCase();
     wrap.setAttribute("aria-hidden", "true");
 
-    // Apple, Android and most modern non-Windows platforms already render
-    // regional-indicator flags correctly. Keep those native glyphs at their
-    // natural width so iOS never crops a flag inside a fixed rectangle.
     if (!needsSvgFallback()) {
       renderNativeFlag(wrap, flag);
       return wrap;
     }
 
-    // Windows intentionally displays many regional-indicator pairs as letters,
-    // so use a real SVG there. If the network asset is unavailable, show a
-    // compact ISO badge rather than an empty flag placeholder.
     const img = document.createElement("img");
     img.src = `${CDN_BASE}/${code}.svg`;
     img.alt = "";
@@ -107,6 +101,42 @@
     nodes.forEach(upgradeTextNode);
   }
 
+  function isArabicUi() {
+    const language = window.TripSpendLocale?.language?.() || document.documentElement.lang || "en";
+    return String(language).toLowerCase().startsWith("ar");
+  }
+
+  function formatSetupDate(value) {
+    const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return isArabicUi() ? "اختر التاريخ" : "Select date";
+    const year = Number(match[1]);
+    const monthIndex = Number(match[2]) - 1;
+    const day = Number(match[3]);
+    const date = new Date(year, monthIndex, day);
+    if (Number.isNaN(date.getTime())) return isArabicUi() ? "اختر التاريخ" : "Select date";
+    const locale = isArabicUi() ? "ar-OM-u-nu-latn" : "en-GB";
+    const month = new Intl.DateTimeFormat(locale, { month:isArabicUi() ? "long" : "short" }).format(date);
+    return `${day} ${month} ${year}`;
+  }
+
+  function refreshSetupDateDisplays(root = document) {
+    const pairs = [
+      ["startDate", "startDateDisplay"],
+      ["endDate", "endDateDisplay"],
+      ["setupExtraStart", "setupExtraStartDisplay"],
+      ["setupExtraEnd", "setupExtraEndDisplay"]
+    ];
+    for (const [inputId, displayId] of pairs) {
+      const input = root.getElementById?.(inputId) || document.getElementById(inputId);
+      const display = root.getElementById?.(displayId) || document.getElementById(displayId);
+      if (!input || !display) continue;
+      display.textContent = formatSetupDate(input.value);
+      display.classList.add("ts-date-display-v706");
+      display.setAttribute("dir", "ltr");
+      display.dataset.tsDateLocale = isArabicUi() ? "ar" : "en";
+    }
+  }
+
   function bindSetupDatePickers(root = document) {
     const cards = [];
     if (root?.matches?.("#setupView .date-picker-card")) cards.push(root);
@@ -118,6 +148,10 @@
       if (!input) return;
       card.dataset.tsDatePickerBound = "1";
       let opening = false;
+
+      const refreshDisplay = () => refreshSetupDateDisplays(document);
+      input.addEventListener("input", refreshDisplay);
+      input.addEventListener("change", refreshDisplay);
 
       card.addEventListener("click", event => {
         if (opening) return;
@@ -134,6 +168,8 @@
         }
       }, { capture:true });
     });
+
+    refreshSetupDateDisplays(document);
   }
 
   function injectStyles() {
@@ -189,7 +225,6 @@
         letter-spacing:.02em;
       }
 
-      /* Setup country search */
       #destinationOptions .ts-country-flag-v705,
       #setupExtraCountryOptions .ts-country-flag-v705{
         width:26px;
@@ -205,7 +240,6 @@
         vertical-align:-4px;
       }
 
-      /* Switch Trip route flags */
       .trip-switcher-modal .ts-country-flag-v705,
       .trip-switcher-sheet .ts-country-flag-v705,
       #tripSwitcherModal .ts-country-flag-v705,
@@ -228,7 +262,6 @@
         vertical-align:-4px;
       }
 
-      /* Country lists and route previews remain compact. */
       #settings .settings-country-flag .ts-country-flag-v705,
       #settings .ts-country-flag-v705{
         width:26px;
@@ -252,8 +285,6 @@
         font-size:20px;
       }
 
-      /* v7.0.6 onboarding date repair: keep RTL dates on one row and make
-         the complete card a reliable picker target on desktop and mobile. */
       #setupView .date-picker-card{cursor:pointer!important}
       #setupView .date-picker-card .native-date-input{
         position:absolute!important;
@@ -266,6 +297,15 @@
         opacity:0!important;
         cursor:pointer!important;
       }
+      #setupView .date-display.ts-date-display-v706{
+        direction:ltr!important;
+        unicode-bidi:isolate!important;
+        font-variant-numeric:tabular-nums;
+        letter-spacing:0!important;
+        white-space:nowrap!important;
+      }
+      html[dir="ltr"] #setupView .date-display.ts-date-display-v706{text-align:left!important}
+      html[dir="rtl"] #setupView .date-display.ts-date-display-v706{text-align:right!important}
       html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:first-child,
       html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:nth-child(2){
         grid-row:1!important;
@@ -303,6 +343,7 @@
     injectStyles();
     upgrade(document.body);
     bindSetupDatePickers(document);
+    refreshSetupDateDisplays(document);
 
     const observer = new MutationObserver(records => {
       for (const record of records) {
@@ -318,6 +359,7 @@
     window.addEventListener("tripspend:render", scheduleUpgrade);
     window.addEventListener("tripspend:page", scheduleUpgrade);
     window.addEventListener("tripspend:language", scheduleUpgrade);
+    window.addEventListener("tripspend:language", () => requestAnimationFrame(() => refreshSetupDateDisplays(document)));
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once:true });
