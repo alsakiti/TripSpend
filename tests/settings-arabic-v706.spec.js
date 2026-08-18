@@ -45,18 +45,25 @@ test("Settings fully localizes visible UI to Arabic and can switch back to Engli
   await expect(advanced).toHaveAttribute("open", "");
   await expect(page.locator("#settings")).toContainText("أمان البيانات");
   await expect(page.locator("#settings")).toContainText("تحديث التطبيق");
-  await expect(page.locator("#settings")).toContainText("صحة التطبيق");
+  await expect(page.locator("#settings")).toContainText("حالة التطبيق");
   await expect(page.locator("#settings")).toContainText("محول العملات");
   await expect(page.locator("#settings")).toContainText("نسخة احتياطية قابلة للنقل");
   await expect(page.locator("#settings")).toContainText("أسعار الصرف المحفوظة");
   await expect(page.locator("#settings")).toContainText("حذف الرحلة");
+  await expect(page.locator("#settings")).toContainText("قاعدة البيانات المحلية السريعة مفعّلة.");
+  await expect(page.locator("#settings")).toContainText("عرض خطوات التثبيت");
+  await expect(page.locator("#settings")).toContainText("لا توجد أسعار صرف محفوظة بعد.");
 
   const visibleText = await page.locator("#settings").innerText();
   for (const english of [
     "Trip name", "Start date", "End date", "Total budget", "Home currency", "Trip currency",
     "Default payment method", "Manage trip", "Trips & history", "Manage Travelers", "Appearance",
     "Advanced & data", "Data safety", "App update", "App health", "Tools & data",
-    "Currency converter", "Portable backup", "Saved exchange rates", "Delete trip"
+    "Currency converter", "Portable backup", "Saved exchange rates", "Delete trip",
+    "Fast local database is active", "Waiting for first save", "Before v6.4 upgrade",
+    "UP TO DATE", "Install availability depends on your browser", "Show Install Steps",
+    "No saved rates yet", "Gemini-powered trip analysis", "confirm writes",
+    "countries • Germany", "Everything looks healthy", " expenses • ", " stored • OK"
   ]) {
     expect(visibleText).not.toContain(english);
   }
@@ -66,4 +73,5 @@ test("Settings fully localizes visible UI to Arabic and can switch back to Engli
   await expect(page.locator("#settingsBasicPanel h3")).toHaveText("Trip details");
   await expect(page.locator("#settingsAdvanced > summary strong")).toHaveText("Advanced & data");
   await expect(page.locator("#settings")).toContainText("Portable backup");
+  await expect(page.locator("#settings")).toContainText("Fast local database is active.");
 });
