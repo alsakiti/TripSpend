@@ -61,6 +61,72 @@
       .fx-status.good{color:var(--ok)!important}
       .fx-status.bad{color:var(--bad)!important}
 
+      /* Keep the dashboard Next Up card compact and vertically balanced.
+         Legacy style.css contains several v6 overrides, including a later 72px
+         minimum height. This v7 layer is the single final source of truth. */
+      .dashboard-refresh #v6PlanRow.v6-plan-row{
+        display:grid!important;
+        grid-template-columns:32px minmax(0,1fr) 18px!important;
+        align-items:center!important;
+        gap:10px!important;
+        min-height:60px!important;
+        margin-top:8px!important;
+        margin-bottom:0!important;
+        padding:9px 11px!important;
+        border-radius:15px!important;
+      }
+      .dashboard-refresh #v6PlanRow .v6-plan-icon{
+        display:grid!important;
+        place-items:center!important;
+        width:32px!important;
+        height:32px!important;
+        border-radius:10px!important;
+        font-size:16px!important;
+        line-height:1!important;
+      }
+      .dashboard-refresh #v6PlanRow .v6-plan-copy{
+        display:grid!important;
+        align-content:center!important;
+        gap:1px!important;
+        min-width:0!important;
+        text-align:start!important;
+      }
+      .dashboard-refresh #v6PlanRow .v6-plan-copy small{
+        margin:0!important;
+        color:var(--brand)!important;
+        font-size:8.5px!important;
+        font-weight:900!important;
+        line-height:1.15!important;
+        letter-spacing:.12em!important;
+      }
+      .dashboard-refresh #v6PlanRow .v6-plan-copy strong{
+        margin:1px 0 0!important;
+        overflow:hidden!important;
+        font-size:13.5px!important;
+        line-height:1.2!important;
+        text-overflow:ellipsis!important;
+        white-space:nowrap!important;
+      }
+      .dashboard-refresh #v6PlanRow .v6-plan-copy>span{
+        margin:2px 0 0!important;
+        overflow:hidden!important;
+        color:var(--muted)!important;
+        font-size:11px!important;
+        line-height:1.25!important;
+        text-overflow:ellipsis!important;
+        white-space:nowrap!important;
+      }
+      .dashboard-refresh #v6PlanRow .v6-plan-arrow{
+        display:grid!important;
+        place-items:center!important;
+        width:18px!important;
+        height:28px!important;
+        color:var(--muted)!important;
+        font-size:22px!important;
+        line-height:1!important;
+        transform:translateY(-1px);
+      }
+
       /* Keep long Switch Trip routes usable instead of squeezing/cropping flags. */
       #tripSwitcherModal .trip-switcher-current-identity,
       #tripSwitcherSheet .trip-switcher-current-identity,
@@ -135,6 +201,17 @@
         .ts-swipe-flags-v705{max-width:128px!important;gap:7px!important}
         #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{
           gap:10px!important;
+        }
+        .dashboard-refresh #v6PlanRow.v6-plan-row{
+          grid-template-columns:30px minmax(0,1fr) 16px!important;
+          gap:9px!important;
+          min-height:58px!important;
+          padding:8px 10px!important;
+        }
+        .dashboard-refresh #v6PlanRow .v6-plan-icon{
+          width:30px!important;
+          height:30px!important;
+          font-size:15px!important;
         }
       }
       @media(max-width:350px){
