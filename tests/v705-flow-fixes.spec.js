@@ -89,7 +89,8 @@ test("Switch Trip flags swipe horizontally and Start New Trip uses premium onboa
   expect(setupStageOverflow).toBeLessThanOrEqual(1);
 
   // Arabic regression: From (من) must be the right-hand field and To (إلى)
-  // the left-hand field, with the date content itself reading RTL.
+  // the left-hand field, both must stay on the same row, and clicking either
+  // visible date card must invoke the native picker.
   await page.evaluate(() => window.TripSpendLocale?.setLanguage?.("ar"));
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
 
@@ -101,15 +102,37 @@ test("Switch Trip flags swipe horizontally and Start New Trip uses premium onboa
     const r = el.getBoundingClientRect();
     const card = el.querySelector(".date-picker-card");
     const display = el.querySelector(".date-display");
+    const input = el.querySelector('input[type="date"]');
+    const inputStyle = getComputedStyle(input);
     return {
       left:Math.round(r.left),
+      top:Math.round(r.top),
       direction:getComputedStyle(card).direction,
-      textAlign:getComputedStyle(display).textAlign
+      textAlign:getComputedStyle(display).textAlign,
+      inputWidth:Math.round(input.getBoundingClientRect().width),
+      cardWidth:Math.round(card.getBoundingClientRect().width),
+      inputHeight:Math.round(input.getBoundingClientRect().height),
+      cardHeight:Math.round(card.getBoundingClientRect().height),
+      zIndex:inputStyle.zIndex
     };
   }));
   expect(rtlLayout[0].left).toBeGreaterThan(rtlLayout[1].left);
+  expect(Math.abs(rtlLayout[0].top - rtlLayout[1].top)).toBeLessThanOrEqual(2);
   expect(rtlLayout[0].direction).toBe("rtl");
   expect(rtlLayout[1].direction).toBe("rtl");
   expect(rtlLayout[0].textAlign).toBe("right");
   expect(rtlLayout[1].textAlign).toBe("right");
+  expect(Math.abs(rtlLayout[0].inputWidth - rtlLayout[0].cardWidth)).toBeLessThanOrEqual(2);
+  expect(Math.abs(rtlLayout[1].inputWidth - rtlLayout[1].cardWidth)).toBeLessThanOrEqual(2);
+  expect(Math.abs(rtlLayout[0].inputHeight - rtlLayout[0].cardHeight)).toBeLessThanOrEqual(2);
+  expect(Math.abs(rtlLayout[1].inputHeight - rtlLayout[1].cardHeight)).toBeLessThanOrEqual(2);
+
+  await page.evaluate(() => {
+    window.__tsPickerCalls = { start:0, end:0 };
+    document.querySelector("#startDate").showPicker = () => { window.__tsPickerCalls.start += 1; };
+    document.querySelector("#endDate").showPicker = () => { window.__tsPickerCalls.end += 1; };
+  });
+  await dateCards.nth(0).click();
+  await dateCards.nth(1).click();
+  expect(await page.evaluate(() => window.__tsPickerCalls)).toEqual({ start:1, end:1 });
 });
