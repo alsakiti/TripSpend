@@ -87,4 +87,29 @@ test("Switch Trip flags swipe horizontally and Start New Trip uses premium onboa
 
   const setupStageOverflow = await page.locator(".ts-setup-stage").evaluate(el => el.scrollWidth - el.clientWidth);
   expect(setupStageOverflow).toBeLessThanOrEqual(1);
+
+  // Arabic regression: From (من) must be the right-hand field and To (إلى)
+  // the left-hand field, with the date content itself reading RTL.
+  await page.evaluate(() => window.TripSpendLocale?.setLanguage?.("ar"));
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+
+  const dateLabels = page.locator('.ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label');
+  await expect(dateLabels.nth(0).locator(":scope > span")).toHaveText("من");
+  await expect(dateLabels.nth(1).locator(":scope > span")).toHaveText("إلى");
+
+  const rtlLayout = await dateLabels.evaluateAll(elements => elements.map(el => {
+    const r = el.getBoundingClientRect();
+    const card = el.querySelector(".date-picker-card");
+    const display = el.querySelector(".date-display");
+    return {
+      left:Math.round(r.left),
+      direction:getComputedStyle(card).direction,
+      textAlign:getComputedStyle(display).textAlign
+    };
+  }));
+  expect(rtlLayout[0].left).toBeGreaterThan(rtlLayout[1].left);
+  expect(rtlLayout[0].direction).toBe("rtl");
+  expect(rtlLayout[1].direction).toBe("rtl");
+  expect(rtlLayout[0].textAlign).toBe("right");
+  expect(rtlLayout[1].textAlign).toBe("right");
 });
