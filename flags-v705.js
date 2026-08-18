@@ -107,6 +107,35 @@
     nodes.forEach(upgradeTextNode);
   }
 
+  function bindSetupDatePickers(root = document) {
+    const cards = [];
+    if (root?.matches?.("#setupView .date-picker-card")) cards.push(root);
+    root?.querySelectorAll?.("#setupView .date-picker-card").forEach(card => cards.push(card));
+
+    cards.forEach(card => {
+      if (card.dataset.tsDatePickerBound === "1") return;
+      const input = card.querySelector('input[type="date"]');
+      if (!input) return;
+      card.dataset.tsDatePickerBound = "1";
+      let opening = false;
+
+      card.addEventListener("click", event => {
+        if (opening) return;
+        opening = true;
+        event.preventDefault();
+        try {
+          input.focus({ preventScroll:true });
+          if (typeof input.showPicker === "function") input.showPicker();
+          else input.click();
+        } catch {
+          try { input.click(); } catch {}
+        } finally {
+          queueMicrotask(() => { opening = false; });
+        }
+      }, { capture:true });
+    });
+  }
+
   function injectStyles() {
     if (document.getElementById("tripSpendFlagsV705Styles")) return;
     const style = document.createElement("style");
@@ -223,6 +252,25 @@
         font-size:20px;
       }
 
+      /* v7.0.6 onboarding date repair: keep RTL dates on one row and make
+         the complete card a reliable picker target on desktop and mobile. */
+      #setupView .date-picker-card{cursor:pointer!important}
+      #setupView .date-picker-card .native-date-input{
+        position:absolute!important;
+        inset:0!important;
+        width:100%!important;
+        height:100%!important;
+        min-width:0!important;
+        max-width:none!important;
+        z-index:3!important;
+        opacity:0!important;
+        cursor:pointer!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:first-child,
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:nth-child(2){
+        grid-row:1!important;
+      }
+
       @media(max-width:420px){
         .ts-country-flag-v705:not(.ts-country-flag-native){width:23px;height:15px;flex-basis:23px}
         .ts-country-flag-v705.ts-country-flag-native{font-size:20px}
@@ -232,6 +280,10 @@
         #setupExtraCountryOptions .ts-country-flag-native{font-size:21px}
         #tripSwitcherModal .ts-country-flag-native,
         #tripSwitcherSheet .ts-country-flag-native{font-size:21px}
+      }
+      @media(max-width:350px){
+        html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:first-child{grid-row:1!important}
+        html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:nth-child(2){grid-row:2!important}
       }
     `;
     document.head.append(style);
@@ -243,17 +295,22 @@
     requestAnimationFrame(() => {
       scheduled = false;
       upgrade(document.body);
+      bindSetupDatePickers(document);
     });
   }
 
   function start() {
     injectStyles();
     upgrade(document.body);
+    bindSetupDatePickers(document);
 
     const observer = new MutationObserver(records => {
       for (const record of records) {
         if (record.type === "characterData") upgradeTextNode(record.target);
-        for (const node of record.addedNodes || []) upgrade(node);
+        for (const node of record.addedNodes || []) {
+          upgrade(node);
+          if (node.nodeType === Node.ELEMENT_NODE) bindSetupDatePickers(node);
+        }
       }
     });
     observer.observe(document.body, { childList:true, subtree:true, characterData:true });
