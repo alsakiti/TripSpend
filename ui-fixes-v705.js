@@ -61,9 +61,13 @@
     "OFFLINE":"غير متصل",
     "Preparing secure local storage…":"جارٍ تجهيز التخزين المحلي الآمن…",
     "Checking your data…":"جارٍ فحص بياناتك…",
+    "Fast local database is active.":"قاعدة البيانات المحلية السريعة مفعّلة.",
+    "Waiting for first save":"انتظار أول حفظ",
     "Restore points":"نقاط الاستعادة",
     "Latest, recent days, and upgrade protection.":"أحدث نسخة، والأيام الأخيرة، وحماية قبل التحديثات.",
     "Save Snapshot":"حفظ نقطة استعادة",
+    "Restore":"استعادة",
+    "Before v6.4 upgrade":"قبل ترقية v6.4",
     "Restore points will appear here automatically.":"ستظهر نقاط الاستعادة هنا تلقائيًا.",
     "Local storage used":"التخزين المحلي المستخدم",
     "Receipt photos":"صور الإيصالات",
@@ -73,9 +77,11 @@
     "Current":"الحالي",
     "Latest":"الأحدث",
     "Checking…":"جارٍ الفحص…",
+    "UP TO DATE":"محدّث",
     "Check for Update":"التحقق من وجود تحديث",
     "Refresh App":"تحديث التطبيق",
     "App health":"صحة التطبيق",
+    "App status":"حالة التطبيق",
     "Quick checks for storage, database, receipts, performance and the offline app shell.":"فحوصات سريعة للتخزين وقاعدة البيانات والإيصالات والأداء وتشغيل التطبيق دون اتصال.",
     "Run checks":"تشغيل الفحوصات",
     "Storage":"التخزين",
@@ -84,6 +90,8 @@
     "Offline app":"التطبيق دون اتصال",
     "Data integrity":"سلامة البيانات",
     "Performance":"الأداء",
+    "Readable":"قابلة للقراءة",
+    "Active":"مفعّل",
     "TripSpend will run a quick check when Settings opens.":"سيجري TripSpend فحصًا سريعًا عند فتح الإعدادات.",
     "Tools & data":"الأدوات والبيانات",
     "Currency converter":"محول العملات",
@@ -97,7 +105,9 @@
     "Connect to the internet once to save a rate for offline use.":"اتصل بالإنترنت مرة واحدة لحفظ سعر لاستخدامه دون اتصال.",
     "Install TripSpend":"تثبيت TripSpend",
     "Use it like an app from your home screen.":"استخدمه كتطبيق من الشاشة الرئيسية.",
+    "Install availability depends on your browser.":"تعتمد إمكانية التثبيت على متصفحك.",
     "Install App":"تثبيت التطبيق",
+    "Show Install Steps":"عرض خطوات التثبيت",
     "Portable backup":"نسخة احتياطية قابلة للنقل",
     "JSON includes trip data and receipt photos. CSV opens in Excel.":"يتضمن JSON بيانات الرحلة وصور الإيصالات، ويمكن فتح CSV في Excel.",
     "Export Backup":"تصدير نسخة احتياطية",
@@ -105,7 +115,10 @@
     "Import Backup":"استيراد نسخة احتياطية",
     "Saved exchange rates":"أسعار الصرف المحفوظة",
     "TripSpend remembers rates you use and reuses them automatically.":"يتذكر TripSpend أسعار الصرف التي تستخدمها ويعيد استخدامها تلقائيًا.",
+    "No saved rates yet.":"لا توجد أسعار صرف محفوظة بعد.",
     "Clear Saved Rates":"مسح أسعار الصرف المحفوظة",
+    "Gemini-powered trip analysis and confirmed changes.":"تحليل الرحلة بواسطة Gemini مع تأكيد التغييرات.",
+    "via Cloudflare Worker • confirm writes":"عبر Cloudflare Worker • تأكيد التغييرات",
     "Delete trip":"حذف الرحلة",
     "Clears this trip from this browser.":"يحذف هذه الرحلة من هذا المتصفح.",
     "Delete Trip":"حذف الرحلة",
@@ -137,6 +150,13 @@
     return String(lang).toLowerCase().startsWith("ar");
   }
 
+  function arabicCountryTrail(value) {
+    return String(value || "")
+      .split(/\s*→\s*/)
+      .map(country => window.TripSpendLocale?.country?.(country.trim()) || country.trim())
+      .join(" ← ");
+  }
+
   function translateSettingsText(value) {
     const raw = String(value ?? "");
     const trimmed = raw.trim();
@@ -147,6 +167,26 @@
     if (match) return raw.replace(trimmed, `${match[1]} دولة`);
     match = trimmed.match(/^(\d+)\s+countries$/i);
     if (match) return raw.replace(trimmed, `${match[1]} دول`);
+    match = trimmed.match(/^(\d+)\s+countries\s*•\s*(.+)$/i);
+    if (match) return raw.replace(trimmed, `${match[1]} دول • ${arabicCountryTrail(match[2])}`);
+    match = trimmed.match(/^startup\s+([\d.]+)\s*ms\s*•\s*render\s+([\d.]+)\s*ms\s*•\s*Waiting for first save$/i);
+    if (match) return raw.replace(trimmed, `بدء التشغيل ${match[1]} مللي ثانية • العرض ${match[2]} مللي ثانية • انتظار أول حفظ`);
+    match = trimmed.match(/^(.+?)\s*•\s*(\d+)\s+photos?$/i);
+    if (match) return raw.replace(trimmed, `${match[1]} • ${match[2]} ${Number(match[2]) === 1 ? "صورة" : "صور"}`);
+    match = trimmed.match(/^IndexedDB\s*•\s*OK$/i);
+    if (match) return raw.replace(trimmed, "IndexedDB • سليم");
+    match = trimmed.match(/^Readable\s*•\s*OK$/i);
+    if (match) return raw.replace(trimmed, "قابلة للقراءة • سليم");
+    match = trimmed.match(/^(\d+)\s+stored\s*•\s*OK$/i);
+    if (match) return raw.replace(trimmed, `${match[1]} محفوظ • سليم`);
+    match = trimmed.match(/^Active\s*•\s*OK$/i);
+    if (match) return raw.replace(trimmed, "مفعّل • سليم");
+    match = trimmed.match(/^Healthy\s*•\s*OK$/i);
+    if (match) return raw.replace(trimmed, "سليم");
+    match = trimmed.match(/^(\d+)\s+expenses?\s*•\s*([\d.]+)\s*ms\s+render$/i);
+    if (match) return raw.replace(trimmed, `${match[1]} مصروف • عرض ${match[2]} مللي ثانية`);
+    match = trimmed.match(/^Everything looks healthy\s*•\s*checked in\s+([\d.]+)\s*ms$/i);
+    if (match) return raw.replace(trimmed, `كل شيء يعمل بشكل سليم • تم الفحص خلال ${match[1]} مللي ثانية`);
     match = trimmed.match(/^Latest available reference rate\s*•\s*rate date\s+(.+)\. Saved for offline use\.$/i);
     if (match) return raw.replace(trimmed, `أحدث سعر مرجعي متاح • تاريخ السعر ${match[1]}. تم حفظه للاستخدام دون اتصال.`);
     match = trimmed.match(/^Saved rate\s*•\s*last refreshed\s+(.+)$/i);
@@ -164,7 +204,7 @@
     if (isArabic()) {
       const translated = translateSettingsText(current);
       if (translated != null && translated !== current) {
-        settingsOriginals.set(node, current);
+        if (!settingsOriginals.has(node)) settingsOriginals.set(node, current);
         node.nodeValue = translated;
       }
       return;
