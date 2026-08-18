@@ -128,6 +128,15 @@
     const card = document.querySelector(".settings-fx-card");
     if (!card) return false;
     if (document.querySelector(".page.active")?.id !== "settings") return false;
+
+    // The FX card lives inside the collapsed Advanced & data section. Some
+    // browsers still report layout boxes for descendants of a closed details
+    // element, so explicitly require every containing <details> to be open
+    // before any background rate request is allowed.
+    for (let parent = card.parentElement; parent; parent = parent.parentElement) {
+      if (parent.tagName === "DETAILS" && !parent.open) return false;
+    }
+
     const style = getComputedStyle(card);
     return style.display !== "none" && style.visibility !== "hidden" && card.getClientRects().length > 0;
   }
@@ -198,7 +207,7 @@
         const when = info.fetchedAt ? new Date(info.fetchedAt).toLocaleString() : "earlier";
         status.textContent = navigator.onLine
           ? `Saved rate • last refreshed ${when}${info.date ? ` • rate date ${info.date}` : ""}. Tap Refresh Rate for a new check.`
-          : `Offline/cached rate • saved ${when}${info.date ? ` • rate date ${info.date}` : ""}.`;
+          : `Offline/cached rate • saved ${when}${info.date ? ` (${info.date})` : ""}.`;
       } else {
         status.className = "fx-status good";
         status.textContent = "Same currency — no exchange rate needed.";
