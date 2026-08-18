@@ -285,7 +285,18 @@
         font-size:20px;
       }
 
-      #setupView .date-picker-card{cursor:pointer!important}
+      /* v7.0.6 onboarding date cards: comfortable text metrics, upright calendar,
+         balanced edge spacing, and the native input still owns the full tap area. */
+      #setupView .date-picker-card{
+        cursor:pointer!important;
+        min-height:54px!important;
+        height:54px!important;
+        padding:0 15px!important;
+        align-items:center!important;
+        justify-content:space-between!important;
+        gap:12px!important;
+        overflow:hidden!important;
+      }
       #setupView .date-picker-card .native-date-input{
         position:absolute!important;
         inset:0!important;
@@ -298,11 +309,44 @@
         cursor:pointer!important;
       }
       #setupView .date-display.ts-date-display-v706{
+        display:flex!important;
+        align-items:center!important;
+        flex:1 1 auto!important;
+        min-width:0!important;
+        min-height:24px!important;
+        padding:2px 0 3px!important;
         direction:ltr!important;
         unicode-bidi:isolate!important;
+        color:var(--text)!important;
+        font-size:13.5px!important;
+        font-weight:780!important;
         font-variant-numeric:tabular-nums;
+        line-height:1.4!important;
         letter-spacing:0!important;
         white-space:nowrap!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
+      }
+      #setupView .date-calendar{
+        display:grid!important;
+        place-items:center!important;
+        flex:0 0 22px!important;
+        width:22px!important;
+        height:22px!important;
+        margin-inline-start:auto!important;
+        margin-inline-end:0!important;
+        padding:0!important;
+        color:var(--muted)!important;
+        font-size:14px!important;
+        line-height:1!important;
+        transform:none!important;
+        opacity:.82;
+      }
+      #setupView .date-calendar svg{
+        display:block!important;
+        width:20px!important;
+        height:20px!important;
+        transform:none!important;
       }
       html[dir="ltr"] #setupView .date-display.ts-date-display-v706{text-align:left!important}
       html[dir="rtl"] #setupView .date-display.ts-date-display-v706{text-align:right!important}
@@ -320,6 +364,10 @@
         #setupExtraCountryOptions .ts-country-flag-native{font-size:21px}
         #tripSwitcherModal .ts-country-flag-native,
         #tripSwitcherSheet .ts-country-flag-native{font-size:21px}
+        #setupView .date-picker-card{height:52px!important;min-height:52px!important;padding:0 13px!important;gap:9px!important}
+        #setupView .date-display.ts-date-display-v706{font-size:12.5px!important;line-height:1.42!important}
+        #setupView .date-calendar{flex-basis:21px!important;width:21px!important;height:21px!important}
+        #setupView .date-calendar svg{width:19px!important;height:19px!important}
       }
       @media(max-width:350px){
         html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:first-child{grid-row:1!important}
