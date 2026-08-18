@@ -89,7 +89,15 @@ const flags = read("flags-v705.js");
 for (const marker of ["TripSpendFlags","ts-country-flag-v705","destinationOptions","setupExtraCountryOptions","flag-icons@7.3.2/flags/4x3","Regional_Indicator"].filter(Boolean)) {
   if (!flags.includes(marker) && marker !== "Regional_Indicator") fail(`flag runtime marker missing: ${marker}`);
 }
-if (!flags.includes("0x1F1E6") || !flags.includes("object-fit:cover")) fail("SVG flag conversion or consistent scaling missing"); else ok("country flags use standardized SVG rendering and sizing");
+if (!flags.includes("0x1F1E6") || !flags.includes("object-fit:contain")) fail("SVG flag conversion or stretch-safe scaling missing"); else ok("country flags use standardized SVG rendering and stretch-safe sizing");
+
+const v5 = read("v5.js");
+for (const marker of ["next-country-name-row", "next-country-flag", "country-name-row", "country-budget-metadata"]) {
+  if (!v5.includes(marker)) fail(`RTL country card structure missing: ${marker}`);
+}
+for (const marker of ['font-family:"Tajawal","Cairo","Noto Sans Arabic"', "letter-spacing:0!important", "object-fit:contain", ".country-budget-metadata"]) {
+  if (!style.includes(marker)) fail(`Arabic/RTL presentation rule missing: ${marker}`);
+}
 
 const uiFixes = read("ui-fixes-v705.js");
 for (const marker of ["forcePremiumSetup","ts-setup-onboarding-form","ts-swipe-flags-v705","overflow-x:auto","touch-action:pan-x","TripSpendUiFixes"]) {

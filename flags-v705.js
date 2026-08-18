@@ -148,7 +148,7 @@
         display:block;
         width:100%;
         height:100%;
-        object-fit:cover;
+        object-fit:contain;
       }
       .ts-country-flag-v705.ts-country-flag-failed{
         border:1px solid color-mix(in srgb,var(--muted) 34%,var(--line));
