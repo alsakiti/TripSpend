@@ -437,6 +437,44 @@
         min-width:0!important;
       }
 
+      /* Arabic onboarding dates: From (من) is the right-hand field and To (إلى) is the left-hand field. */
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{
+        direction:ltr!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:first-child{
+        grid-column:2!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:nth-child(2){
+        grid-column:1!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .date-field-label{
+        direction:rtl!important;
+        text-align:right!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .date-field-label>span{
+        display:block!important;
+        width:100%!important;
+        text-align:right!important;
+        letter-spacing:0!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .date-picker-card{
+        direction:rtl!important;
+        justify-content:flex-start!important;
+        text-align:right!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .date-display{
+        flex:1 1 auto!important;
+        min-width:0!important;
+        direction:rtl!important;
+        unicode-bidi:plaintext;
+        text-align:right!important;
+      }
+      html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .date-calendar{
+        flex:0 0 auto!important;
+        margin-inline-start:auto!important;
+        margin-inline-end:0!important;
+      }
+
       @media(max-width:420px){
         .ts-swipe-flags-v705{max-width:128px!important;gap:7px!important}
         #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{gap:10px!important}
@@ -451,6 +489,8 @@
       @media(max-width:350px){
         .ts-swipe-flags-v705{max-width:105px!important}
         #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates{grid-template-columns:1fr!important}
+        html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:first-child,
+        html[dir="rtl"] #setupView.ts-setup-onboarding .ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label:nth-child(2){grid-column:1!important}
       }
     `;
     document.head.appendChild(style);
@@ -497,7 +537,7 @@
       const settingsObserver = new MutationObserver(() => {
         if (!settingsLocalizing && document.querySelector(".page.active")?.id === "settings") queueSettingsLocalization();
       });
-      settingsObserver.observe(settings, {childList:true, subtree:true,characterData:true});
+      settingsObserver.observe(settings, {childList:true,subtree:true,characterData:true});
     }
 
     window.addEventListener("tripspend:render", () => { schedule(); queueSettingsLocalization(); });
