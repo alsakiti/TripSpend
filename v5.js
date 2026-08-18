@@ -669,9 +669,18 @@
       top.className = "country-budget-row-top";
 
       const label = document.createElement("div");
+      label.className = "country-budget-copy";
       const strong = document.createElement("strong");
-      strong.textContent = `${core.countryFlag(stop.country)} ${stop.country}`;
+      strong.className = "country-name-row";
+      const flag = document.createElement("span");
+      flag.className = "country-name-flag";
+      flag.textContent = core.countryFlag(stop.country);
+      const countryName = document.createElement("span");
+      countryName.className = "country-name-text";
+      countryName.textContent = stop.country;
+      strong.append(flag, countryName);
       const small = document.createElement("small");
+      small.className = "country-budget-metadata";
       small.textContent = `${stop.currency} • ${core.fmtDate(stop.startDate)}–${core.fmtDate(stop.endDate)}`;
       label.append(strong, small);
 
@@ -754,6 +763,23 @@
     const dates = $("v6NextCountryDates");
     if (!button || !name || !dates || !state().trip) return;
 
+    const renderCountryName = stop => {
+      name.replaceChildren();
+      name.classList.add("next-country-name-row");
+      const flag = document.createElement("span");
+      flag.className = "next-country-flag";
+      flag.textContent = core.countryFlag(stop.country);
+      const title = document.createElement("span");
+      title.className = "next-country-name";
+      title.textContent = stop.country;
+      name.append(flag, title);
+    };
+
+    const renderPlainName = text => {
+      name.classList.remove("next-country-name-row");
+      name.textContent = text;
+    };
+
     const today = core.today();
     const activeItems = itinerary()
       .filter(item => item.status !== "done" && item.date >= today)
@@ -773,7 +799,7 @@
           : "NEXT UP";
       }
 
-      name.textContent = `${type.icon} ${nextItem.title}`;
+      renderPlainName(`${type.icon} ${nextItem.title}`);
 
       const details = [];
       if (nextItem.date !== today) details.push(core.fmtDateWithYear(nextItem.date));
@@ -794,7 +820,7 @@
 
     if (next) {
       if (label) label.textContent = today < state().trip.startDate ? "NEXT UP • FIRST COUNTRY" : "NEXT UP";
-      name.textContent = `${core.countryFlag(next.country)} ${next.country}`;
+      renderCountryName(next);
       dates.textContent = `${core.fmtDateWithYear(next.startDate)} • ${next.currency}`;
       return;
     }
@@ -802,13 +828,12 @@
     const current = stopForDate(today);
     if (today > state().trip.endDate) {
       if (label) label.textContent = "TRIP COMPLETE";
-      name.textContent = "Trip complete";
+      renderPlainName("Trip complete");
       dates.textContent = `${core.fmtDateWithYear(state().trip.startDate)} – ${core.fmtDateWithYear(state().trip.endDate)}`;
     } else {
       if (label) label.textContent = "TRIP PLANNER";
-      name.textContent = current
-        ? `${core.countryFlag(current.country)} ${current.country}`
-        : "No upcoming plans";
+      if (current) renderCountryName(current);
+      else renderPlainName("No upcoming plans");
       dates.textContent = "Open itinerary & costs";
     }
   }
