@@ -72,6 +72,113 @@
         letter-spacing: normal !important;
         word-spacing: normal !important;
       }
+
+      /* v7.0.6 Home polish — make Next Up feel like part of the premium trip context. */
+      html body .dashboard-refresh #v6PlanRow.v6-plan-row {
+        display:grid!important;
+        grid-template-columns:46px minmax(0,1fr) 20px!important;
+        align-items:center!important;
+        gap:12px!important;
+        min-height:78px!important;
+        margin:10px 0 0!important;
+        padding:12px 13px!important;
+        border:1px solid color-mix(in srgb,var(--brand) 18%,var(--line))!important;
+        border-radius:17px!important;
+        background:linear-gradient(145deg,color-mix(in srgb,var(--brand-soft) 62%,var(--surface)),var(--surface))!important;
+        box-shadow:0 5px 16px rgba(18,104,232,.055)!important;
+      }
+      html body .dashboard-refresh #v6PlanRow .v6-plan-icon {
+        display:grid!important;
+        place-items:center!important;
+        width:46px!important;
+        height:46px!important;
+        border-radius:14px!important;
+        background:color-mix(in srgb,var(--brand-soft) 86%,var(--surface))!important;
+        color:var(--brand)!important;
+        font-size:22px!important;
+        font-weight:700!important;
+        line-height:1!important;
+        box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 10%,transparent)!important;
+      }
+      html body .dashboard-refresh #v6PlanRow .v6-plan-copy {
+        display:grid!important;
+        align-content:center!important;
+        gap:2px!important;
+        min-width:0!important;
+        text-align:start!important;
+      }
+      html body .dashboard-refresh #v6PlanRow #v6PlanLabel {
+        margin:0!important;
+        color:var(--brand)!important;
+        font-size:9px!important;
+        font-weight:900!important;
+        line-height:1.15!important;
+        letter-spacing:.11em!important;
+      }
+      html body .dashboard-refresh #v6PlanRow #v6NextCountry {
+        display:flex!important;
+        align-items:center!important;
+        gap:8px!important;
+        min-width:0!important;
+        margin:2px 0 0!important;
+        overflow:hidden!important;
+        color:var(--text)!important;
+        font-size:15px!important;
+        font-weight:850!important;
+        line-height:1.25!important;
+        text-overflow:ellipsis!important;
+        white-space:nowrap!important;
+      }
+      html body .dashboard-refresh #v6PlanRow #v6NextCountry .ts-country-flag-v705 {
+        flex:0 0 auto!important;
+        margin:0!important;
+        vertical-align:middle!important;
+      }
+      html body .dashboard-refresh #v6PlanRow #v6NextCountryDates {
+        margin:2px 0 0!important;
+        overflow:hidden!important;
+        color:var(--muted)!important;
+        font-size:11.5px!important;
+        font-weight:600!important;
+        line-height:1.3!important;
+        text-overflow:ellipsis!important;
+        white-space:nowrap!important;
+      }
+      html body .dashboard-refresh #v6PlanRow .v6-plan-arrow {
+        display:grid!important;
+        place-items:center!important;
+        width:20px!important;
+        height:32px!important;
+        color:color-mix(in srgb,var(--muted) 82%,var(--brand))!important;
+        font-size:22px!important;
+        font-weight:400!important;
+        line-height:1!important;
+        transform:none!important;
+      }
+      html[data-theme="dark"] body .dashboard-refresh #v6PlanRow.v6-plan-row {
+        border-color:#2a405d!important;
+        background:linear-gradient(145deg,rgba(25,65,119,.22),var(--surface))!important;
+        box-shadow:none!important;
+      }
+      body.lang-ar .dashboard-refresh #v6PlanRow #v6PlanLabel {
+        letter-spacing:0!important;
+      }
+      @media(max-width:420px) {
+        html body .dashboard-refresh #v6PlanRow.v6-plan-row {
+          grid-template-columns:42px minmax(0,1fr) 18px!important;
+          gap:10px!important;
+          min-height:74px!important;
+          padding:11px 12px!important;
+        }
+        html body .dashboard-refresh #v6PlanRow .v6-plan-icon {
+          width:42px!important;
+          height:42px!important;
+          border-radius:13px!important;
+          font-size:20px!important;
+        }
+        html body .dashboard-refresh #v6PlanRow #v6NextCountry {font-size:14.5px!important}
+        html body .dashboard-refresh #v6PlanRow #v6NextCountryDates {font-size:11px!important}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -167,6 +274,58 @@
     sub.setAttribute("lang", isAr ? "ar" : "en");
   }
 
+  function orderedStops() {
+    const appState = window.TripSpendCore?.getState?.();
+    const stops = Array.isArray(appState?.stops) ? appState.stops : [];
+    return stops
+      .filter(stop => stop && stop.country)
+      .slice()
+      .sort((a,b) => String(a.startDate || "").localeCompare(String(b.startDate || "")) || Number(a.createdAt || 0) - Number(b.createdAt || 0));
+  }
+
+  function currentAndNextStop() {
+    const stops = orderedStops();
+    if (!stops.length) return { current:null, next:null };
+    const today = String(window.TripSpendCore?.today?.() || new Date().toISOString().slice(0,10));
+
+    let currentIndex = -1;
+    stops.forEach((stop,index) => {
+      const start = String(stop.startDate || "");
+      const end = String(stop.endDate || "");
+      if (start && start <= today && (!end || today <= end)) currentIndex = index;
+    });
+
+    if (currentIndex < 0) {
+      const started = stops.map((stop,index) => ({stop,index})).filter(row => String(row.stop.startDate || "") <= today);
+      currentIndex = started.length ? started.at(-1).index : 0;
+    }
+
+    return {
+      current:stops[currentIndex] || null,
+      next:stops[currentIndex + 1] || null
+    };
+  }
+
+  function syncHomeCountryElement(id, stop, isAr) {
+    const el = document.getElementById(id);
+    if (!el || !stop?.country) return;
+    const english = String(stop.country).trim();
+    const localized = isAr ? country(english) : english;
+    const flag = String(window.TripSpendCore?.countryFlag?.(english) || "").trim();
+    const key = `${isAr ? "ar" : "en"}|${english}`;
+    if (el.dataset.tsHomeCountryKey === key) return;
+    el.textContent = `${flag}${flag ? " " : ""}${localized}`.trim();
+    el.dataset.tsHomeCountryKey = key;
+    el.dataset.tsCountryCanonical = english;
+    el.setAttribute("lang",isAr ? "ar" : "en");
+  }
+
+  function syncHomeCountries(isAr) {
+    const { current, next } = currentAndNextStop();
+    if (current) syncHomeCountryElement("currentCountryName",current,isAr);
+    if (next) syncHomeCountryElement("v6NextCountry",next,isAr);
+  }
+
   function apply() {
     if (busy) return;
     busy = true;
@@ -193,6 +352,7 @@
       syncHeaderRoute(isAr);
       syncDashboardWelcome(isAr);
       syncHomeQuickAdd(isAr);
+      syncHomeCountries(isAr);
       syncFloatingAdd();
     } finally {
       busy = false;
@@ -209,6 +369,8 @@
   function start() {
     observer = new MutationObserver(() => { if (!busy) queue(); });
     window.addEventListener("tripspend:language",queue);
+    window.addEventListener("tripspend:render",queue);
+    window.addEventListener("tripspend:page",queue);
     apply();
   }
 
