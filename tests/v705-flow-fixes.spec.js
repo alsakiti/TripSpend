@@ -69,8 +69,6 @@ test("Switch Trip flags swipe horizontally and Start New Trip uses premium onboa
   await expect(page.locator("#mainView")).toHaveClass(/hidden/);
   await expect(page.locator("body")).toHaveClass(/ts-setup-onboarding-active/);
 
-  // Regression: hiding the legacy country-number cell must not collapse Step 1
-  // into its old 27px grid column on iPhone-sized screens.
   const destinationBox = await page.locator("#destination").boundingBox();
   expect(destinationBox).not.toBeNull();
   expect(destinationBox.width).toBeGreaterThan(240);
@@ -88,15 +86,32 @@ test("Switch Trip flags swipe horizontally and Start New Trip uses premium onboa
   const setupStageOverflow = await page.locator(".ts-setup-stage").evaluate(el => el.scrollWidth - el.clientWidth);
   expect(setupStageOverflow).toBeLessThanOrEqual(1);
 
+  // TripSpend owns the visible date format rather than inheriting the browser locale.
+  await page.evaluate(() => {
+    const setDate = (id, value) => {
+      const input = document.getElementById(id);
+      input.value = value;
+      input.dispatchEvent(new Event("input", { bubbles:true }));
+    };
+    setDate("startDate", "2026-08-20");
+    setDate("endDate", "2026-08-24");
+  });
+  await expect(page.locator("#startDateDisplay")).toHaveText("20 Aug 2026");
+  await expect(page.locator("#endDateDisplay")).toHaveText("24 Aug 2026");
+
   // Arabic regression: From (من) must be the right-hand field and To (إلى)
-  // the left-hand field, both must stay on the same row, and clicking either
-  // visible date card must invoke the native picker.
+  // the left-hand field, both must stay on the same row, keep an explicit
+  // day-month-year display, and clicking either card must invoke the picker.
   await page.evaluate(() => window.TripSpendLocale?.setLanguage?.("ar"));
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
 
   const dateLabels = page.locator('.ts-setup-panel[data-setup-step="1"] .primary-country-dates>.date-field-label');
   await expect(dateLabels.nth(0).locator(":scope > span")).toHaveText("من");
   await expect(dateLabels.nth(1).locator(":scope > span")).toHaveText("إلى");
+  await expect(page.locator("#startDateDisplay")).toHaveText("20 أغسطس 2026");
+  await expect(page.locator("#endDateDisplay")).toHaveText("24 أغسطس 2026");
+  await expect(page.locator("#startDateDisplay")).toHaveAttribute("dir", "ltr");
+  await expect(page.locator("#endDateDisplay")).toHaveAttribute("dir", "ltr");
 
   const rtlLayout = await dateLabels.evaluateAll(elements => elements.map(el => {
     const r = el.getBoundingClientRect();
