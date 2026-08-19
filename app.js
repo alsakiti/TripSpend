@@ -2570,11 +2570,11 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   function health() {
     const t = state.trip, s = spent(), p = projected();
-    if (!t) return { cls: "on-track", icon: "✓", title: "Ready", text: "Create your trip to start tracking.", action: "Start trip", target: "setup" };
-    if (s > t.budget) return { cls: "over", icon: "!", title: "Over budget", text: `You are ${money(s - t.budget, t.homeCurrency)} over your trip budget.`, action: "View analytics", target: "analytics" };
-    if (elapsed() > 0 && p > t.budget * 1.05) return { cls: "watch", icon: "↗", title: "Watch your pace", text: `At this pace you may finish around ${money(p - t.budget, t.homeCurrency)} over budget.`, action: "View analytics", target: "analytics" };
-    if (elapsed() > 0 && p > 0) return { cls: "on-track", icon: "✓", title: "On track", text: `At your current pace you may finish around ${money(Math.max(0, t.budget - p), t.homeCurrency)} under budget.`, action: "View expenses", target: "expenses" };
-    return { cls: "on-track", icon: "✓", title: "Budget ready", text: `You have ${money(t.budget, t.homeCurrency)} planned for this trip.`, action: "Add expense", target: "add" };
+    if (!t) return { cls: "on-track", icon: "✓", title: "Ready", text: "Create your trip to start tracking." };
+    if (s > t.budget) return { cls: "over", icon: "!", title: "Over budget", text: `You are ${money(s - t.budget, t.homeCurrency)} over your trip budget.` };
+    if (elapsed() > 0 && p > t.budget * 1.05) return { cls: "watch", icon: "↗", title: "Watch your pace", text: `At this pace you may finish around ${money(p - t.budget, t.homeCurrency)} over budget.` };
+    if (elapsed() > 0 && p > 0) return { cls: "on-track", icon: "✓", title: "On track", text: `At your current pace you may finish around ${money(Math.max(0, t.budget - p), t.homeCurrency)} under budget.` };
+    return { cls: "on-track", icon: "✓", title: "No spending recorded yet", text: "Your daily spending guidance will update after you record your first expense." };
   }
 
   function applyLargeMoneyClass(el, text) {
@@ -2593,11 +2593,6 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     $("healthIcon").textContent = h.icon;
     $("healthTitle").textContent = h.title;
     $("healthText").textContent = h.text;
-    const action = $("healthAction");
-    if (action) {
-      action.textContent = h.action;
-      action.dataset.target = h.target;
-    }
   }
 
   function smartInsights() {
@@ -4613,13 +4608,6 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   };
 
   ["quickAdd", "pageAdd", "navAdd"].forEach(id => $(id).onclick = () => openModal());
-
-  $("healthAction")?.addEventListener("click", () => {
-    const target = $("healthAction")?.dataset.target;
-    if (target === "add") return openModal();
-    if (target === "setup") return $("startNewTripBtn")?.click();
-    if (target) page(target);
-  });
 
   const guide = $("homeGuideCard");
   const guideDismissed = localStorage.getItem("tripspend.home-guide.v709") === "1";

@@ -48,7 +48,7 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.9");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.10");
 }
 
 async function openPageByEnglishLabel(page, label) {
@@ -107,14 +107,15 @@ test("Arabic Home has localized welcome text and no floating add overlap", async
   await expect(page.locator("#headerSub")).toContainText("النمسا");
   await expect(page.locator("#headerSub")).toContainText("إيطاليا");
   await expect(page.locator("#currentCountryStatus")).not.toContainText(/FIRST|CURRENT|LAST|AUTO BY DATE/);
-  await expect(page.locator("#healthTitle")).not.toContainText(/Budget ready|On track|Over budget/);
+  await expect(page.locator("#healthTitle")).not.toContainText(/No spending recorded yet|On track|Over budget/);
   await expect(page.locator("#healthText")).not.toContainText(/You have|planned for this trip|under budget|over budget/);
   await expect(page.locator("#countryBudgetList")).not.toContainText(/Set budget|left|over/);
 
   const dynamicArabic = await page.evaluate(() => [
     "FIRST COUNTRY • AUTO BY DATE",
     "LAST COUNTRY • AUTO BY DATE",
-    "Budget ready",
+    "No spending recorded yet",
+    "Your daily spending guidance will update after you record your first expense.",
     "You have 2,500 OMR planned for this trip.",
     "500 OMR still unallocated.",
     "100 OMR over-allocated.",
@@ -201,7 +202,7 @@ test("Arabic Add Expense sheet fully localizes static and dynamic copy", async (
   await expect(page.locator("#modal")).not.toHaveClass(/hidden/);
   await page.waitForTimeout(250);
 
-  // Receipt controls are intentionally part of the optional details in v7.0.9.
+  // Receipt controls are intentionally part of the optional details in v7.0.10.
   await page.locator("#expenseMoreOptions").click();
   await expect(page.locator("#expenseAdvancedFields")).toBeVisible();
   await page.waitForTimeout(150);

@@ -27,15 +27,18 @@ async function boot(page) {
   });
   await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.9");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.10");
 }
 
-test("v7.0.9 Home prioritizes guidance and keeps secondary route budgets collapsible", async ({ page }) => {
+test("v7.0.10 Home prioritizes guidance and keeps secondary route budgets collapsible", async ({ page }) => {
   await page.setViewportSize({width:390,height:844});
   await boot(page);
 
   await expect(page.locator("#homeGuideCard")).toBeVisible();
   await expect(page.locator("#healthBanner")).toBeVisible();
+  await expect(page.locator("#healthTitle")).toHaveText("No spending recorded yet");
+  await expect(page.locator("#healthText")).toHaveText("Your daily spending guidance will update after you record your first expense.");
+  await expect(page.locator("#healthAction")).toHaveCount(0);
 
   const order = await page.evaluate(() => ({
     guidance:document.getElementById("healthBanner").getBoundingClientRect().top,

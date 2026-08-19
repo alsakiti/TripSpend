@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.9";
+  const RELEASE = "7.0.10";
   const $ = id => document.getElementById(id);
   let scheduled = false;
   let settingsLocalizationQueued = false;
