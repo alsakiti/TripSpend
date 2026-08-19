@@ -77,7 +77,13 @@ test("new trip setup uses the premium 3-step onboarding and final preview", asyn
   await editBudget.click();
   await expect(page.locator('.ts-setup-panel[data-setup-step="3"]')).toBeVisible();
   await expect(page.locator("#budget")).toHaveValue("1000");
+  await expect.poll(() => page.locator("#budget").evaluate(el => getComputedStyle(el).fontSize)).toBe("16px");
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName || "")).toBe("BODY");
+  const hiddenPreview = await page.locator("#tsSetupPreview").innerHTML();
+  await page.locator("#budget").fill("1200");
+  await expect(page.locator("#tsSetupPreview")).toHaveJSProperty("innerHTML", hiddenPreview);
   await page.locator("#tsSetupNext").click();
+  await expect(page.locator("#tsSetupPreview")).toContainText("1,200 OMR");
 
   await editCurrency.click();
   await expect(page.locator('.ts-setup-panel[data-setup-step="3"]')).toBeVisible();
