@@ -48,7 +48,7 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.8");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.9");
 }
 
 async function openPageByEnglishLabel(page, label) {
