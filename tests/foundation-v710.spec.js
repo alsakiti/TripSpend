@@ -82,11 +82,14 @@ test("in-app dialogs replace browser popups and remain Arabic-safe", async ({ pa
 });
 
 test("returning to the app surfaces a clear update banner", async ({ page }) => {
-  let latest = "7.1.0";
-  await page.route("**/version.json*", route => route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({version:latest,label:`TripSpend v${latest}`})}));
   await boot(page);
-  latest = "7.1.1";
-  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await page.evaluate(() => {
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => String(input).includes("version.json")
+      ? Promise.resolve(new Response(JSON.stringify({version:"7.1.1",label:"TripSpend v7.1.1"}), {status:200,headers:{"Content-Type":"application/json"}}))
+      : nativeFetch(input, init);
+    window.dispatchEvent(new Event("online"));
+  });
   await expect(page.locator("#updateBanner")).toBeVisible();
   await expect(page.locator("#updateVersionText")).toContainText("v7.1.1 is ready");
   await expect(page.locator("#applyUpdateBtn")).toHaveText("Update now");
