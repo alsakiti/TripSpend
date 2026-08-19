@@ -26,7 +26,7 @@ if (!String(manifest.name).includes(VERSION)) fail(`manifest name does not inclu
 
 const sw = read("sw.js");
 if (!sw.includes(`const APP_VERSION = "${VERSION}"`)) fail("service worker version mismatch"); else ok("service worker version matches");
-if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("ui-foundation-v710.js")) fail("v7.1 runtime modules missing from service worker"); else ok("v7.1 runtime modules are wired");
+if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.includes("ui-foundation-v710.js") || !sw.includes("enhancements-v710.js")) fail("v7.1 runtime modules missing from service worker"); else ok("v7.1 runtime modules are wired");
 for (const oldPatch of ["upgradeHtml","upgradeAppJs","upgradeLocaleJs","upgradeVisualJs","upgradeSettingsJs","upgradeFlagsJs","upgradeUiFixesJs","upgradeSetupJs","upgradeReceiptJs"]) {
   if (sw.includes(oldPatch)) fail(`service worker still contains runtime patch: ${oldPatch}`);
 }
@@ -155,6 +155,7 @@ ok("receipt suggestions target the expense form only");
 
 const app = read("app.js");
 const foundation = read("ui-foundation-v710.js");
+const enhancements = read("enhancements-v710.js");
 const appNativeDialogs = [...app.matchAll(/(?<!\.)\b(confirm|alert|prompt)\(/g)];
 const v5NativeDialogs = [...v5.matchAll(/(?<!\.)\b(confirm|alert|prompt)\(/g)];
 if (appNativeDialogs.length !== 3 || v5NativeDialogs.length !== 1) fail("native browser dialogs remain in user actions");
@@ -165,8 +166,10 @@ for (const marker of ["TripSpendDialog","TripSpendRouteInfo","focusable(modal)",
 for (const marker of ["TRIPSPEND_UPDATE_READY",'window.addEventListener("online"',"15 * 60 * 1000","checkAppVersion();"]) {
   if (!app.includes(marker)) fail(`v7.1 update lifecycle missing: ${marker}`);
 }
-if (!index.includes("appDialogModal") || !index.includes("routeCountryModal") || !index.includes("ui-foundation-v710.js?v=7.1.0")) fail("v7.1 dialogs or route details are not wired in source");
+if (!index.includes("appDialogModal") || !index.includes("routeCountryModal") || !index.includes("enhancements-v710.js?v=7.1.0") || !enhancements.includes('"ui-foundation-v710.js"')) fail("v7.1 dialogs or route details are not wired in source");
 else ok("dialogs, route details and update UX are wired in source");
+if (!enhancements.includes('window.addEventListener("load", run') || enhancements.includes("MutationObserver")) fail("enhancement startup can block initial page load");
+else ok("non-critical enhancements start cleanly after the page load event");
 if (!app.includes("Today’s spending guide") || !app.includes("You can spend up to")) fail("actionable daily spending guidance is missing");
 else ok("Today guidance becomes concrete after spending begins");
 for (const marker of ["Today’s spending guide","You can spend up to","Avoid more spending today"]) {
@@ -199,7 +202,7 @@ if (!wrangler.includes('main = "ai-worker-v703.js"')) fail("wrangler does not ro
 if (!wrangler.includes('name = "AI_RATE_LIMITER"')) fail("AI_RATE_LIMITER binding missing from wrangler config"); else ok("rate limiter binding is configured");
 if (!/limit\s*=\s*30\b/.test(wrangler) || !/period\s*=\s*60\b/.test(wrangler)) fail("rate limiter must be 30 requests per 60 seconds"); else ok("rate limiter is 30 requests per 60 seconds");
 
-for (const path of ["sw.js","fx.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","settings-polish-v704.js","visual-polish-v704.js","setup-language-host-v700.js","setup-onboarding-v704.js","flags-v705.js","ui-fixes-v705.js","receipt-capability-v700.js","receipt-ai-v700.js","ui-foundation-v710.js"]) {
+for (const path of ["sw.js","fx.js","locale-v700.js","locale-dynamic-v700.js","expense-locale-v703.js","page-locale-v704.js","settings-polish-v704.js","visual-polish-v704.js","setup-language-host-v700.js","setup-onboarding-v704.js","flags-v705.js","ui-fixes-v705.js","receipt-capability-v700.js","receipt-ai-v700.js","ui-foundation-v710.js","enhancements-v710.js"]) {
   try { new vm.Script(read(path), {filename:path}); ok(`${path} parses`); }
   catch (error) { fail(`${path} syntax error: ${error.message}`); }
 }

@@ -32,7 +32,10 @@ test("first visit runs the current source without a service-worker reload", () =
   const index = fs.readFileSync("index.html", "utf8");
   expect(app).toContain('const APP_VERSION = "7.1.0"');
   expect(index).toContain('app.js?v=7.1.0');
-  expect(index).toContain('ui-foundation-v710.js?v=7.1.0');
+  expect(index).toContain('enhancements-v710.js?v=7.1.0');
+  const enhancements = fs.readFileSync("enhancements-v710.js", "utf8");
+  expect(enhancements).toContain('"ui-foundation-v710.js"');
+  expect(enhancements).toContain('window.addEventListener("load", run');
   expect(fx).not.toContain("bootstrapFirstVisitRuntime");
   expect(fx).not.toContain("reloadWhenControlled");
 });

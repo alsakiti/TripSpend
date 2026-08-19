@@ -27,6 +27,7 @@ async function boot(page) {
   });
   await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
+  await page.evaluate(() => window.TripSpendEnhancementsReady);
   await expect(page.locator(".version-badge").first()).toHaveText("v7.1.0");
 }
 

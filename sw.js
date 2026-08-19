@@ -7,7 +7,7 @@ const APP_SHELL = [
   "./page-locale-v704.js", "./settings-polish-v704.js", "./visual-polish-v704.js",
   "./setup-language-host-v700.js", "./setup-onboarding-v704.js", "./flags-v705.js",
   "./ui-fixes-v705.js", "./receipt-capability-v700.js", "./receipt-ai-v700.js",
-  "./ui-foundation-v710.js", "./manifest.webmanifest", "./version.json", "./ai-config.json",
+  "./ui-foundation-v710.js", "./enhancements-v710.js", "./manifest.webmanifest", "./version.json", "./ai-config.json",
   "./icons/icon-96.png", "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"
 ];
 
