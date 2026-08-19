@@ -54,6 +54,8 @@ else ok("fresh visits run v7.1 source directly without a service-worker reload")
 const locale = read("locale-v700.js");
 if (!locale.includes("Intl.DisplayNames")) fail("country localization is not using Intl.DisplayNames"); else ok("country localization uses Intl.DisplayNames");
 if (!locale.includes("TripSpendLocale")) fail("TripSpendLocale API missing"); else ok("TripSpendLocale API exposed");
+if (!locale.includes('if (lang === "ar")') || !locale.includes("hasTranslatedDocument")) fail("English startup still performs a full localization scan");
+else ok("English startup skips unnecessary full-document localization work");
 for (const phrase of ["Make today easier","TODAY'S GUIDANCE","Your trip and receipts stay on this device unless you export them."]) {
   if (!locale.includes(phrase)) fail(`v7.1.0 Arabic localization missing: ${phrase}`);
 }

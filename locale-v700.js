@@ -9,6 +9,7 @@
   let busy = false;
   let queued = false;
   let lang = "en";
+  let hasTranslatedDocument = false;
 
   try { lang = localStorage.getItem(KEY) === "ar" ? "ar" : "en"; } catch {}
 
@@ -262,7 +263,13 @@
       document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
       document.body.classList.toggle("lang-ar", lang === "ar");
       document.body.dir = lang === "ar" ? "rtl" : "ltr";
-      scan(document.body);
+      if (lang === "ar") {
+        scan(document.body);
+        hasTranslatedDocument = true;
+      } else if (hasTranslatedDocument) {
+        scan(document.body);
+        hasTranslatedDocument = false;
+      }
       enforceVersion();
       mountToggle();
     } finally {
