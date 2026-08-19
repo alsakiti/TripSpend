@@ -223,6 +223,7 @@ async function upgradeFlagsJs(response) {
   if (!response?.ok) return response;
   let js = await response.text();
   js = js.replace(/const RELEASE = "[^"]+";/, `const RELEASE = "${APP_VERSION}";`);
+  // MutationObserver already sees inserted/replaced flag text. Avoid rescanning the whole document on every render.
   js = js.replace('    window.addEventListener("tripspend:render", scheduleUpgrade);\n', "");
   js = js.replace('    window.addEventListener("tripspend:page", scheduleUpgrade);\n', "");
   js = js.replace('    window.addEventListener("tripspend:language", scheduleUpgrade);\n', "");
