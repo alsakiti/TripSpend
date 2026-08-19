@@ -9,6 +9,10 @@ const fail = message => { console.error(`✗ ${message}`); process.exitCode = 1;
 const ok = message => console.log(`✓ ${message}`);
 
 const version = JSON.parse(read("version.json"));
+const playwrightConfig = read("playwright.config.js");
+const qualityWorkflow = read(".github/workflows/v7-quality.yml");
+if (!playwrightConfig.includes('channel: process.env.CI ? "chrome" : undefined') || !qualityWorkflow.includes("google-chrome --version") || qualityWorkflow.includes("playwright install chromium")) fail("CI does not use the preinstalled Chrome browser");
+else ok("CI uses the preinstalled Chrome browser without a blocking download");
 const index = read("index.html");
 if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches app release");
 
