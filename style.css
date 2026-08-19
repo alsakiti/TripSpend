@@ -6549,6 +6549,7 @@ html[data-theme="dark"] .home-trip-history-btn{
 
 .country-budget-actions{display:flex;align-items:center;gap:4px}
 .country-budget-actions .link-btn{min-height:40px;padding:0 8px;color:var(--brand)}
+#countryBudgetList.hidden{display:none!important}
 .local-first-note{display:flex;align-items:center;justify-content:center;gap:7px;margin:13px 12px 0;color:var(--muted);font-size:10px;line-height:1.45;text-align:center}
 .local-first-note span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--surface2);color:var(--brand);font-weight:900}
 
