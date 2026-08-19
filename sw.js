@@ -1,5 +1,5 @@
 const APP_VERSION = "7.0.6";
-const CACHE = `tripspend-v${APP_VERSION}-r2`;
+const CACHE = `tripspend-v${APP_VERSION}-r3`;
 
 const APP_SHELL = [
   "./",
@@ -48,6 +48,7 @@ async function upgradeHtml(response) {
   html = html
     .replaceAll("v6.8.1", `v${APP_VERSION}`)
     .replaceAll("?v=6.8.1", `?v=${APP_VERSION}`)
+    .replace("From <small>(automatic)</small>", "From")
     .replace(/(<[^>]*class=["'][^"']*version-badge[^"']*["'][^>]*>)v\d+\.\d+\.\d+(<\/[^>]+>)/gi, `$1v${APP_VERSION}$2`);
 
   const retired = [
@@ -110,6 +111,34 @@ async function upgradeAppJs(response) {
     `${indent}if ("requestIdleCallback" in window) requestIdleCallback(runDeferredSettingsWork, { timeout: 650 });`,
     `${indent}else setTimeout(runDeferredSettingsWork, 60);`
   ].join("\n"));
+
+  return responseWithText(response, js, "text/javascript; charset=utf-8");
+}
+
+async function upgradeV5Js(response) {
+  if (!response?.ok) return response;
+  let js = await response.text();
+
+  // Additional-country start dates are suggested from the previous stop, but remain editable.
+  js = js.replace(/\$\("setupExtraStart"\)\.disabled = true;/g, '$("setupExtraStart").disabled = false;');
+
+  // Do not rewrite dates a traveler explicitly chose when the primary route changes or a stop is saved.
+  js = js.replace(
+    /  function syncSetupCountryDates\(\) \{[\s\S]*?\n  \}\n\n  function addSetupCountry/,
+    '  function syncSetupCountryDates() {\n    renderSetupRoute();\n  }\n\n  function addSetupCountry'
+  );
+
+  // Saving one country should finish that action and unblock Continue instead of leaving the editor open.
+  js = js.replace(
+    '    } else {\n      setSetupExtraDefaults();\n      core.toast(`${country} added`);\n    }',
+    '    } else {\n      $("setupMultiCountryPanel")?.classList.add("hidden");\n      core.toast(`${country} added`);\n    }'
+  );
+
+  // Respect manual From changes. Only keep the To date valid relative to the chosen start date.
+  js = js.replace(
+    /  \$\("setupExtraStart"\)\?\.addEventListener\("change", \(\) => \{[\s\S]*?\n  \}\);\n\n  \$\("setupExtraEnd"\)/,
+    '  $("setupExtraStart")?.addEventListener("change", () => {\n    const start = $("setupExtraStart").value;\n    const end = $("setupExtraEnd").value;\n    if (start) $("setupExtraEnd").min = start;\n    if (start && (!end || end < start)) {\n      $("setupExtraEnd").value = daysAfter(start, 2);\n      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));\n    }\n  });\n\n  $("setupExtraEnd")'
+  );
 
   return responseWithText(response, js, "text/javascript; charset=utf-8");
 }
@@ -194,8 +223,6 @@ async function upgradeFlagsJs(response) {
   if (!response?.ok) return response;
   let js = await response.text();
   js = js.replace(/const RELEASE = "[^"]+";/, `const RELEASE = "${APP_VERSION}";`);
-  // MutationObserver already sees inserted/replaced flag text. Avoid rescanning the
-  // entire document again after every render, page switch and language event.
   js = js.replace('    window.addEventListener("tripspend:render", scheduleUpgrade);\n', "");
   js = js.replace('    window.addEventListener("tripspend:page", scheduleUpgrade);\n', "");
   js = js.replace('    window.addEventListener("tripspend:language", scheduleUpgrade);\n', "");
@@ -308,6 +335,10 @@ self.addEventListener("fetch", event => {
   const path = url.pathname;
   if (path.endsWith("/app.js")) {
     event.respondWith(networkFirst(request, upgradeAppJs));
+    return;
+  }
+  if (path.endsWith("/v5.js")) {
+    event.respondWith(networkFirst(request, upgradeV5Js));
     return;
   }
   if (path.endsWith("/fx.js")) {
