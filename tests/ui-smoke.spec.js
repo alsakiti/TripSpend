@@ -48,7 +48,7 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.7");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.8");
 }
 
 async function openPageByEnglishLabel(page, label) {
@@ -106,6 +106,21 @@ test("Arabic Home has localized welcome text and no floating add overlap", async
   await expect(page.locator("#headerSub")).toContainText("ألمانيا");
   await expect(page.locator("#headerSub")).toContainText("النمسا");
   await expect(page.locator("#headerSub")).toContainText("إيطاليا");
+  await expect(page.locator("#currentCountryStatus")).not.toContainText(/FIRST|CURRENT|LAST|AUTO BY DATE/);
+  await expect(page.locator("#healthTitle")).not.toContainText(/Budget ready|On track|Over budget/);
+  await expect(page.locator("#healthText")).not.toContainText(/You have|planned for this trip|under budget|over budget/);
+  await expect(page.locator("#countryBudgetList")).not.toContainText(/Set budget|left|over/);
+
+  const dynamicArabic = await page.evaluate(() => [
+    "FIRST COUNTRY • AUTO BY DATE",
+    "LAST COUNTRY • AUTO BY DATE",
+    "Budget ready",
+    "You have 2,500 OMR planned for this trip.",
+    "500 OMR still unallocated.",
+    "100 OMR over-allocated.",
+    "250 OMR left"
+  ].map(value => window.TripSpendLocale?.t?.(value)));
+  for (const value of dynamicArabic) expect(value).toMatch(/[\u0600-\u06FF]/);
 
   const flagIsLeft = await visibleLanguageButton(page).evaluate(el => {
     const r = el.getBoundingClientRect();
@@ -126,6 +141,12 @@ test("Arabic Home has localized welcome text and no floating add overlap", async
   await expect(page.locator("#headerSub")).toContainText("Italy");
   await expect(page.locator("#headerSub")).not.toContainText("دول");
   await expect(page.locator("#headerSub")).not.toContainText("ألمانيا");
+
+  await openPageByEnglishLabel(page, "Expenses");
+  await page.waitForTimeout(150);
+  const englishExpenses = await page.locator("#expenses").innerText();
+  expect(englishExpenses).not.toMatch(/[\u0600-\u06FF]/);
+  await expect(page.locator("#expenseSummary")).toContainText(/expenses?/);
 });
 
 test("existing trip expense cards localize dynamic Arabic text", async ({ page }) => {
@@ -156,6 +177,16 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
   await page.screenshot({ path:"test-results/expenses-ar.png", fullPage:true });
+
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  await page.waitForTimeout(250);
+  const restoredEnglish = await page.locator("#expenses").innerText();
+  expect(restoredEnglish).not.toMatch(/[\u0600-\u06FF]/);
+  expect(restoredEnglish).toContain("Dinner");
+  expect(restoredEnglish).toContain("Food");
+  expect(restoredEnglish).toContain("Repeat");
+  await expect(page.locator("#expenseSummary")).toContainText(/expense/);
 });
 
 test("Arabic Add Expense sheet fully localizes static and dynamic copy", async ({ page }) => {

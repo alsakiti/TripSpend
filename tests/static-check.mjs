@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const VERSION = "7.0.7";
+const VERSION = "7.0.8";
 const INNER_WORKER_VERSION = "7.0.0";
 const WORKER_RUNTIME_VERSION = "7.0.3";
 const read = path => fs.readFileSync(path,"utf8");
@@ -9,6 +9,10 @@ const fail = message => { console.error(`✗ ${message}`); process.exitCode = 1;
 const ok = message => console.log(`✓ ${message}`);
 
 const version = JSON.parse(read("version.json"));
+const playwrightConfig = read("playwright.config.js");
+const qualityWorkflow = read(".github/workflows/v7-quality.yml");
+if (!playwrightConfig.includes('channel: process.env.CI ? "chrome" : undefined') || !qualityWorkflow.includes("google-chrome --version") || qualityWorkflow.includes("playwright install chromium")) fail("CI does not use the preinstalled Chrome browser");
+else ok("CI uses the preinstalled Chrome browser without a blocking download");
 const index = read("index.html");
 if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches app release");
 
@@ -21,7 +25,7 @@ if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.
 if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 if (!sw.includes('label: "Google Gemini"') || !sw.includes('short: "Gemini 3.5 Flash-Lite"')) fail("Gemini-first AI label transform missing"); else ok("AI settings identify Gemini as the primary model");
 for (const marker of ["upgradeVisualJs","upgradeSettingsJs","upgradeFlagsJs","upgradeUiFixesJs","upgradeSetupJs","upgradeReceiptJs","requestIdleCallback","STORAGE_SAVE_DELAY = 220","canvas.toBlob","observeClass","tsV706Signature"]) {
-  if (!sw.includes(marker)) fail(`v7.0.7 performance transform missing: ${marker}`);
+  if (!sw.includes(marker)) fail(`v7.0.8 performance transform missing: ${marker}`);
 }
 if (!sw.includes('document.querySelector(".page.active")?.id !== "settings"')) fail("Settings localization work is not page-gated"); else ok("Settings work is deferred and page-gated");
 if (!sw.includes("MutationObserver already sees inserted/replaced flag text")) fail("flag render rescan removal transform is missing");
@@ -35,13 +39,13 @@ for (const old of ["i18n.js","i18n-layout-fix.js","i18n-audit-v690.js","rtl-poli
 ok("legacy localization patches are retired from APP_SHELL");
 
 const fx = read("fx.js");
-for (const marker of ["const APP_RELEASE = \"7.0.7\"","fxCardVisible","bootstrapFirstVisitRuntime","navigator.serviceWorker?.controller","FIRST_LOAD_RUNTIME","settingsAdvanced > summary"]) {
+for (const marker of ["const APP_RELEASE = \"7.0.8\"","fxCardVisible","bootstrapFirstVisitRuntime","navigator.serviceWorker?.controller","FIRST_LOAD_RUNTIME","settingsAdvanced > summary"]) {
   if (!fx.includes(marker)) fail(`FX/first-load reliability marker missing: ${marker}`);
 }
 if (!fx.includes('if (fxCardVisible()) convertSection(true)') || !fx.includes('if (!amountEl || !fxCardVisible()) return')) fail("hidden FX converter can still perform background conversion work");
 else ok("FX conversion work is gated to the visible Settings card");
 if (!fx.includes("tripspend:first-load-runtime")) fail("fresh uncontrolled visits do not bootstrap the current runtime");
-else ok("fresh visits bootstrap the v7.0.7 runtime before service-worker control");
+else ok("fresh visits bootstrap the v7.0.8 runtime before service-worker control");
 
 const locale = read("locale-v700.js");
 if (!locale.includes("Intl.DisplayNames")) fail("country localization is not using Intl.DisplayNames"); else ok("country localization uses Intl.DisplayNames");
@@ -66,6 +70,10 @@ if (!pageLocale.includes("tripspend:language")) fail("page locale does not react
 
 const settingsPolish = read("settings-polish-v704.js");
 const style = read("style.css");
+if (!style.includes("touch-action:manipulation") || !style.includes('input:not([type="checkbox"]):not([type="radio"])') || !style.includes("font-size:16px!important")) fail("mobile focus-zoom protection missing");
+else ok("all mobile form controls prevent iPhone focus zoom");
+if (/\.date-calendar\s*\{[^}]*transform:rotate\(/s.test(style)) fail("calendar icons are still rotated");
+else ok("calendar icons remain upright globally");
 for (const marker of ["settings-simple-form","settings-country-list-compact","settings-save-dock","settings-advanced","ts-no-floating-add"]) {
   if (!settingsPolish.includes(marker)) fail(`simplified Settings marker missing: ${marker}`);
 }

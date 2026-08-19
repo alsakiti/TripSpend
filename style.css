@@ -673,11 +673,26 @@ input[type="date"]::-webkit-calendar-picker-indicator{
   text-overflow:ellipsis;
 }
 .date-calendar{
-  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  align-self:center;
+  flex:0 0 20px;
+  width:20px;
+  height:20px;
+  margin:0;
+  padding:0;
   color:var(--muted);
   font-size:13px;
-  transform:rotate(45deg);
+  line-height:1;
+  transform:none;
   pointer-events:none;
+}
+.date-calendar svg{
+  display:block;
+  width:100%;
+  height:100%;
+  transform:none;
+  transform-origin:center;
 }
 .native-date-input{
   position:absolute!important;
@@ -6505,6 +6520,26 @@ html[data-theme="dark"] .home-trip-history-btn{
   }
   .trip-switcher-past-side small{
     display:none;
+  }
+}
+
+/* Prevent iPhone Safari from auto-zooming focused controls or double-tapped actions.
+   Pinch zoom remains available for accessibility. */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"]{
+  touch-action:manipulation;
+}
+@media(max-width:600px){
+  html body input:not([type="checkbox"]):not([type="radio"]),
+  html body select,
+  html body select[id]:not([multiple]):not([size]),
+  html body textarea,
+  html body [contenteditable="true"]{
+    font-size:16px!important;
   }
 }
 

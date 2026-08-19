@@ -91,3 +91,50 @@ test("onboarding dates are not clipped and calendar icons are upright and center
   expect(arabic.svgTransform).toBe("none");
   expect(arabic.iconLeft - arabic.cardLeft).toBeGreaterThanOrEqual(11);
 });
+
+test("every custom calendar icon is upright and centered", async ({ page }) => {
+  await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seededTrip());
+  await page.goto("/");
+  await page.waitForSelector("#mainView:not(.hidden)");
+
+  const icons = await page.locator(".date-picker-card .date-calendar").evaluateAll(nodes => nodes.map(icon => {
+    const iconStyle = getComputedStyle(icon);
+    const svg = icon.querySelector("svg");
+    const svgStyle = svg ? getComputedStyle(svg) : null;
+    return {
+      display:iconStyle.display,
+      alignItems:iconStyle.alignItems,
+      justifyItems:iconStyle.justifyItems,
+      transform:iconStyle.transform,
+      svgTransform:svgStyle?.transform || "none"
+    };
+  }));
+
+  expect(icons.length).toBeGreaterThan(5);
+  for (const icon of icons) {
+    expect(icon.display).toBe("grid");
+    expect(icon.alignItems).toBe("center");
+    expect(icon.justifyItems).toBe("center");
+    expect(icon.transform).toBe("none");
+    expect(icon.svgTransform).toBe("none");
+  }
+});
+
+test("mobile form controls never trigger Safari focus zoom", async ({ page }) => {
+  await page.setViewportSize({width:390,height:844});
+  await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seededTrip());
+  await page.goto("/");
+  await page.waitForSelector("#mainView:not(.hidden)");
+  await page.locator('.nav-btn[data-page="expenses"]').click();
+
+  const controls = await page.locator('input:not([type="checkbox"]):not([type="radio"]), select, textarea, [contenteditable="true"]').evaluateAll(nodes => nodes.map(node => ({
+    id:node.id,
+    fontSize:parseFloat(getComputedStyle(node).fontSize)
+  })));
+  expect(controls.length).toBeGreaterThan(5);
+  for (const control of controls) expect(control.fontSize, control.id || "unnamed control").toBeGreaterThanOrEqual(16);
+
+  const search = page.locator("#searchExpense");
+  await expect(search).toBeVisible();
+  await expect.poll(() => search.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
+});
