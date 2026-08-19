@@ -6536,6 +6536,7 @@ textarea,
 @media(max-width:600px){
   html body input:not([type="checkbox"]):not([type="radio"]),
   html body select,
+  html body select[id]:not([multiple]):not([size]),
   html body textarea,
   html body [contenteditable="true"]{
     font-size:16px!important;
