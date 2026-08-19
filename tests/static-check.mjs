@@ -78,7 +78,7 @@ if (!pageLocale.includes("tripspend:language")) fail("page locale does not react
 
 const settingsPolish = read("settings-polish-v704.js");
 const style = read("style.css");
-for (const marker of ["TripSpend v7.0.10","home-guide-card","home-guidance-card","trip-flag-rail::before","expense-fast-fields","prefers-reduced-motion:reduce"]) {
+for (const marker of ["TripSpend v7.0.10","home-guide-card","home-guidance-card","A compact route capsule keeps four countries visible without crowding","expense-fast-fields","prefers-reduced-motion:reduce"]) {
   if (!style.includes(marker)) fail(`v7.0.10 visual polish missing: ${marker}`);
 }
 if (!style.includes("touch-action:manipulation") || !style.includes('input:not([type="checkbox"]):not([type="radio"])') || !style.includes("font-size:16px!important")) fail("mobile focus-zoom protection missing");

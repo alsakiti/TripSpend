@@ -9,7 +9,8 @@ function seededTrip() {
     stops:[
       {id:"de",country:"Germany",startDate:"2026-08-22",endDate:"2026-08-25",currency:"EUR",budget:1000,createdAt:now},
       {id:"at",country:"Austria",startDate:"2026-08-26",endDate:"2026-08-28",currency:"EUR",budget:700,createdAt:now+1},
-      {id:"it",country:"Italy",startDate:"2026-08-29",endDate:"2026-08-31",currency:"EUR",budget:800,createdAt:now+2}
+      {id:"it",country:"Italy",startDate:"2026-08-29",endDate:"2026-08-30",currency:"EUR",budget:500,createdAt:now+2},
+      {id:"at-2",country:"Austria",startDate:"2026-08-31",endDate:"2026-08-31",currency:"EUR",budget:300,createdAt:now+3}
     ],
     preferences:{recentCategories:["Coffee","Transport"]}
   };
@@ -49,16 +50,21 @@ test("v7.0.10 Home prioritizes guidance and keeps secondary route budgets collap
   expect(order.add).toBeLessThan(order.route);
 
   const route = page.locator("#tripFlagRail");
-  await expect(route.locator(".trip-flag")).toHaveCount(3);
+  await expect(route.locator(".trip-flag")).toHaveCount(4);
   await expect(route.locator(".trip-flag.active")).toHaveCount(1);
   const activeFlag = await route.locator(".trip-flag.active").evaluate(el => ({
     width:Math.round(el.getBoundingClientRect().width),
     radius:getComputedStyle(el).borderRadius,
-    opacity:getComputedStyle(el).opacity
+    opacity:getComputedStyle(el).opacity,
+    transform:getComputedStyle(el).transform
   }));
-  expect(activeFlag.width).toBeGreaterThanOrEqual(26);
-  expect(activeFlag.radius).toBe("50%");
+  expect(activeFlag.width).toBe(32);
+  expect(activeFlag.radius).toBe("8px");
   expect(activeFlag.opacity).toBe("1");
+  expect(activeFlag.transform).toBe("none");
+
+  const railFit = await route.evaluate(el => ({clientWidth:el.clientWidth,scrollWidth:el.scrollWidth}));
+  expect(railFit.scrollWidth).toBeLessThanOrEqual(railFit.clientWidth + 1);
 
   await expect(page.locator("#countryBudgetList")).toBeHidden();
   await page.locator("#countryBudgetToggle").click();

@@ -6552,12 +6552,11 @@ html[data-theme="dark"] .home-trip-history-btn{
 .local-first-note{display:flex;align-items:center;justify-content:center;gap:7px;margin:13px 12px 0;color:var(--muted);font-size:10px;line-height:1.45;text-align:center}
 .local-first-note span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--surface2);color:var(--brand);font-weight:900}
 
-/* The country strip reads as a route instead of a loose row of flags. */
-.trip-flag-rail{position:relative;isolation:isolate;gap:7px!important;padding:3px 2px!important;overflow-x:auto;scrollbar-width:none}
+/* A compact route capsule keeps four countries visible without crowding. */
+.trip-flag-rail{position:relative;isolation:isolate;justify-content:flex-start!important;gap:4px!important;max-width:156px!important;min-height:32px;padding:4px!important;border:1px solid color-mix(in srgb,var(--brand) 12%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--surface2) 72%,var(--surface));overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none}
 .trip-flag-rail::-webkit-scrollbar{display:none}
-.trip-flag-rail::before{content:"";position:absolute;z-index:-1;top:50%;inset-inline:10px;height:2px;transform:translateY(-50%);border-radius:999px;background:color-mix(in srgb,var(--brand) 24%,var(--line))}
-.trip-flag{flex:0 0 auto;min-width:26px!important;width:26px;height:26px!important;padding:3px!important;border:2px solid var(--surface);border-radius:50%!important;background:var(--surface2);opacity:.72!important;box-shadow:0 2px 8px rgba(16,24,40,.08)}
-.trip-flag.active{transform:scale(1.1)!important;background:var(--brand-soft);opacity:1!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 45%,transparent),0 4px 12px rgba(21,112,239,.16)}
+.trip-flag{flex:0 0 32px;min-width:32px!important;width:32px;height:24px!important;padding:2px!important;border:1px solid transparent;border-radius:8px!important;background:var(--surface);opacity:.62!important;filter:saturate(.84);scroll-snap-align:start;box-shadow:none}
+.trip-flag.active{transform:none!important;border-color:color-mix(in srgb,var(--brand) 42%,var(--line));background:var(--surface);opacity:1!important;filter:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 12%,transparent),0 2px 7px rgba(16,24,40,.08)}
 
 .expense-fast-fields{display:grid;gap:0;margin:2px 0 4px;padding:13px;border:1px solid var(--line);border-radius:17px;background:color-mix(in srgb,var(--surface2) 58%,var(--surface))}
 .expense-fast-fields label:last-of-type{margin-bottom:10px!important}
