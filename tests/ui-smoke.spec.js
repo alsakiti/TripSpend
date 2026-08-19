@@ -201,6 +201,11 @@ test("Arabic Add Expense sheet fully localizes static and dynamic copy", async (
   await expect(page.locator("#modal")).not.toHaveClass(/hidden/);
   await page.waitForTimeout(250);
 
+  // Receipt controls are intentionally part of the optional details in v7.0.9.
+  await page.locator("#expenseMoreOptions").click();
+  await expect(page.locator("#expenseAdvancedFields")).toBeVisible();
+  await page.waitForTimeout(150);
+
   let modalText = await page.locator("#modal").innerText();
   expect(modalText).toContain("إضافة مصروف");
   expect(modalText).toContain("نوع المصروف");
