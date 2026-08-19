@@ -9,6 +9,7 @@ const fail = message => { console.error(`✗ ${message}`); process.exitCode = 1;
 const ok = message => console.log(`✓ ${message}`);
 
 const version = JSON.parse(read("version.json"));
+const index = read("index.html");
 if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches app release");
 
 const manifest = JSON.parse(read("manifest.webmanifest"));
@@ -92,6 +93,15 @@ for (const marker of ["TripSpendFlags","ts-country-flag-v705","destinationOption
 if (!flags.includes("0x1F1E6") || !flags.includes("object-fit:contain")) fail("SVG flag conversion or stretch-safe scaling missing"); else ok("country flags use standardized SVG rendering and stretch-safe sizing");
 
 const v5 = read("v5.js");
+if (sw.includes("upgradeV5Js") || sw.includes('replace("From <small>(automatic)</small>"')) fail("route builder is patched by the service worker instead of source");
+else ok("route builder behavior is implemented in source");
+if (index.includes("From <small>(automatic)</small>")) fail("additional-country From field is still labeled automatic");
+else ok("additional-country From field is labeled editable");
+for (const marker of ["validateSetupCountryDates", "setupExtraDateError", '$("setupMultiCountryPanel")?.classList.add("hidden")']) {
+  if (!v5.includes(marker)) fail(`route builder source marker missing: ${marker}`);
+}
+if (v5.includes('$("setupExtraStart").disabled = true')) fail("additional-country From date is still disabled in source");
+else ok("additional-country From date remains enabled in source");
 for (const marker of ["next-country-name-row", "next-country-flag", "country-name-row", "country-budget-metadata"]) {
   if (!v5.includes(marker)) fail(`RTL country card structure missing: ${marker}`);
 }

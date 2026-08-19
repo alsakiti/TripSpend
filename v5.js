@@ -156,7 +156,7 @@
 
     core.setDestinationValue("setupExtraCountry", stop.country);
     $("setupExtraStart").value = stop.startDate;
-    $("setupExtraStart").disabled = true;
+    $("setupExtraStart").disabled = false;
     $("setupExtraEnd").value = stop.endDate;
     $("setupExtraEnd").min = stop.startDate;
     $("setupExtraCurrency").value = stop.currency;
@@ -164,6 +164,7 @@
 
     $("setupExtraStart").dispatchEvent(new Event("input", { bubbles: true }));
     $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
+    setSetupCountryDateError();
 
     setTimeout(() => {
       $("setupMultiCountryPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -175,6 +176,7 @@
     editingSetupStopIndex = -1;
     setCountryPanelMode(false);
     core.setDestinationValue("setupExtraCountry", "");
+    setSetupCountryDateError();
     $("setupMultiCountryPanel")?.classList.add("hidden");
   }
 
@@ -183,47 +185,53 @@
     const start = lastEnd;
     const end = daysAfter(start, 2);
     $("setupExtraStart").value = start;
-    $("setupExtraStart").disabled = true;
+    $("setupExtraStart").disabled = false;
     $("setupExtraEnd").value = end;
     $("setupExtraEnd").min = start;
     if ($("setupExtraBudget") && editingSetupStopIndex < 0) $("setupExtraBudget").value = "";
     $("setupExtraStart").dispatchEvent(new Event("input", { bubbles: true }));
     $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
-  }
-
-
-  function setupStopDurationDays(stop) {
-    if (!stop?.startDate || !stop?.endDate) return 0;
-    const [sy, sm, sd] = stop.startDate.split("-").map(Number);
-    const [ey, em, ed] = stop.endDate.split("-").map(Number);
-    const start = new Date(sy, sm - 1, sd);
-    const end = new Date(ey, em - 1, ed);
-    return Math.max(0, Math.round((end - start) / 86400000));
+    setSetupCountryDateError();
   }
 
   function syncSetupCountryDates() {
-    let previousEnd = $("endDate")?.value || "";
-    if (!previousEnd) return;
-
-    setupDraftStops.forEach(stop => {
-      const duration = setupStopDurationDays(stop);
-      stop.startDate = previousEnd;
-      stop.endDate = daysAfter(previousEnd, duration);
-      previousEnd = stop.endDate;
-    });
-
     renderSetupRoute();
+  }
+
+  function setSetupCountryDateError(message = "") {
+    const error = $("setupExtraDateError");
+    if (error) {
+      error.textContent = message;
+      error.classList.toggle("hidden", !message);
+    }
+    for (const id of ["setupExtraStart", "setupExtraEnd"]) {
+      const input = $(id);
+      if (input) input.setAttribute("aria-invalid", message ? "true" : "false");
+    }
+  }
+
+  function validateSetupCountryDates() {
+    const startDate = $("setupExtraStart")?.value || "";
+    const endDate = $("setupExtraEnd")?.value || "";
+    if (!startDate || !endDate) {
+      setSetupCountryDateError("Choose both From and To dates.");
+      return false;
+    }
+    if (endDate < startDate) {
+      setSetupCountryDateError("To date cannot be before From date.");
+      return false;
+    }
+    setSetupCountryDateError();
+    return true;
   }
 
   function addSetupCountry() {
     const country = core.canonicalDestination("setupExtraCountry");
     if (!country) return;
 
+    if (!validateSetupCountryDates()) return;
     const startDate = $("setupExtraStart").value;
     const endDate = $("setupExtraEnd").value;
-    if (!core.validDates(startDate, endDate)) {
-      return core.toast("Country end date must be after its start date");
-    }
 
     const duplicate = setupDraftStops.some((s, i) =>
       i !== editingSetupStopIndex &&
@@ -257,12 +265,11 @@
     setCountryPanelMode(false);
     core.setDestinationValue("setupExtraCountry", "");
     syncSetupCountryDates();
+    $("setupMultiCountryPanel")?.classList.add("hidden");
 
     if (wasEditing) {
-      $("setupMultiCountryPanel")?.classList.add("hidden");
       core.toast(`${country} updated`);
     } else {
-      setSetupExtraDefaults();
       core.toast(`${country} added`);
     }
   }
@@ -2398,28 +2405,13 @@
   });
 
   $("setupExtraStart")?.addEventListener("change", () => {
-    const previousEnd = editingSetupStopIndex > 0
-      ? setupDraftStops[editingSetupStopIndex - 1]?.endDate
-      : $("endDate")?.value;
-    if (previousEnd) $("setupExtraStart").value = previousEnd;
-
     const start = $("setupExtraStart").value;
-    const end = $("setupExtraEnd").value;
     if (start) $("setupExtraEnd").min = start;
-    if (start && (!end || end < start)) {
-      $("setupExtraEnd").value = daysAfter(start, 2);
-      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
-    }
+    validateSetupCountryDates();
   });
 
   $("setupExtraEnd")?.addEventListener("change", () => {
-    const start = $("setupExtraStart").value;
-    const end = $("setupExtraEnd").value;
-    if (start && end && end < start) {
-      $("setupExtraEnd").value = start;
-      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
-      core.toast("End date adjusted to match the start date");
-    }
+    validateSetupCountryDates();
   });
   core.initDestinationAutocomplete("setupExtraCountry", "setupExtraCountryOptions", "");
 

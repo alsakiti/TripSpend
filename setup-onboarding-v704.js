@@ -85,6 +85,7 @@
       #setupRouteList .mini-btn{min-height:32px!important;padding:0 9px!important;border-radius:10px!important;font-size:10px!important}
       #setupToggleCountries,#setupToggleTravelers{width:100%!important;min-height:48px!important;margin-top:7px!important;border:1px dashed color-mix(in srgb,var(--brand) 42%,var(--line))!important;border-radius:15px!important;background:rgba(34,126,255,.055)!important;color:#4998ff!important;font-size:13px!important;font-weight:820!important}
       .ts-setup-panel .setup-add-panel{margin-top:11px!important;padding:14px!important;border:1px solid color-mix(in srgb,var(--brand) 16%,var(--line))!important;border-radius:17px!important;background:color-mix(in srgb,var(--surface2) 88%,#081525)!important}
+      .ts-setup-panel .setup-panel-actions button{min-height:48px!important}
       .ts-setup-panel .setup-summary-hint{margin:11px 2px 0!important;color:var(--muted)!important;font-size:10.5px!important;text-align:center}
 
       .ts-setup-settings-grid{display:grid;gap:13px}
@@ -324,9 +325,7 @@
   function validateStep2() {
     const addPanel = $("setupMultiCountryPanel");
     if (addPanel && !addPanel.classList.contains("hidden")) {
-      core()?.toast?.(tr("Finish adding the country or tap Cancel","أكمل إضافة الدولة أو اضغط إلغاء"));
-      addPanel.scrollIntoView({ behavior:"smooth", block:"center" });
-      return false;
+      $("setupCancelCountry")?.click();
     }
     return true;
   }
@@ -405,9 +404,11 @@
   function polishRouteRows() {
     document.querySelectorAll("#setupRouteList .setup-route-item").forEach((row, index) => {
       const strong = row.querySelector(":scope > div > strong");
-      if (strong) strong.textContent = (strong.textContent || "").replace(/^Country\s+\d+\s*:\s*/i, "");
+      const polished = (strong?.textContent || "").replace(/^Country\s+\d+\s*:\s*/i, "");
+      if (strong && strong.textContent !== polished) strong.textContent = polished;
       const number = row.querySelector(".setup-route-number");
-      if (number) number.textContent = String(index + 2);
+      const expectedNumber = String(index + 2);
+      if (number && number.textContent !== expectedNumber) number.textContent = expectedNumber;
     });
   }
 

@@ -46,6 +46,7 @@ async function openTab(page, label) {
 }
 
 test("Analytics matches the premium reference graphics and Settings keeps Gemini/flags polished", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-08-18T12:00:00+04:00"));
   await boot(page);
   await openTab(page, "Analytics");
   await expect(page.locator("#analytics")).toHaveClass(/active/);
