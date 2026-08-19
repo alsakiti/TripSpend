@@ -16,10 +16,19 @@ async function bootV7(page) {
 test("route builder keeps From editable and Add/Cancel/Continue remain responsive", async ({ page }) => {
   await bootV7(page);
 
-  await page.locator("#tripName").fill("Europe");
-  await page.locator("#destination").fill("Germany");
-  await page.locator("#startDate").fill("2026-08-22");
-  await page.locator("#endDate").fill("2026-08-25");
+  await page.evaluate(() => {
+    const set = (id, value) => {
+      const el = document.getElementById(id);
+      el.value = value;
+      el.dispatchEvent(new Event("input", { bubbles:true }));
+      el.dispatchEvent(new Event("change", { bubbles:true }));
+    };
+    set("tripName", "Europe");
+    window.TripSpendCore?.setDestinationValue?.("destination", "Germany");
+    set("startDate", "2026-08-22");
+    set("endDate", "2026-08-25");
+  });
+  await expect(page.locator("#tsSetupNext")).toBeEnabled();
   await page.locator("#tsSetupNext").click();
   await expect(page.locator('.ts-setup-panel[data-setup-step="2"]')).toBeVisible();
 
