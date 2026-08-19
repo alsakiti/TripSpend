@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const VERSION = "7.0.6";
+const VERSION = "7.0.7";
 const INNER_WORKER_VERSION = "7.0.0";
 const WORKER_RUNTIME_VERSION = "7.0.3";
 const read = path => fs.readFileSync(path,"utf8");
@@ -21,7 +21,7 @@ if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.
 if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 if (!sw.includes('label: "Google Gemini"') || !sw.includes('short: "Gemini 3.5 Flash-Lite"')) fail("Gemini-first AI label transform missing"); else ok("AI settings identify Gemini as the primary model");
 for (const marker of ["upgradeVisualJs","upgradeSettingsJs","upgradeFlagsJs","upgradeUiFixesJs","upgradeSetupJs","upgradeReceiptJs","requestIdleCallback","STORAGE_SAVE_DELAY = 220","canvas.toBlob","observeClass","tsV706Signature"]) {
-  if (!sw.includes(marker)) fail(`v7.0.6 performance transform missing: ${marker}`);
+  if (!sw.includes(marker)) fail(`v7.0.7 performance transform missing: ${marker}`);
 }
 if (!sw.includes('document.querySelector(".page.active")?.id !== "settings"')) fail("Settings localization work is not page-gated"); else ok("Settings work is deferred and page-gated");
 if (!sw.includes("MutationObserver already sees inserted/replaced flag text")) fail("flag render rescan removal transform is missing");
@@ -35,13 +35,13 @@ for (const old of ["i18n.js","i18n-layout-fix.js","i18n-audit-v690.js","rtl-poli
 ok("legacy localization patches are retired from APP_SHELL");
 
 const fx = read("fx.js");
-for (const marker of ["const APP_RELEASE = \"7.0.6\"","fxCardVisible","bootstrapFirstVisitRuntime","navigator.serviceWorker?.controller","FIRST_LOAD_RUNTIME","settingsAdvanced > summary"]) {
+for (const marker of ["const APP_RELEASE = \"7.0.7\"","fxCardVisible","bootstrapFirstVisitRuntime","navigator.serviceWorker?.controller","FIRST_LOAD_RUNTIME","settingsAdvanced > summary"]) {
   if (!fx.includes(marker)) fail(`FX/first-load reliability marker missing: ${marker}`);
 }
 if (!fx.includes('if (fxCardVisible()) convertSection(true)') || !fx.includes('if (!amountEl || !fxCardVisible()) return')) fail("hidden FX converter can still perform background conversion work");
 else ok("FX conversion work is gated to the visible Settings card");
 if (!fx.includes("tripspend:first-load-runtime")) fail("fresh uncontrolled visits do not bootstrap the current runtime");
-else ok("fresh visits bootstrap the v7.0.6 runtime before service-worker control");
+else ok("fresh visits bootstrap the v7.0.7 runtime before service-worker control");
 
 const locale = read("locale-v700.js");
 if (!locale.includes("Intl.DisplayNames")) fail("country localization is not using Intl.DisplayNames"); else ok("country localization uses Intl.DisplayNames");
