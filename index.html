@@ -133,8 +133,8 @@
             </label>
 
             <div class="grid2 date-grid setup-extra-date-grid">
-              <label class="date-field-label"><span>From <small>(automatic)</small></span>
-                <div class="date-picker-card automatic-date-card">
+              <label class="date-field-label"><span>From</span>
+                <div class="date-picker-card">
                   <span id="setupExtraStartDisplay" class="date-display">Select date</span>
                   <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
                   <input id="setupExtraStart" class="native-date-input" type="date" aria-label="Additional country start date">
@@ -148,6 +148,8 @@
                 </div>
               </label>
             </div>
+
+            <p id="setupExtraDateError" class="setup-inline-error hidden" role="alert" aria-live="polite"></p>
 
             <div class="grid2 country-money-grid">
               <label>Local currency
