@@ -18,14 +18,22 @@ function seededTrip() {
 async function boot(page) {
   await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seededTrip());
   await page.goto("/");
+  await page.evaluate(async () => {
+    if (!("serviceWorker" in navigator)) return;
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise(resolve => navigator.serviceWorker.addEventListener("controllerchange", resolve, {once:true}));
+    }
+  });
+  await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.9");
 }
 
 test("v7.0.9 Home prioritizes guidance and keeps secondary route budgets collapsible", async ({ page }) => {
   await page.setViewportSize({width:390,height:844});
   await boot(page);
 
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.9");
   await expect(page.locator("#homeGuideCard")).toBeVisible();
   await expect(page.locator("#healthBanner")).toBeVisible();
 
