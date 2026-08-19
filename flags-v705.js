@@ -193,10 +193,10 @@
       }
       .ts-country-flag-v705.ts-country-flag-native{
         display:inline-block!important;
-        width:auto!important;
-        min-width:0!important;
+        width:1.3em!important;
+        min-width:1.3em!important;
         height:auto!important;
-        flex:0 0 auto!important;
+        flex:0 0 1.3em!important;
         overflow:visible!important;
         border-radius:0!important;
         background:transparent!important;
