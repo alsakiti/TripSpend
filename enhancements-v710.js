@@ -3,7 +3,7 @@
 
   const VERSION = "7.1.0";
   const modules = [
-    "fx.js", "v5.js", "ai-v684.js", "locale-v700.js", "locale-dynamic-v700.js",
+    "app.js", "fx.js", "v5.js", "ai-v684.js", "locale-v700.js", "locale-dynamic-v700.js",
     "expense-locale-v703.js", "page-locale-v704.js", "settings-polish-v704.js",
     "visual-polish-v704.js", "setup-language-host-v700.js", "setup-onboarding-v704.js",
     "flags-v705.js", "ui-fixes-v705.js", "receipt-capability-v700.js",
