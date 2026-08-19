@@ -327,7 +327,7 @@
       else{const d=await requestWorker(question);const text=cleanText(d?.answer,5000)||(d?.action?"Review the proposed change below.":"I couldn't produce an answer for that question.");waiting.textContent=text;chatHistory.push({role:"assistant",content:text});chatHistory=chatHistory.slice(-MAX_HISTORY);persistHistory();if(d?.action&&SUPPORTED_ACTIONS.has(d.action.type))renderActionCard(d.action);}
     }catch(error){waiting.textContent=error?.name==="AbortError"?"The AI request timed out. Please try again.":(error?.message||"TripSpend AI is unavailable right now.");}finally{clearTimeout(timer);requestController=null;if(send)send.disabled=false;}}
 
-  function paintVersion(){document.querySelectorAll(".version-badge").forEach(el=>el.textContent=`v${RELEASE}`);const c=$("currentVersionText");if(c)c.textContent=`v${RELEASE}`;}
+  function paintVersion(){const value=`v${RELEASE}`;document.querySelectorAll(".version-badge").forEach(el=>{if(el.textContent!==value)el.textContent=value;});const c=$("currentVersionText");if(c&&c.textContent!==value)c.textContent=value;}
   function init(){injectStyles();injectModal();injectSettings();activateTrigger();paintVersion();loadConfig();const obs=new MutationObserver(()=>paintVersion());obs.observe(document.body,{childList:true,subtree:true});}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
