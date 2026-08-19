@@ -10,6 +10,7 @@ async function waitForServiceWorker(page) {
     }
   });
   await page.reload();
+  await page.evaluate(() => window.TripSpendEnhancementsReady);
 }
 
 function seededTrip() {
