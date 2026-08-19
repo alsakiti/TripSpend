@@ -49,7 +49,7 @@ test.describe("iPhone flag rendering", () => {
     await expect(omanFlag.locator("img")).toHaveCount(0);
     await expect(omanFlag).toContainText("🇴🇲");
 
-    const style = await omanFlag.evaluate(el => {
+    const readStyle = () => omanFlag.evaluate(el => {
       const css = getComputedStyle(el);
       const r = el.getBoundingClientRect();
       return {
@@ -60,6 +60,8 @@ test.describe("iPhone flag rendering", () => {
         whiteSpace:css.whiteSpace
       };
     });
+    await expect.poll(async () => (await readStyle()).width).toBeGreaterThan(0);
+    const style = await readStyle();
     expect(style.width).toBeGreaterThan(0);
     expect(style.height).toBeGreaterThan(0);
     expect(style.overflow).toBe("visible");
