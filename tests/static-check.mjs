@@ -66,6 +66,10 @@ if (!pageLocale.includes("tripspend:language")) fail("page locale does not react
 
 const settingsPolish = read("settings-polish-v704.js");
 const style = read("style.css");
+if (!style.includes("touch-action:manipulation") || !style.includes('input:not([type="checkbox"]):not([type="radio"])') || !style.includes("font-size:16px!important")) fail("mobile focus-zoom protection missing");
+else ok("all mobile form controls prevent iPhone focus zoom");
+if (/\.date-calendar\s*\{[^}]*transform:rotate\(/s.test(style)) fail("calendar icons are still rotated");
+else ok("calendar icons remain upright globally");
 for (const marker of ["settings-simple-form","settings-country-list-compact","settings-save-dock","settings-advanced","ts-no-floating-add"]) {
   if (!settingsPolish.includes(marker)) fail(`simplified Settings marker missing: ${marker}`);
 }
