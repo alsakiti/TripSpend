@@ -17,8 +17,8 @@ function tripState() {
   };
 }
 
-async function boot(page) {
-  await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), tripState());
+async function boot(page, initialState = tripState()) {
+  await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), initialState);
   await page.goto("/");
   await page.evaluate(async () => {
     if (!("serviceWorker" in navigator)) return;
@@ -55,6 +55,11 @@ test("guidance becomes concrete and route flags open useful country details", as
   await expect(page.locator("#routeCountryModal")).toBeHidden();
   await expect(flags.first()).toBeFocused();
 
+  await languageButton(page).click();
+  await flags.first().click();
+  await expect(page.locator("#routeCountryTitle")).toHaveText("🇩🇪 ألمانيا");
+  await page.keyboard.press("Escape");
+
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
 });
@@ -79,6 +84,20 @@ test("in-app dialogs replace browser popups and remain Arabic-safe", async ({ pa
   await expect(page.locator("#appDialogModal")).not.toContainText(/Clear all|Confirm deletion|Cancel/);
   await page.keyboard.press("Escape");
   await expect(page.locator("#appDialogModal")).toBeHidden();
+
+  await page.evaluate(() => { void window.TripSpendDialog.confirm("Delete Ahmed from this trip?", {danger:true,confirmText:"Delete"}); });
+  await expect(page.locator("#appDialogMessage")).toHaveText("هل تريد حذف Ahmed من هذه الرحلة؟");
+  await page.keyboard.press("Escape");
+});
+
+test("completed trips show a final result instead of daily spending advice", async ({ page }) => {
+  const completed = tripState();
+  completed.trip.endDate = "2026-08-18";
+  completed.stops.at(-1).endDate = "2026-08-18";
+  await boot(page, completed);
+  await expect(page.locator("#healthTitle")).toHaveText("Trip complete");
+  await expect(page.locator("#healthText")).toContainText("under budget");
+  await expect(page.locator("#healthText")).not.toContainText(/today|daily/i);
 });
 
 test("returning to the app surfaces a clear update banner", async ({ page }) => {
