@@ -6523,7 +6523,51 @@ html[data-theme="dark"] .home-trip-history-btn{
   }
 }
 
-/* TripSpend v7.0.10 — clearer Home guidance and calmer motion */
+/* TripSpend v7.1.0 — source-first reliability, accessible dialogs and route details */
+:where(button,a,input,select,textarea,[tabindex]):focus-visible{
+  outline:3px solid color-mix(in srgb,var(--brand) 52%,transparent)!important;
+  outline-offset:3px!important;
+}
+.trip-flag{
+  appearance:none;
+  cursor:pointer;
+  color:inherit;
+  font:inherit;
+}
+.trip-flag:focus-visible{position:relative;z-index:2}
+.route-country-sheet,.app-dialog-sheet{width:min(100%,430px);padding:12px 18px max(20px,env(safe-area-inset-bottom))}
+.route-country-dates{margin:8px 0 16px;color:var(--muted);font-size:13px;line-height:1.55}
+.route-country-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:15px}
+.route-country-metrics>div{min-width:0;padding:12px 9px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
+.route-country-metrics small,.route-country-metrics strong{display:block}
+.route-country-metrics small{margin-bottom:5px;color:var(--muted);font-size:10px}
+.route-country-metrics strong{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.app-dialog-sheet{text-align:center}
+.app-dialog-icon{display:grid;place-items:center;width:48px;height:48px;margin:2px auto 12px;border-radius:16px;background:var(--brand-soft);color:var(--brand);font-size:23px;font-weight:900}
+.app-dialog-sheet h2{margin:0;font-size:21px}
+.app-dialog-sheet p{margin:9px 0 16px;color:var(--muted);font-size:13px;line-height:1.6;white-space:pre-line}
+.app-dialog-sheet label{text-align:start}
+.app-dialog-sheet label span{display:block;margin-bottom:7px;font-size:12px;font-weight:800}
+.app-dialog-sheet input{width:100%;min-height:48px;padding:0 13px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--text);font-size:16px}
+.app-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}
+.app-dialog-actions .primary,.app-dialog-actions .secondary{min-height:48px}
+.app-dialog-sheet.is-alert .app-dialog-actions{grid-template-columns:1fr}
+.app-dialog-sheet.is-alert #appDialogCancel{display:none}
+.app-dialog-sheet.is-danger .app-dialog-icon{background:var(--badbg);color:var(--bad)}
+.app-dialog-sheet.is-danger #appDialogConfirm{background:var(--bad);color:#fff}
+.update-banner{max-width:calc(100% - 24px);border:1px solid color-mix(in srgb,var(--brand) 24%,var(--line));box-shadow:0 14px 36px rgba(16,24,40,.18)}
+html[dir="rtl"] .route-country-sheet,html[dir="rtl"] .app-dialog-sheet{text-align:right}
+html[dir="rtl"] .app-dialog-icon{margin-inline:auto}
+@media(max-width:380px){
+  .route-country-metrics{grid-template-columns:1fr}
+  .route-country-metrics>div{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .route-country-metrics small{margin:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .modal,.sheet,.update-banner{animation:none!important;transition:none!important}
+}
+
+/* TripSpend v7.1.0 — clearer Home guidance and calmer motion */
 .home-guide-card{
   display:grid;
   grid-template-columns:38px minmax(0,1fr) auto;

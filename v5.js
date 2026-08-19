@@ -5,6 +5,7 @@
   if (!core) return;
 
   const $ = id => document.getElementById(id);
+  const askConfirm = (message, options = {}) => window.TripSpendDialog?.confirm?.(message, options) ?? Promise.resolve(confirm(message));
   let preparedSource = null;
   let currentExpenseType = "personal";
   let setupDraftStops = [];
@@ -603,17 +604,24 @@
 
     const rail = $("tripFlagRail");
     if (rail) {
-      const signature = stops().map(tripStop => `${tripStop.id}:${tripStop.country}:${tripStop.id === stop.id}`).join("|");
+      const currentLanguage = window.TripSpendLocale?.language?.() === "ar" ? "ar" : "en";
+      const signature = `${currentLanguage}|${stops().map(tripStop => `${tripStop.id}:${tripStop.country}:${tripStop.id === stop.id}`).join("|")}`;
       if (signature === lastFlagRailSignature) return;
       lastFlagRailSignature = signature;
       rail.replaceChildren();
       const fragment = document.createDocumentFragment();
       stops().forEach(tripStop => {
-        const flag = document.createElement("span");
+        const flag = document.createElement("button");
+        flag.type = "button";
         flag.className = "trip-flag";
         flag.classList.toggle("active", tripStop.id === stop.id);
         flag.textContent = core.countryFlag(tripStop.country);
-        flag.title = tripStop.country;
+        const localizedCountry = window.TripSpendLocale?.country?.(tripStop.country) || tripStop.country;
+        flag.title = localizedCountry;
+        flag.dataset.stopId = tripStop.id;
+        flag.setAttribute("aria-label", `${localizedCountry}${tripStop.id === stop.id ? (currentLanguage === "ar" ? " • الدولة الحالية" : " • current country") : ""}`);
+        if (tripStop.id === stop.id) flag.setAttribute("aria-current", "step");
+        flag.addEventListener("click", () => window.TripSpendRouteInfo?.open?.(tripStop.id));
         fragment.append(flag);
       });
       rail.append(fragment);
@@ -1090,8 +1098,8 @@
     core.toast(item.status === "done" ? "Marked done" : "Moved back to planned");
   }
 
-  function deleteItineraryItem(item) {
-    if (!confirm(`Delete “${item.title}” from your itinerary?`)) return;
+  async function deleteItineraryItem(item) {
+    if (!await askConfirm(`Delete “${item.title}” from your itinerary?`, { danger:true, confirmText:"Delete" })) return;
 
     const plan = linkedPlanForItem(item);
     const recorded = plan && state().expenses.some(expense => expense.planId === plan.id);
@@ -1384,12 +1392,12 @@
     });
   }
 
-  function removeStop(id) {
+  async function removeStop(id) {
     const s = stopById(id);
     if (!s) return;
     const used = state().expenses.some(e => e.stopId === id) || plans().some(p => p.stopId === id);
     if (used) return core.toast("This country has expenses or planned costs. Remove those first.");
-    if (!confirm(`Remove ${s.country} from this trip?`)) return;
+    if (!await askConfirm(`Remove ${s.country} from this trip?`, { danger:true, confirmText:"Remove" })) return;
     state().stops = stops().filter(x => x.id !== id);
     sortStops();
     core.save();
@@ -1472,8 +1480,8 @@
       del.type = "button";
       del.className = "mini-btn delete";
       del.textContent = "Delete";
-      del.onclick = () => {
-        if (!confirm(`Delete planned cost “${p.title}”?`)) return;
+      del.onclick = async () => {
+        if (!await askConfirm(`Delete planned cost “${p.title}”?`, { danger:true, confirmText:"Delete" })) return;
         state().plans = plans().filter(x => x.id !== p.id);
         core.save();
         core.render();
@@ -2351,7 +2359,8 @@
     setupStops,
     clearSetupStops,
     setupPeople,
-    clearSetupPeople
+    clearSetupPeople,
+    openCountryBudget:setCountryBudget
   };
 
 
@@ -2777,5 +2786,6 @@
 
   window.addEventListener("tripspend:render", renderAll);
   window.addEventListener("tripspend:page", event => renderFeaturePage(event.detail?.id));
+  window.addEventListener("tripspend:language", renderAll);
   renderAll();
 })();

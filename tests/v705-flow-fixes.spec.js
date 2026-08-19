@@ -59,8 +59,9 @@ test("Switch Trip flags swipe horizontally and Start New Trip uses premium onboa
   });
   expect(didScroll).toBe(true);
 
-  page.once("dialog", dialog => dialog.accept());
   await page.locator("#tripSwitcherNewBtn").click();
+  await expect(page.locator("#appDialogModal")).toBeVisible();
+  await page.locator("#appDialogConfirm").click();
 
   await expect(page.locator("#setupView")).not.toHaveClass(/hidden/);
   await expect(page.locator("#setupForm")).toHaveClass(/ts-setup-onboarding-form/);

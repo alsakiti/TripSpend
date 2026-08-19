@@ -374,7 +374,6 @@
   }
 
   function start() {
-    observer = new MutationObserver(() => { if (!busy) queue(); });
     window.addEventListener("tripspend:language",queue);
     window.addEventListener("tripspend:render",queue);
     window.addEventListener("tripspend:page",queue);

@@ -10,6 +10,7 @@ async function waitForServiceWorker(page) {
     }
   });
   await page.reload();
+  await page.evaluate(() => window.TripSpendEnhancementsReady);
 }
 
 function seededTrip() {
@@ -38,7 +39,7 @@ test.describe("iPhone flag rendering", () => {
   test("country picker keeps native flags visible without clipping", async ({ page }) => {
     await waitForServiceWorker(page);
     await expect(page.locator("#setupView")).toBeVisible();
-    await expect(page.locator(".version-badge").first()).toHaveText("v7.0.10");
+    await expect(page.locator(".version-badge").first()).toHaveText("v7.1.0");
 
     await page.locator("#destination").fill("om");
     await expect(page.locator("#destinationOptions")).not.toHaveClass(/hidden/);
@@ -49,7 +50,7 @@ test.describe("iPhone flag rendering", () => {
     await expect(omanFlag.locator("img")).toHaveCount(0);
     await expect(omanFlag).toContainText("🇴🇲");
 
-    const style = await omanFlag.evaluate(el => {
+    const readStyle = () => omanFlag.evaluate(el => {
       const css = getComputedStyle(el);
       const r = el.getBoundingClientRect();
       return {
@@ -60,6 +61,8 @@ test.describe("iPhone flag rendering", () => {
         whiteSpace:css.whiteSpace
       };
     });
+    await expect.poll(async () => (await readStyle()).width).toBeGreaterThan(0);
+    const style = await readStyle();
     expect(style.width).toBeGreaterThan(0);
     expect(style.height).toBeGreaterThan(0);
     expect(style.overflow).toBe("visible");

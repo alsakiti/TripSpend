@@ -23,8 +23,9 @@ async function openNewTrip(page) {
   await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
   await page.locator("#tripSwitcherTrigger").click();
-  page.once("dialog", dialog => dialog.accept());
   await page.locator("#tripSwitcherNewBtn").click();
+  await expect(page.locator("#appDialogModal")).toBeVisible();
+  await page.locator("#appDialogConfirm").click();
   await expect(page.locator("#setupForm")).toHaveClass(/ts-setup-onboarding-form/);
   await page.evaluate(() => {
     const setDate = (id, value) => {

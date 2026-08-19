@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.0";
+  const RELEASE = "7.1.0";
   const KEY = "tripspend.language";
   const originals = new WeakMap();
   const attrOriginals = new WeakMap();
@@ -9,6 +9,7 @@
   let busy = false;
   let queued = false;
   let lang = "en";
+  let hasTranslatedDocument = false;
 
   try { lang = localStorage.getItem(KEY) === "ar" ? "ar" : "en"; } catch {}
 
@@ -31,9 +32,9 @@
     "Available per day":"المتاح يوميًا","☀️ Available per day":"المتاح يوميًا ☀️","Spent today":"مصروف اليوم","🧾 Spent today":"مصروف اليوم 🧾","The amount you can spend per day: your balance after upcoming planned costs, divided by the days left in your trip.":"المبلغ الذي يمكنك إنفاقه يوميًا: رصيدك بعد التكاليف المخططة القادمة، مقسومًا على الأيام المتبقية في الرحلة.",
     "WHERE YOU ARE":"موقعك الآن","Current trip":"الرحلة الحالية","FIRST COUNTRY • AUTO BY DATE":"الدولة الأولى • تلقائي حسب التاريخ","CURRENT COUNTRY • AUTO BY DATE":"الدولة الحالية • تلقائي حسب التاريخ","LAST COUNTRY • AUTO BY DATE":"الدولة الأخيرة • تلقائي حسب التاريخ","Current country • auto by date":"الدولة الحالية • تلقائي حسب التاريخ","No country budget":"لم تُحدَّد ميزانية لهذه الدولة","NEXT UP":"التالي","Next up":"التالي",
     "QUICK START":"بداية سريعة","Make today easier":"سهّل يومك","Add expenses as you go. TripSpend updates your safe daily amount automatically.":"سجّل مصروفاتك أولًا بأول، وسيحدّث TripSpend المبلغ اليومي الآمن تلقائيًا.","Got it":"حسنًا","Dismiss quick start tip":"إخفاء نصيحة البداية السريعة","TODAY'S GUIDANCE":"إرشاد اليوم","View expenses":"عرض المصروفات","View analytics":"عرض التحليلات","Start trip":"بدء الرحلة","Show":"عرض","Hide":"إخفاء","Your trip and receipts stay on this device unless you export them.":"تبقى بيانات رحلتك وإيصالاتك على هذا الجهاز ما لم تُصدّرها.",
-    "YOUR ROUTE":"مسار رحلتك","Country budgets":"ميزانيات الدول","Manage":"إدارة","Tap a country to set its budget.":"اضغط على دولة لتحديد ميزانيتها.","Set budget":"تحديد الميزانية","No spending recorded yet":"لم تُسجَّل مصروفات بعد","Your daily spending guidance will update after you record your first expense.":"سيتم تحديث إرشادات الإنفاق اليومية بعد تسجيل أول مصروف.","Trip budget fully allocated.":"تم توزيع ميزانية الرحلة بالكامل.","On track":"ضمن الميزانية","Over budget":"تجاوزت الميزانية","Trip history":"سجل الرحلات","Trips & history":"الرحلات والسجل","No past trips yet • tap to manage trips":"لا توجد رحلات سابقة • اضغط لإدارة الرحلات",
+    "YOUR ROUTE":"مسار رحلتك","Country budgets":"ميزانيات الدول","Manage":"إدارة","Tap a country to set its budget.":"اضغط على دولة لتحديد ميزانيتها.","Set budget":"تحديد الميزانية","No spending recorded yet":"لم تُسجَّل مصروفات بعد","Your daily spending guidance will update after you record your first expense.":"سيتم تحديث إرشادات الإنفاق اليومية بعد تسجيل أول مصروف.","Today’s spending guide":"إرشاد إنفاق اليوم","Today’s safe amount is used":"تم استخدام المبلغ الآمن لليوم","Avoid more spending today to protect the rest of your trip budget.":"تجنّب المزيد من الإنفاق اليوم للحفاظ على بقية ميزانية الرحلة.","Trip budget fully allocated.":"تم توزيع ميزانية الرحلة بالكامل.","On track":"ضمن الميزانية","Over budget":"تجاوزت الميزانية","Trip history":"سجل الرحلات","Trips & history":"الرحلات والسجل","No past trips yet • tap to manage trips":"لا توجد رحلات سابقة • اضغط لإدارة الرحلات",
 
-    "MONEY":"المال","HISTORY":"السجل","Add":"إضافة","Add +":"إضافة +","Add expense":"إضافة مصروف","＋ Add expense":"＋ إضافة مصروف","Filters":"التصفية","Search expenses":"ابحث في المصروفات","Search note, category, country, payer…":"ابحث بالملاحظة أو الفئة أو الدولة أو الدافع…","Search note, category, country, payer...":"ابحث بالملاحظة أو الفئة أو الدولة أو الدافع…",
+    "MONEY":"المال","HISTORY":"السجل","Add":"إضافة","Add +":"إضافة +","Add expense":"إضافة مصروف","＋ Add expense":"＋ إضافة مصروف","Filters":"التصفية","Search expenses":"ابحث في المصروفات","Search note, category, country, payer…":"ابحث بالملاحظة أو الفئة أو الدولة أو الدافع…","Search note, category, country, payer...":"ابحث بالملاحظة أو الفئة أو الدولة أو الدافع…","Close expense editor":"إغلاق محرر المصروف","Close receipt viewer":"إغلاق عارض الإيصال","Zoom out receipt":"تصغير الإيصال","Zoom in receipt":"تكبير الإيصال",
     "All categories":"كل الفئات","All payments":"كل طرق الدفع","All payment methods":"كل طرق الدفع","No expenses yet":"لا توجد مصروفات بعد","No matching expenses":"لا توجد مصروفات مطابقة","Load more":"عرض المزيد","Expense details":"تفاصيل المصروف","Amount":"المبلغ","Date":"التاريخ","Category":"الفئة","Payment":"الدفع","Paid by":"دفع بواسطة","Personal expense for":"مصروف شخصي لـ","Shared with":"مشترك مع","Everyone":"الجميع","Note":"ملاحظة","Receipt":"الإيصال","📷 Add receipt":"📷 إضافة إيصال","Receipt attached":"تم إرفاق الإيصال","Saved locally":"محفوظ محليًا","Stored locally":"محفوظ محليًا","No receipt attached":"لا يوجد إيصال مرفق","More options":"خيارات إضافية","Use suggestion":"استخدام الاقتراح","Exchange rate":"سعر الصرف","Enter the exchange rate.":"أدخل سعر الصرف.","Use Latest Rate":"استخدام أحدث سعر","Save Expense":"حفظ المصروف","Edit Expense":"تعديل المصروف","Repeat":"تكرار","Personal":"شخصي","Shared":"مشترك","Me":"أنا","For Me":"لي","Paid by Me":"دفعت أنا",
     "Food":"الطعام","Transport":"النقل","Hotel":"الفندق","Shopping":"التسوق","Activities":"الأنشطة","Flights":"الرحلات الجوية","Coffee":"القهوة","Groceries":"البقالة","Other":"أخرى","Cash":"نقدًا","Credit Card":"بطاقة ائتمان","Debit Card":"بطاقة خصم","Apple Pay":"Apple Pay",
     "Dinner":"عشاء","Lunch":"غداء","Breakfast":"إفطار","Taxi":"سيارة أجرة","Restaurant":"مطعم","Groceries":"بقالة","Flight":"رحلة جوية","Activity":"نشاط",
@@ -125,6 +126,7 @@
     m = text.match(/^(.+?)\s+over$/i); if (m) return raw.replace(text, `تجاوز بمقدار ${m[1]}`);
     m = text.match(/^At your current pace you may finish around\s+(.+?)\s+under budget\.?$/i); if (m) return raw.replace(text, `بحسب وتيرتك الحالية قد تنهي الرحلة بأقل من الميزانية بحوالي ${m[1]}.`);
     m = text.match(/^At your current pace you may finish around\s+(.+?)\s+over budget\.?$/i); if (m) return raw.replace(text, `بحسب وتيرتك الحالية قد تنهي الرحلة بأعلى من الميزانية بحوالي ${m[1]}.`);
+    m = text.match(/^You can spend up to\s+(.+?)\s+more today and stay on your current plan\.?$/i); if (m) return raw.replace(text, `يمكنك إنفاق ما يصل إلى ${m[1]} إضافية اليوم والبقاء ضمن خطتك الحالية.`);
 
     if (text.includes(" • ")) {
       const parts = text.split(" • ").map(part => {
@@ -261,7 +263,13 @@
       document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
       document.body.classList.toggle("lang-ar", lang === "ar");
       document.body.dir = lang === "ar" ? "rtl" : "ltr";
-      scan(document.body);
+      if (lang === "ar") {
+        scan(document.body);
+        hasTranslatedDocument = true;
+      } else if (hasTranslatedDocument) {
+        scan(document.body);
+        hasTranslatedDocument = false;
+      }
       enforceVersion();
       mountToggle();
     } finally {
@@ -293,7 +301,9 @@
 
   function start() {
     observer = new MutationObserver(() => { if (!busy) queueApply(); });
-    apply();
+    const initialApply = () => apply();
+    if ("requestIdleCallback" in window) requestIdleCallback(initialApply, { timeout:500 });
+    else setTimeout(initialApply, 0);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, {once:true}); else start();
 })();

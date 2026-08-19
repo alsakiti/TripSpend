@@ -26,13 +26,18 @@ async function bootControlled(page) {
   await page.waitForSelector("#mainView:not(.hidden)");
 }
 
-test("first visit upgrades through the service worker without blocking page load", () => {
+test("first visit runs the current source without a service-worker reload", () => {
   const fx = fs.readFileSync("fx.js", "utf8");
-  expect(fx).toContain('const FIRST_LOAD_RUNTIME = "tripspend:first-load-runtime"');
-  expect(fx).toContain('navigator.serviceWorker.addEventListener("controllerchange", reloadWhenControlled');
-  expect(fx).toContain("location.reload()");
-  expect(fx).toContain("appState()?.trip");
-  expect(fx).not.toContain("loadRuntimeScript(");
+  const app = fs.readFileSync("app.js", "utf8");
+  const index = fs.readFileSync("index.html", "utf8");
+  expect(app).toContain('const APP_VERSION = "7.1.0"');
+  expect(index).toContain('enhancements-v710.js?v=7.1.0');
+  const enhancements = fs.readFileSync("enhancements-v710.js", "utf8");
+  expect(enhancements).toContain('"app.js"');
+  expect(enhancements).toContain('"ui-foundation-v710.js"');
+  expect(enhancements).toContain('window.addEventListener("load", run');
+  expect(fx).not.toContain("bootstrapFirstVisitRuntime");
+  expect(fx).not.toContain("reloadWhenControlled");
 });
 
 test("hidden FX card does not make background rate requests", async ({ page }) => {
@@ -69,10 +74,11 @@ test("hidden FX card does not make background rate requests", async ({ page }) =
   expect(fxResultBackground).not.toBe("rgba(0, 0, 0, 0)");
 });
 
-test("v7.0.10 cache revision serves FX network-first", async ({ page }) => {
+test("v7.1.0 cache revision serves source files stale-while-revalidate", async ({ page }) => {
   await bootControlled(page);
   const sw = await page.evaluate(async () => await (await fetch("./sw.js?health=1", {cache:"no-store"})).text());
-  expect(sw).toContain('const CACHE = `tripspend-v${APP_VERSION}-r2`');
-  expect(sw).toContain('if (path.endsWith("/fx.js"))');
-  expect(sw).toContain('event.respondWith(networkFirst(request));');
+  expect(sw).toContain('const CACHE = `tripspend-v${APP_VERSION}-r1`');
+  expect(sw).toContain("staleWhileRevalidate");
+  expect(sw).toContain("TRIPSPEND_UPDATE_READY");
+  expect(sw).not.toContain("upgradeAppJs");
 });

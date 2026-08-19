@@ -1,12 +1,13 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.4";
+  const RELEASE = "7.1.0";
   const $ = id => document.getElementById(id);
   let built = false;
   let currentStep = 1;
   let pendingDefaultPayment = "Credit Card";
   let analyticsInsightsOpen = true;
+  let afterChangeTimer = 0;
 
   const lang = () => window.TripSpendLocale?.language?.() === "ar" ? "ar" : "en";
   const tr = (en, ar) => lang() === "ar" ? ar : en;
@@ -513,7 +514,7 @@
     if (!toggle || !details) return;
     if (toggle.dataset.tsToggleFixed !== "1") {
       toggle.dataset.tsToggleFixed = "1";
-      analyticsInsightsOpen = !details.classList.contains("hidden");
+      analyticsInsightsOpen = false;
       toggle.addEventListener("click", event => {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -525,11 +526,12 @@
   }
 
   function afterAppChange() {
-    window.setTimeout(() => {
+    clearTimeout(afterChangeTimer);
+    afterChangeTimer = window.setTimeout(() => {
       ensureSetupBuilt();
       repairAnalyticsToggle();
       applyAnalyticsToggleState();
-    }, 90);
+    }, 45);
   }
 
   function start() {

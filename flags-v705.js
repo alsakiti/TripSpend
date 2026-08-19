@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.5";
+  const RELEASE = "7.1.0";
   const FLAG_RE = /[\u{1F1E6}-\u{1F1FF}]{2}/gu;
   const CDN_BASE = "https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/flags/4x3";
   const WINDOWS_RE = /Windows NT/i;
@@ -26,6 +26,10 @@
     wrap.replaceChildren(document.createTextNode(flag));
     wrap.classList.add("ts-country-flag-native");
     wrap.classList.remove("ts-country-flag-svg", "ts-country-flag-failed");
+    wrap.style.setProperty("display", "inline-block", "important");
+    wrap.style.setProperty("width", "1.3em", "important");
+    wrap.style.setProperty("min-width", "1.3em", "important");
+    wrap.style.setProperty("overflow", "visible", "important");
   }
 
   function renderCodeFallback(wrap, code) {
@@ -193,10 +197,10 @@
       }
       .ts-country-flag-v705.ts-country-flag-native{
         display:inline-block!important;
-        width:auto!important;
-        min-width:0!important;
+        width:1.3em!important;
+        min-width:1.3em!important;
         height:auto!important;
-        flex:0 0 auto!important;
+        flex:0 0 1.3em!important;
         overflow:visible!important;
         border-radius:0!important;
         background:transparent!important;
@@ -404,9 +408,6 @@
     });
     observer.observe(document.body, { childList:true, subtree:true, characterData:true });
 
-    window.addEventListener("tripspend:render", scheduleUpgrade);
-    window.addEventListener("tripspend:page", scheduleUpgrade);
-    window.addEventListener("tripspend:language", scheduleUpgrade);
     window.addEventListener("tripspend:language", () => requestAnimationFrame(() => refreshSetupDateDisplays(document)));
   }
 
