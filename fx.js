@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_RELEASE = "7.0.8";
+  const APP_RELEASE = "7.0.9";
   const FIRST_LOAD_RUNTIME = "tripspend:first-load-runtime";
   const APP_KEY = "tripspend.v1";
   const FX_KEY = "tripspend.fxcache.v1";
