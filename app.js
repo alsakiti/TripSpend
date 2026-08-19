@@ -1921,6 +1921,11 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       }
     }
 
+    // Keep the loading cover in place until the post-load modules have built
+    // their final controls. This prevents a user from interacting with setup
+    // fields that are about to be moved into the onboarding layout.
+    try { await window.TripSpendEnhancementsReady; } catch {}
+
     applyAppearance(state.preferences?.appearance || "system");
 
     if (boot) {
