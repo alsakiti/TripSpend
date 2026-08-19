@@ -277,6 +277,26 @@
           <p id="safeTodayExplanation" class="safe-today-explanation hidden">The amount you can spend per day: your balance after upcoming planned costs, divided by the days left in your trip.</p>
         </div>
 
+        <section id="homeGuideCard" class="home-guide-card" aria-labelledby="homeGuideTitle">
+          <span class="home-guide-icon" aria-hidden="true">✦</span>
+          <div>
+            <small>QUICK START</small>
+            <strong id="homeGuideTitle">Make today easier</strong>
+            <span>Add expenses as you go. TripSpend updates your safe daily amount automatically.</span>
+          </div>
+          <button id="dismissHomeGuide" type="button" aria-label="Dismiss quick start tip">Got it</button>
+        </section>
+
+        <div id="healthBanner" class="health-banner on-track v6-health-banner home-guidance-card">
+          <div class="health-icon" id="healthIcon">✓</div>
+          <div>
+            <small class="health-kicker">TODAY'S GUIDANCE</small>
+            <strong id="healthTitle">On track</strong>
+            <span id="healthText">Your budget looks healthy.</span>
+          </div>
+          <button id="healthAction" class="health-action" type="button">View expenses</button>
+        </div>
+
         <button id="quickAdd" class="primary v6-quick-add">
           <span class="quick-add-icon" aria-hidden="true">＋</span>
           <span><strong>Add expense</strong><small>Log a purchase in seconds</small></span>
@@ -316,19 +336,14 @@
         <section id="countryBudgetSection" class="section country-budget-section v6-country-budget-section">
           <div class="section-title v6-section-title">
             <div><span class="dashboard-section-kicker">YOUR ROUTE</span><h2>Country budgets</h2></div>
-            <button id="countryBudgetManage" class="link-btn" type="button">Manage</button>
+            <div class="country-budget-actions">
+              <button id="countryBudgetToggle" class="link-btn" type="button" aria-expanded="false">Show</button>
+              <button id="countryBudgetManage" class="link-btn" type="button">Manage</button>
+            </div>
           </div>
           <div id="countryBudgetSummary" class="country-budget-summary"></div>
-          <div id="countryBudgetList" class="country-budget-list v6-country-budget-list"></div>
+          <div id="countryBudgetList" class="country-budget-list v6-country-budget-list hidden"></div>
         </section>
-
-        <div id="healthBanner" class="health-banner on-track v6-health-banner">
-          <div class="health-icon" id="healthIcon">✓</div>
-          <div>
-            <strong id="healthTitle">On track</strong>
-            <span id="healthText">Your budget looks healthy.</span>
-          </div>
-        </div>
 
         <button id="homeTripHistoryBtn" class="card home-trip-history-btn" type="button">
           <span class="home-trip-history-icon" aria-hidden="true">🧳</span>
@@ -338,6 +353,8 @@
           </span>
           <span class="home-trip-history-arrow" aria-hidden="true">›</span>
         </button>
+
+        <p class="local-first-note"><span aria-hidden="true">⌁</span> Your trip and receipts stay on this device unless you export them.</p>
 
         <!-- Compatibility targets kept hidden. Detailed views live elsewhere. -->
         <div class="v6-compat hidden" aria-hidden="true">
@@ -1282,6 +1299,19 @@
 
       <div id="conversion" class="conversion smart-conversion">≈ 0 OMR</div>
 
+      <div class="expense-fast-fields">
+        <label>Category<select id="expenseCategory"></select></label>
+        <div id="recentCategoryChips" class="recent-category-chips" aria-label="Quick categories"></div>
+
+        <label>Note <small>(optional)</small>
+          <input id="expenseNote" maxlength="120" placeholder="Dinner, taxi, hotel...">
+        </label>
+        <div id="categorySuggestion" class="suggestion hidden">
+          <span id="suggestionText"></span>
+          <button id="applySuggestion" type="button">Use suggestion</button>
+        </div>
+      </div>
+
       <fieldset class="expense-type-fieldset smart-type-fieldset">
         <legend>Expense type</legend>
         <div class="expense-type-toggle">
@@ -1316,28 +1346,6 @@
         <div id="sharedSplitPreview" class="shared-split-preview hidden"></div>
       </fieldset>
 
-      <div class="receipt-field">
-          <div class="receipt-field-head">
-            <div>
-              <strong>Receipt</strong>
-              <small>Optional photo stored locally with this expense.</small>
-            </div>
-            <label class="secondary receipt-add-btn">
-              📷 Add receipt
-              <input id="receiptInput" type="file" accept="image/*" capture="environment">
-            </label>
-          </div>
-
-          <div id="receiptPreview" class="receipt-preview hidden">
-            <img id="receiptPreviewImage" alt="Receipt preview">
-            <div>
-              <strong id="receiptPreviewName">Receipt attached</strong>
-              <small id="receiptPreviewSize">Saved locally</small>
-            </div>
-            <button id="removeReceiptBtn" class="mini-btn delete" type="button">Remove</button>
-          </div>
-        </div>
-
       <button id="expenseMoreOptions" type="button" class="secondary smart-more-options">
         More options
         <span id="expenseMoreOptionsArrow">⌄</span>
@@ -1363,13 +1371,6 @@
 
         <select id="expensePerson" class="hidden" aria-hidden="true" tabindex="-1"></select>
 
-        <label>Category<select id="expenseCategory"></select></label>
-        <div id="recentCategoryChips" class="recent-category-chips hidden"></div>
-        <div id="categorySuggestion" class="suggestion hidden">
-          <span id="suggestionText"></span>
-          <button id="applySuggestion" type="button">Use suggestion</button>
-        </div>
-
         <div class="grid2">
           <label>Payment<select id="paymentMethod"></select></label>
           <label class="date-field-label expense-date-label"><span>Date</span>
@@ -1381,9 +1382,27 @@
           </label>
         </div>
 
-        <label>Note <small>(optional)</small>
-          <input id="expenseNote" maxlength="120" placeholder="Dinner, taxi, hotel...">
-        </label>
+        <div class="receipt-field">
+          <div class="receipt-field-head">
+            <div>
+              <strong>Receipt</strong>
+              <small>Optional photo stored locally with this expense.</small>
+            </div>
+            <label class="secondary receipt-add-btn">
+              📷 Add receipt
+              <input id="receiptInput" type="file" accept="image/*" capture="environment">
+            </label>
+          </div>
+
+          <div id="receiptPreview" class="receipt-preview hidden">
+            <img id="receiptPreviewImage" alt="Receipt preview">
+            <div>
+              <strong id="receiptPreviewName">Receipt attached</strong>
+              <small id="receiptPreviewSize">Saved locally</small>
+            </div>
+            <button id="removeReceiptBtn" class="mini-btn delete" type="button">Remove</button>
+          </div>
+        </div>
 
         <div id="rateDetailsBlock" class="smart-rate-details">
           <label id="rateWrap">Exchange rate

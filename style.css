@@ -6523,6 +6523,67 @@ html[data-theme="dark"] .home-trip-history-btn{
   }
 }
 
+/* TripSpend v7.0.9 — focused Home, faster expense entry, and calmer motion */
+.home-guide-card{
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto;
+  align-items:center;
+  gap:11px;
+  margin:12px 0;
+  padding:12px 13px;
+  border:1px solid color-mix(in srgb,var(--brand) 18%,var(--line));
+  border-radius:17px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 7%,var(--surface)),var(--surface));
+  box-shadow:0 8px 24px rgba(18,84,180,.06);
+}
+.home-guide-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--brand-soft);color:var(--brand);font-size:18px}
+.home-guide-card small,.home-guide-card strong,.home-guide-card span{display:block}
+.home-guide-card small{color:var(--brand);font-size:9px;font-weight:900;letter-spacing:.11em}
+.home-guide-card strong{margin-top:2px;font-size:13px}
+.home-guide-card div>span{margin-top:2px;color:var(--muted);font-size:10.5px;line-height:1.4}
+.home-guide-card button,.health-action{min-height:38px;padding:0 11px;border:1px solid color-mix(in srgb,var(--brand) 24%,var(--line));border-radius:11px;background:color-mix(in srgb,var(--brand) 8%,var(--surface));color:var(--brand);font-size:10.5px;font-weight:850}
+
+.home-guidance-card{grid-template-columns:42px minmax(0,1fr) auto!important;margin:12px 0!important;box-shadow:0 8px 22px rgba(16,24,40,.055)}
+.health-kicker{margin:0 0 2px!important;font-size:8.5px!important;font-weight:900;letter-spacing:.11em;opacity:.78}
+.health-action{justify-self:end;white-space:nowrap}
+
+.country-budget-actions{display:flex;align-items:center;gap:4px}
+.country-budget-actions .link-btn{min-height:40px;padding:0 8px;color:var(--brand)}
+#countryBudgetList.hidden{display:none!important}
+.local-first-note{display:flex;align-items:center;justify-content:center;gap:7px;margin:13px 12px 0;color:var(--muted);font-size:10px;line-height:1.45;text-align:center}
+.local-first-note span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--surface2);color:var(--brand);font-weight:900}
+
+/* The country strip reads as a route instead of a loose row of flags. */
+.trip-flag-rail{position:relative;isolation:isolate;gap:7px!important;padding:3px 2px!important;overflow-x:auto;scrollbar-width:none}
+.trip-flag-rail::-webkit-scrollbar{display:none}
+.trip-flag-rail::before{content:"";position:absolute;z-index:-1;top:50%;inset-inline:10px;height:2px;transform:translateY(-50%);border-radius:999px;background:color-mix(in srgb,var(--brand) 24%,var(--line))}
+.trip-flag{flex:0 0 auto;min-width:26px!important;width:26px;height:26px!important;padding:3px!important;border:2px solid var(--surface);border-radius:50%!important;background:var(--surface2);opacity:.72!important;box-shadow:0 2px 8px rgba(16,24,40,.08)}
+.trip-flag.active{transform:scale(1.1)!important;background:var(--brand-soft);opacity:1!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 45%,transparent),0 4px 12px rgba(21,112,239,.16)}
+
+.expense-fast-fields{display:grid;gap:0;margin:2px 0 4px;padding:13px;border:1px solid var(--line);border-radius:17px;background:color-mix(in srgb,var(--surface2) 58%,var(--surface))}
+.expense-fast-fields label:last-of-type{margin-bottom:10px!important}
+.expense-fast-fields .recent-category-chips{margin:-7px 0 13px}
+.recent-category-chip{min-height:36px!important;padding:0 11px!important;font-size:10.5px!important;transition:border-color .16s ease,background .16s ease,transform .16s ease}
+.recent-category-chip:active{transform:scale(.97)}
+.recent-category-chip.active{border-color:color-mix(in srgb,var(--brand) 55%,var(--line));background:var(--brand-soft);color:var(--brand)}
+.smart-more-options{margin-top:7px}
+.smart-save-expense{position:sticky;bottom:0;z-index:3;box-shadow:0 -8px 18px color-mix(in srgb,var(--surface) 86%,transparent),0 10px 24px rgba(17,103,239,.2)}
+
+@media(max-width:480px){
+  .home-guide-card{grid-template-columns:36px minmax(0,1fr);padding:11px}
+  .home-guide-card>button{grid-column:2;justify-self:start;min-height:36px}
+  .home-guidance-card{grid-template-columns:38px minmax(0,1fr)!important}
+  .home-guidance-card .health-action{grid-column:2;justify-self:start;margin-top:5px}
+  .expense-fast-fields{padding:11px}
+}
+html[dir="rtl"] .home-guide-card,html[dir="rtl"] .home-guidance-card{direction:rtl;text-align:right}
+html[dir="rtl"] .health-action{justify-self:start}
+
+@media(prefers-reduced-motion:reduce){
+  .trip-flag,.recent-category-chip,.progress>div,.ts-setup-panel.active{animation:none!important;transition:none!important}
+  html:focus-within{scroll-behavior:auto!important}
+}
+
 /* Prevent iPhone Safari from auto-zooming focused controls or double-tapped actions.
    Pinch zoom remains available for accessibility. */
 button,
