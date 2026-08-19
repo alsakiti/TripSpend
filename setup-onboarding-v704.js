@@ -450,9 +450,9 @@
       <div class="ts-setup-preview-route">${routeHtml(stops)}</div>
       <div class="ts-setup-preview-meta">
         <div class="ts-preview-meta-row">${icon("date")}<span>${escapeHtml(dateLabel(start,end))}</span><button type="button" class="ts-setup-edit" data-edit-step="2">${escapeHtml(tr("Edit","تعديل"))}</button></div>
-        <div class="ts-preview-meta-row">${icon("budget")}<span dir="ltr">${escapeHtml(`${budget.toLocaleString("en-US",{maximumFractionDigits:3})} ${home}`)}</span><small>${escapeHtml(tr("Budget","الميزانية"))}</small></div>
+        <div class="ts-preview-meta-row">${icon("budget")}<span dir="ltr">${escapeHtml(`${budget.toLocaleString("en-US",{maximumFractionDigits:3})} ${home}`)}</span><button type="button" class="ts-setup-edit" data-edit-step="3" aria-label="${escapeHtml(tr("Edit budget","تعديل الميزانية"))}">${escapeHtml(tr("Edit","تعديل"))}</button></div>
         <div class="ts-preview-meta-row">${icon("people")}<span>${escapeHtml(`${travelers} ${tr(travelers === 1 ? "traveler" : "travelers", travelers === 1 ? "مسافر" : "مسافرين")}`)}</span><button type="button" class="ts-setup-edit" data-edit-step="3">${escapeHtml(tr("Edit","تعديل"))}</button></div>
-        <div class="ts-preview-meta-row">${icon("currency")}<span dir="ltr">${escapeHtml(tripCurrency)}</span><small>${escapeHtml(tr("Trip currency","عملة الرحلة"))}</small></div>
+        <div class="ts-preview-meta-row">${icon("currency")}<span dir="ltr">${escapeHtml(tripCurrency)}</span><button type="button" class="ts-setup-edit" data-edit-step="3" aria-label="${escapeHtml(tr("Edit trip currency","تعديل عملة الرحلة"))}">${escapeHtml(tr("Edit","تعديل"))}</button></div>
       </div>`;
   }
 

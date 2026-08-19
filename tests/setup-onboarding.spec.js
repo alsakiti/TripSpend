@@ -69,6 +69,22 @@ test("new trip setup uses the premium 3-step onboarding and final preview", asyn
   await expect(page.locator("#tsSetupPreview")).toContainText("Germany");
   await expect(page.locator("#tsSetupPreview")).toContainText("1,000 OMR");
 
+  const editBudget = page.getByRole("button", { name:"Edit budget" });
+  const editCurrency = page.getByRole("button", { name:"Edit trip currency" });
+  await expect(editBudget).toBeVisible();
+  await expect(editCurrency).toBeVisible();
+
+  await editBudget.click();
+  await expect(page.locator('.ts-setup-panel[data-setup-step="3"]')).toBeVisible();
+  await expect(page.locator("#budget")).toHaveValue("1000");
+  await page.locator("#tsSetupNext").click();
+
+  await editCurrency.click();
+  await expect(page.locator('.ts-setup-panel[data-setup-step="3"]')).toBeVisible();
+  await expect(page.locator("#tripCurrency")).toHaveValue("EUR");
+  await page.locator("#tsSetupNext").click();
+  await expect(page.locator('.ts-setup-panel[data-setup-step="4"]')).toBeVisible();
+
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
   await page.screenshot({path:"test-results/setup-onboarding.png",fullPage:true});
