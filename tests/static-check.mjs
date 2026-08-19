@@ -166,6 +166,8 @@ for (const marker of ["TripSpendDialog","TripSpendRouteInfo","focusable(modal)",
 for (const marker of ["TRIPSPEND_UPDATE_READY",'window.addEventListener("online"',"15 * 60 * 1000","checkAppVersion();"]) {
   if (!app.includes(marker)) fail(`v7.1 update lifecycle missing: ${marker}`);
 }
+if (!app.includes('if (document.readyState === "complete") registerAppServiceWorker()')) fail("late-loaded app cannot register its service worker");
+else ok("service worker registration works before or after the page load event");
 if (!index.includes("appDialogModal") || !index.includes("routeCountryModal") || !index.includes("enhancements-v710.js?v=7.1.0") || !enhancements.includes('"ui-foundation-v710.js"')) fail("v7.1 dialogs or route details are not wired in source");
 else ok("dialogs, route details and update UX are wired in source");
 if (!enhancements.includes('window.addEventListener("load", run') || enhancements.includes("MutationObserver")) fail("enhancement startup can block initial page load");

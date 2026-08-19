@@ -5294,7 +5294,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   window.setInterval(() => checkAppVersion(), 15 * 60 * 1000);
 
   if ("serviceWorker" in navigator) {
-    addEventListener("load", async () => {
+    const registerAppServiceWorker = async () => {
       try {
         const reg = await navigator.serviceWorker.register("./sw.js?v=7.1.0", {
           updateViaCache: "none"
@@ -5303,7 +5303,9 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       } catch {}
 
       checkAppVersion();
-    });
+    };
+    if (document.readyState === "complete") registerAppServiceWorker();
+    else addEventListener("load", registerAppServiceWorker, { once:true });
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       // The new worker is active. A manual or next launch refresh will use it.
@@ -5318,13 +5320,15 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       if (event.data?.type === "TRIPSPEND_UPDATE_READY" && event.data.version !== APP_VERSION) checkAppVersion();
     });
   } else {
-    addEventListener("load", () => {
+    const finishBrowserStartup = () => {
       checkAppVersion().then(() => {
         if (sessionStorage.getItem("tripspend.refreshRequested")) {
           sessionStorage.removeItem("tripspend.refreshRequested");
           toast(`App refreshed • v${APP_VERSION}`);
         }
       });
-    });
+    };
+    if (document.readyState === "complete") finishBrowserStartup();
+    else addEventListener("load", finishBrowserStartup, { once:true });
   }
 })();
