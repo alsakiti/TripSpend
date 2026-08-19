@@ -26,6 +26,10 @@
     wrap.replaceChildren(document.createTextNode(flag));
     wrap.classList.add("ts-country-flag-native");
     wrap.classList.remove("ts-country-flag-svg", "ts-country-flag-failed");
+    wrap.style.setProperty("display", "inline-block", "important");
+    wrap.style.setProperty("width", "1.3em", "important");
+    wrap.style.setProperty("min-width", "1.3em", "important");
+    wrap.style.setProperty("overflow", "visible", "important");
   }
 
   function renderCodeFallback(wrap, code) {
