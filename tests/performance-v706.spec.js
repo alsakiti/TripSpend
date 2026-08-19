@@ -26,7 +26,7 @@ async function boot(page) {
   await page.waitForSelector("#mainView:not(.hidden)");
 }
 
-test("v7.0.6 defers non-visible UI work and serves optimized runtimes", async ({ page }) => {
+test("v7.0.7 defers non-visible UI work and serves optimized runtimes", async ({ page }) => {
   await boot(page);
 
   // Settings should not restructure hidden DOM during Home startup.
@@ -39,11 +39,11 @@ test("v7.0.6 defers non-visible UI work and serves optimized runtimes", async ({
     return out;
   });
 
-  expect(runtimes["app.js"]).toContain('const APP_VERSION = "7.0.6"');
+  expect(runtimes["app.js"]).toContain('const APP_VERSION = "7.0.7"');
   expect(runtimes["app.js"]).toContain("const STORAGE_SAVE_DELAY = 220;");
   expect(runtimes["app.js"]).toContain("requestIdleCallback(runDeferredSettingsWork");
 
-  expect(runtimes["visual-polish-v704.js"]).toContain('const RELEASE = "7.0.6"');
+  expect(runtimes["visual-polish-v704.js"]).toContain('const RELEASE = "7.0.7"');
   expect(runtimes["visual-polish-v704.js"]).toContain('active === "analytics"');
   expect(runtimes["visual-polish-v704.js"]).toContain("tsV706Signature");
   expect(runtimes["visual-polish-v704.js"]).not.toContain("window.setTimeout(polish, 1100)");
