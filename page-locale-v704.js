@@ -222,10 +222,9 @@
   function start() {
     installStyles();
     apply();
-    const main = document.getElementById("mainView") || document.body;
-    observer = new MutationObserver(() => { if (!busy) queueApply(); });
-    observer.observe(main, { childList:true, subtree:true, characterData:true });
     window.addEventListener("tripspend:language", queueApply);
+    window.addEventListener("tripspend:render", queueApply);
+    window.addEventListener("tripspend:page", queueApply);
     document.addEventListener("click", event => {
       if (event.target?.closest?.("#plan, #analytics, nav, .bottom-nav")) queueApply();
     }, true);

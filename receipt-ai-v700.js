@@ -95,7 +95,7 @@
   async function imageData(file) {
     if (!file?.type?.startsWith("image/")) throw new Error(text("Choose an image receipt.", "اختر صورة للإيصال."));
     const bitmap = await createImageBitmap(file);
-    const maxSide = 1600;
+    const maxSide = file.size > 5_000_000 ? 1280 : 1440;
     const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
     const width = Math.max(1, Math.round(bitmap.width * scale));
     const height = Math.max(1, Math.round(bitmap.height * scale));
@@ -104,8 +104,16 @@
     const ctx = canvas.getContext("2d", {alpha:false});
     ctx.drawImage(bitmap,0,0,width,height);
     bitmap.close?.();
-    const dataUrl = canvas.toDataURL("image/jpeg",0.82);
-    if (dataUrl.length > 5_500_000) throw new Error(text("This receipt photo is too large to scan.", "صورة الإيصال كبيرة جدًا للمسح."));
+    const encodedBlob = await new Promise((resolve, reject) => {
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error(text("Could not prepare this receipt photo.", "تعذر تجهيز صورة الإيصال."))), "image/jpeg", 0.78);
+    });
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error || new Error(text("Could not prepare this receipt photo.", "تعذر تجهيز صورة الإيصال.")));
+      reader.readAsDataURL(encodedBlob);
+    });
+    if (dataUrl.length > 4_800_000) throw new Error(text("This receipt photo is too large to scan.", "صورة الإيصال كبيرة جدًا للمسح."));
     return { image:dataUrl, mimeType:"image/jpeg" };
   }
 

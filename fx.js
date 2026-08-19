@@ -1,8 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_RELEASE = "7.0.10";
-  const FIRST_LOAD_RUNTIME = "tripspend:first-load-runtime";
+  const APP_RELEASE = "7.1.0";
   const APP_KEY = "tripspend.v1";
   const FX_KEY = "tripspend.fxcache.v1";
   const API = "https://api.frankfurter.dev/v2/rate";
@@ -10,8 +9,6 @@
   const $ = id => document.getElementById(id);
   let conversionRequestId = 0;
   let pageSyncQueued = false;
-  let firstLoadBootStarted = false;
-  let firstLoadReloadQueued = false;
 
   function appState() {
     try { return JSON.parse(localStorage.getItem(APP_KEY) || "{}"); }
@@ -269,24 +266,6 @@
     });
   }
 
-  function reloadWhenControlled() {
-    if (firstLoadReloadQueued || !navigator.serviceWorker?.controller) return;
-    firstLoadReloadQueued = true;
-    window.setTimeout(() => location.reload(), 120);
-  }
-
-  function bootstrapFirstVisitRuntime() {
-    if (firstLoadBootStarted || navigator.serviceWorker?.controller || appState()?.trip) return;
-    firstLoadBootStarted = true;
-
-    document.querySelectorAll(".version-badge").forEach(el => { el.textContent = `v${APP_RELEASE}`; });
-    window.dispatchEvent(new CustomEvent(FIRST_LOAD_RUNTIME, { detail:{ version:APP_RELEASE, mode:"worker-reload" } }));
-    if (!("serviceWorker" in navigator)) return;
-
-    navigator.serviceWorker.addEventListener("controllerchange", reloadWhenControlled, { once:true });
-    navigator.serviceWorker.ready.then(reloadWhenControlled).catch(()=>{});
-  }
-
   function wire() {
     if (!$("fxFrom")) return;
 
@@ -336,17 +315,14 @@
     fetchRate,
     saved,
     refresh: () => refreshVisibleFx({ forceNetwork:true, forceCurrencies:true }),
-    visible: fxCardVisible,
-    bootstrapFirstVisitRuntime
+    visible: fxCardVisible
   };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
       wire();
-      bootstrapFirstVisitRuntime();
     }, { once:true });
   } else {
     wire();
-    bootstrapFirstVisitRuntime();
   }
 })();

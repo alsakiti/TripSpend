@@ -28,10 +28,10 @@ async function boot(page) {
   });
   await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.0.10");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.1.0");
 }
 
-test("v7.0.10 Home prioritizes guidance and keeps secondary route budgets collapsible", async ({ page }) => {
+test("v7.1.0 Home prioritizes guidance and keeps secondary route budgets collapsible", async ({ page }) => {
   await page.setViewportSize({width:390,height:844});
   await boot(page);
 

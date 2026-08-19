@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.4";
+  const RELEASE = "7.1.0";
   const $ = id => document.getElementById(id);
   const core = () => window.TripSpendCore;
   let scheduled = 0;
@@ -585,6 +585,9 @@
 
     const state = core()?.getState?.();
     const currency = state?.trip?.homeCurrency || "OMR";
+    const signature = language() + "|" + currency + "|" + rows.map(row => row.date + ":" + Number(row.amount || 0).toFixed(3)).join("|");
+    if (host.classList.contains("ts-daily-reference") && host.dataset.tsV706Signature === signature && host.querySelector(".ts-daily-chart-shell")) return;
+    host.dataset.tsV706Signature = signature;
     const total = rows.reduce((sum, row) => sum + row.amount, 0);
     const average = total / Math.max(1, rows.length);
     const maxAmount = Math.max(...rows.map(row => row.amount), 0);
@@ -673,9 +676,11 @@
   function polishMoreInsights() {
     const toggle = $("analyticsMoreToggle");
     const details = $("analyticsMoreDetails");
-    if (toggle) toggle.setAttribute("aria-expanded", "true");
-    if (details) details.classList.remove("hidden");
-    if ($("analyticsMoreArrow")) $("analyticsMoreArrow").textContent = "⌄";
+    if (!toggle || !details) return;
+    const open = !details.classList.contains("hidden");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    const arrow = $("analyticsMoreArrow");
+    if (arrow) arrow.textContent = open ? "⌃" : "⌄";
   }
 
   function polishAiCard() {
@@ -707,25 +712,30 @@
 
   function polish() {
     injectStyles();
-    polishMoreInsights();
-    polishPaymentChart();
-    polishTravelerChart();
-    polishDailyChart();
-    polishAiCard();
+    const active = document.querySelector(".page.active")?.id || "";
+    if (active === "analytics") {
+      polishMoreInsights();
+      polishPaymentChart();
+      polishTravelerChart();
+      polishDailyChart();
+    }
+    if (active === "settings") polishAiCard();
   }
 
   function schedule() {
     clearTimeout(scheduled);
-    scheduled = window.setTimeout(() => requestAnimationFrame(polish), 45);
+    scheduled = window.setTimeout(() => requestAnimationFrame(polish), 24);
   }
 
   function start() {
+    injectStyles();
     polish();
     window.addEventListener("tripspend:render", schedule);
     window.addEventListener("tripspend:page", schedule);
     window.addEventListener("tripspend:language", schedule);
-    window.setTimeout(polish, 350);
-    window.setTimeout(polish, 1100);
+    const idlePolish = () => polish();
+    if ("requestIdleCallback" in window) requestIdleCallback(idlePolish, { timeout: 700 });
+    else window.setTimeout(idlePolish, 180);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once:true });

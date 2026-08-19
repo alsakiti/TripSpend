@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "6.8.3";
+  const APP_VERSION = "7.1.0";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -9,7 +9,7 @@
   const DB_BACKUP_STORE = "backups";
   const DB_META_STORE = "meta";
   const DB_RECEIPT_STORE = "receipts";
-  const STORAGE_SAVE_DELAY = 140;
+  const STORAGE_SAVE_DELAY = 220;
   const MAX_DAILY_BACKUPS = 7;
   const PORTABLE_BACKUP_WARN_BYTES = 25 * 1024 * 1024;
   const PORTABLE_BACKUP_MAX_BYTES = 75 * 1024 * 1024;
@@ -64,6 +64,9 @@
   const PAYS = ["Cash","Credit Card","Debit Card","Apple Pay","Other"];
   const KEYWORDS = {Coffee:["coffee","cafe","café","latte","espresso","starbucks"],Food:["dinner","lunch","breakfast","restaurant","meal","burger","pizza","sushi","food","brunch"],Transport:["taxi","uber","grab","careem","metro","bus","train","fuel","gas","parking","toll"],Hotel:["hotel","resort","room","booking","airbnb","hostel"],Shopping:["shopping","mall","clothes","shirt","shoes","souvenir","gift"],Activities:["ticket","tour","museum","spa","massage","activity","excursion","park"],Flights:["flight","airline","airport","baggage","luggage"],Groceries:["grocery","groceries","supermarket","market","water","snacks"]};
   const $ = id => document.getElementById(id);
+  const askConfirm = (message, options = {}) => window.TripSpendDialog?.confirm?.(message, options) ?? Promise.resolve(confirm(message));
+  const showAlert = (message, options = {}) => window.TripSpendDialog?.alert?.(message, options) ?? Promise.resolve(alert(message));
+  const askPrompt = (message, defaultValue = "", options = {}) => window.TripSpendDialog?.prompt?.(message, defaultValue, options) ?? Promise.resolve(prompt(message, defaultValue));
 
   const APPEARANCE_VALUES = new Set(["system", "light", "dark"]);
 
@@ -559,7 +562,7 @@
 
   async function startNewTripFlow() {
     if (state.trip) {
-      const ok = confirm(`Archive “${state.trip.name}” and start a new trip? You can reopen it anytime from Past Trips.`);
+      const ok = await askConfirm(`Archive “${state.trip.name}” and start a new trip? You can reopen it anytime from Past Trips.`, { confirmText:"Start new trip" });
       if (!ok) return;
 
       if (storageMode === "indexeddb") {
@@ -588,7 +591,7 @@
     if (!record?.data?.trip) return;
 
     if (state.trip && state.trip.id !== id) {
-      const ok = confirm(`Open “${record.data.trip.name}”? Your current trip will move to Past Trips.`);
+      const ok = await askConfirm(`Open “${record.data.trip.name}”? Your current trip will move to Past Trips.`, { confirmText:"Open trip" });
       if (!ok) return;
     }
 
@@ -623,7 +626,7 @@
     if (!record) return;
     const name = record.data?.trip?.name || "this trip";
 
-    if (!confirm(`Delete “${name}” from Past Trips? This cannot be undone from Trip History.`)) return;
+    if (!await askConfirm(`Delete “${name}” from Past Trips? This cannot be undone from Trip History.`, { danger:true, confirmText:"Delete" })) return;
 
     if (storageMode === "indexeddb") {
       await createBackupSnapshot("Before deleting a past trip", state, "before-delete");
@@ -1240,7 +1243,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       window.scrollTo({ top: 0, behavior: "smooth" });
       toast("Trip finished and saved to Past Trips");
     } catch {
-      alert("TripSpend could not finish the trip safely.");
+      await showAlert("TripSpend could not finish the trip safely.");
     }
   }
 
@@ -2054,14 +2057,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const integrity = stateIntegrityReport(normalized);
 
     if (!integrity.ok) {
-      alert(`This restore point failed validation and was not restored.\n\n${integrity.errors.slice(0, 3).join("\n")}`);
+      await showAlert(`This restore point failed validation and was not restored.\n\n${integrity.errors.slice(0, 3).join("\n")}`);
       return;
     }
 
     const description = snapshotDescription(normalized);
     const warning = integrity.warnings.length ? `\n\nNote: ${integrity.warnings[0]}` : "";
 
-    if (!confirm(`Restore “${backup.label || "this snapshot"}”?\n\n${description}${warning}\n\nYour current data will be kept as a safety snapshot first.`)) {
+    if (!await askConfirm(`Restore “${backup.label || "this snapshot"}”?\n\n${description}${warning}\n\nYour current data will be kept as a safety snapshot first.`, { confirmText:"Restore" })) {
       return;
     }
 
@@ -2077,7 +2080,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       page(state.trip ? "dashboard" : "settings");
       toast("Restore point validated and restored");
     } catch {
-      alert("TripSpend could not restore that snapshot safely.");
+      await showAlert("TripSpend could not restore that snapshot safely.");
     }
   }
 
@@ -2573,7 +2576,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if (!t) return { cls: "on-track", icon: "✓", title: "Ready", text: "Create your trip to start tracking." };
     if (s > t.budget) return { cls: "over", icon: "!", title: "Over budget", text: `You are ${money(s - t.budget, t.homeCurrency)} over your trip budget.` };
     if (elapsed() > 0 && p > t.budget * 1.05) return { cls: "watch", icon: "↗", title: "Watch your pace", text: `At this pace you may finish around ${money(p - t.budget, t.homeCurrency)} over budget.` };
-    if (elapsed() > 0 && p > 0) return { cls: "on-track", icon: "✓", title: "On track", text: `At your current pace you may finish around ${money(Math.max(0, t.budget - p), t.homeCurrency)} under budget.` };
+    if (s > 0) {
+      const convertedPlanIds = new Set(state.expenses.map(expense => expense.planId).filter(Boolean));
+      const reserved = (state.plans || []).filter(plan => plan.status !== "paid" && !convertedPlanIds.has(plan.id)).reduce((sum, plan) => sum + num(plan.homeAmount), 0);
+      const safeToday = left() > 0 ? Math.max(0, t.budget - s - reserved) / left() : 0;
+      return safeToday > 0
+        ? { cls:"on-track", icon:"✓", title:"Today’s spending guide", text:`You can spend up to ${money(safeToday, t.homeCurrency)} more today and stay on your current plan.` }
+        : { cls:"watch", icon:"!", title:"Today’s safe amount is used", text:"Avoid more spending today to protect the rest of your trip budget." };
+    }
     return { cls: "on-track", icon: "✓", title: "No spending recorded yet", text: "Your daily spending guidance will update after you record your first expense." };
   }
 
@@ -3593,9 +3603,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       fillSettings();
       renderAppearanceControls();
       renderRates();
-      renderStoragePanel();
       renderUpdateSettings(latestVersionKnown ? "online" : "checking");
-      runDiagnostics();
+      const runDeferredSettingsWork = () => { renderStoragePanel(); runDiagnostics(); };
+      if ("requestIdleCallback" in window) requestIdleCallback(runDeferredSettingsWork, { timeout: 650 });
+      else setTimeout(runDeferredSettingsWork, 60);
     }
 
     if (activePage === "trips") renderTripsPage();
@@ -3634,9 +3645,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       fillSettings();
       renderAppearanceControls();
       renderRates();
-      renderStoragePanel();
       renderUpdateSettings(latestVersionKnown ? "online" : "checking");
-      runDiagnostics();
+      const runDeferredSettingsWork = () => { renderStoragePanel(); runDiagnostics(); };
+      if ("requestIdleCallback" in window) requestIdleCallback(runDeferredSettingsWork, { timeout: 650 });
+      else setTimeout(runDeferredSettingsWork, 60);
     }
     if (id === "trips") renderTripsPage();
 
@@ -3872,7 +3884,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const expense = state.expenses.find(item => item.id === activeExpenseDetailId);
     if (!expense?.receiptId) return;
 
-    if (!confirm("Remove this receipt from the expense?")) return;
+    if (!await askConfirm("Remove this receipt from the expense?", { danger:true, confirmText:"Remove" })) return;
 
     expense.receiptId = "";
     save({ immediate: true });
@@ -4013,7 +4025,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
   async function removeExpense(id) {
     const expense = state.expenses.find(x => x.id === id);
-    if (expense && confirm(`Delete ${expense.note || expense.category}?`)) {
+    if (expense && await askConfirm(`Delete ${expense.note || expense.category}?`, { danger:true, confirmText:"Delete" })) {
       state.expenses = state.expenses.filter(x => x.id !== id);
       save();
       render();
@@ -4065,10 +4077,10 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     return a && b && a <= b;
   }
 
-  function renamePerson(id) {
+  async function renamePerson(id) {
     const person = personById(id);
     if (!person) return;
-    const value = prompt("Traveler name", person.name);
+    const value = await askPrompt("Traveler name", person.name, { title:"Edit traveler", inputLabel:"Traveler name", confirmText:"Save" });
     if (value === null) return;
     const name = value.trim().slice(0, 50);
     if (!name) return toast("Name cannot be empty");
@@ -4082,14 +4094,14 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     toast("Traveler renamed");
   }
 
-  function archivePerson(id) {
+  async function archivePerson(id) {
     const person = personById(id);
     if (!person) return;
     const activeCount = activePeople().length;
     const warning = activeCount <= 1
       ? `Archive ${person.name}? You will have no active travelers until you restore or add someone. Historical totals will stay intact.`
       : `Archive ${person.name}? Historical spending will stay intact, but they will no longer appear when adding new expenses.`;
-    if (!confirm(warning)) return;
+    if (!await askConfirm(warning, { confirmText:"Archive" })) return;
     person.active = false;
     save();
     render();
@@ -4105,7 +4117,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     toast("Traveler restored");
   }
 
-  function deletePerson(id) {
+  async function deletePerson(id) {
     const person = personById(id);
     if (!person) return;
     const usedByExpenses = state.expenses.some(e =>
@@ -4115,7 +4127,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       s.fromPersonId === id || s.toPersonId === id
     );
     if (usedByExpenses || usedBySettlements) return toast("Archive this traveler instead to preserve history");
-    if (!confirm(`Delete ${person.name} from this trip?`)) return;
+    if (!await askConfirm(`Delete ${person.name} from this trip?`, { danger:true, confirmText:"Delete" })) return;
     state.people = state.people.filter(p => p.id !== id);
     save();
     render();
@@ -4205,7 +4217,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     toast(`Trip created • ${countryText} • ${travelerText}`);
   };
 
-  $("settingsForm").onsubmit = e => {
+  $("settingsForm").onsubmit = async e => {
     e.preventDefault();
     const start = $("sStartDate").value, end = $("sEndDate").value;
     if (!validDates(start, end)) return toast("End date must be after start date");
@@ -4214,7 +4226,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 
     const newHome = $("sHomeCurrency").value;
     if (state.expenses.length && newHome !== state.trip.homeCurrency &&
-        !confirm("Existing expenses and traveler shares will not be recalculated into the new home currency. Continue?")) return;
+        !await askConfirm("Existing expenses and traveler shares will not be recalculated into the new home currency. Continue?")) return;
 
     state.trip = {
       ...state.trip,
@@ -4414,12 +4426,12 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         }
 
         if (receiptBytes > PORTABLE_BACKUP_MAX_BYTES) {
-          alert(`This backup contains ${humanBytes(receiptBytes)} of receipt photos, which is too large to package safely on iPhone. Remove unnecessary receipts or export from a device with more memory.`);
+          await showAlert(`This backup contains ${humanBytes(receiptBytes)} of receipt photos, which is too large to package safely on iPhone. Remove unnecessary receipts or export from a device with more memory.`);
           return;
         }
 
         if (receiptBytes > PORTABLE_BACKUP_WARN_BYTES &&
-            !confirm(`This backup includes ${humanBytes(receiptBytes)} of receipt photos and may take longer to create. Continue?`)) {
+            !await askConfirm(`This backup includes ${humanBytes(receiptBytes)} of receipt photos and may take longer to create. Continue?`)) {
           return;
         }
         for (const id of ids) {
@@ -4453,7 +4465,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       );
       toast(receipts.length ? `Backup exported with ${receipts.length} receipt${receipts.length === 1 ? "" : "s"}` : "Backup exported");
     } catch {
-      alert("TripSpend could not create the portable backup.");
+      await showAlert("TripSpend could not create the portable backup.");
     } finally {
       if (button) {
         button.disabled = false;
@@ -4501,7 +4513,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     if (!file) return;
     try {
       if (file.size > PORTABLE_IMPORT_MAX_BYTES) {
-        alert(`This backup is ${humanBytes(file.size)} and is too large to import safely on this device.`);
+        await showAlert(`This backup is ${humanBytes(file.size)} and is too large to import safely on this device.`);
         return;
       }
 
@@ -4513,12 +4525,12 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       const normalizedImport = normalizeState(data);
       const integrity = stateIntegrityReport(normalizedImport);
       if (!integrity.ok) {
-        alert(`This backup failed validation and was not imported.\n\n${integrity.errors.slice(0, 3).join("\n")}`);
+        await showAlert(`This backup failed validation and was not imported.\n\n${integrity.errors.slice(0, 3).join("\n")}`);
         return;
       }
 
       const importDescription = snapshotDescription(normalizedImport);
-      if (!confirm(`Import this backup?\n\n${importDescription}\n\nIt will replace the current TripSpend data in this browser.`)) return;
+      if (!await askConfirm(`Import this backup?\n\n${importDescription}\n\nIt will replace the current TripSpend data in this browser.`, { confirmText:"Import" })) return;
 
       if (meaningfulState(state) && storageMode === "indexeddb") {
         await createBackupSnapshot("Before import", state, "before-import");
@@ -4552,7 +4564,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       cleanupUnusedReceipts({ silent: true }).catch(() => {});
       toast(receiptRows.length ? `Backup imported with ${receiptRows.length} receipt${receiptRows.length === 1 ? "" : "s"}` : "Backup imported");
     } catch {
-      alert("That file is not a valid TripSpend backup.");
+      await showAlert("That file is not a valid TripSpend backup.");
     } finally {
       $("importFile").value = "";
     }
@@ -4575,8 +4587,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   $("csvBtn").onclick = exportCSV;
   $("importFile").onchange = e => importBackup(e.target.files?.[0]);
 
-  $("clearRates").onclick = () => {
-    if (confirm("Clear all remembered exchange rates?")) {
+  $("clearRates").onclick = async () => {
+    if (await askConfirm("Clear all remembered exchange rates?", { danger:true, confirmText:"Clear" })) {
       state.rates = {};
       save();
       renderRates();
@@ -4585,7 +4597,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   };
 
   $("deleteTrip").onclick = async () => {
-    if (state.trip && confirm(`Delete “${state.trip.name}” and all expenses?`)) {
+    if (state.trip && await askConfirm(`Delete “${state.trip.name}” and all expenses?`, { danger:true, confirmText:"Delete trip" })) {
       try {
         if (storageMode === "indexeddb") {
           await createBackupSnapshot("Before deleting trip", state, "before-delete");
@@ -4602,7 +4614,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
         cleanupUnusedReceipts({ silent: true }).catch(() => {});
         toast("Current trip deleted");
       } catch {
-        alert("TripSpend could not delete the trip safely.");
+        await showAlert("TripSpend could not delete the trip safely.");
       }
     }
   };
@@ -5075,6 +5087,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       clearTimeout(dashboardWelcomeTimer);
     } else {
       refreshDashboardWelcome();
+      checkAppVersion();
     }
   });
 
@@ -5231,7 +5244,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       const versionText = $("updateVersionText");
 
       if (latestVersionKnown !== APP_VERSION) {
-        if (versionText) versionText.textContent = `v${latestVersionKnown} is ready`;
+        const arabic = window.TripSpendLocale?.language?.() === "ar";
+        if (versionText) versionText.textContent = arabic ? `الإصدار ${latestVersionKnown} جاهز` : `v${latestVersionKnown} is ready`;
         if (banner) banner.classList.remove("hidden");
         if (announce) toast(`v${latestVersionKnown} is available`);
       } else {
@@ -5276,11 +5290,13 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   }
 
   $("applyUpdateBtn")?.addEventListener("click", forceAppUpdate);
+  window.addEventListener("online", () => checkAppVersion());
+  window.setInterval(() => checkAppVersion(), 15 * 60 * 1000);
 
   if ("serviceWorker" in navigator) {
     addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=6.8.3-manual1", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=7.1.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
@@ -5297,6 +5313,9 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
           toast(`App refreshed • v${APP_VERSION}`);
         }
       });
+    });
+    navigator.serviceWorker.addEventListener("message", event => {
+      if (event.data?.type === "TRIPSPEND_UPDATE_READY" && event.data.version !== APP_VERSION) checkAppVersion();
     });
   } else {
     addEventListener("load", () => {

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.10";
+  const RELEASE = "7.1.0";
   const $ = id => document.getElementById(id);
   let scheduled = false;
   let settingsLocalizationQueued = false;
@@ -513,24 +513,20 @@
     injectStyles();
     apply();
 
-    const observer = new MutationObserver(records => {
-      let relevant = false;
-      for (const record of records) {
-        if (record.type === "attributes") {
-          const target = record.target;
-          if (["setupView", "mainView", "tripSwitcherModal", "tripSwitcherSheet"].includes(target?.id)) {
-            relevant = true;
-            break;
-          }
-        }
-        if (record.addedNodes?.length) {
-          relevant = true;
-          break;
-        }
-      }
-      if (relevant) schedule();
-    });
-    observer.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:["class"]});
+    const observeClass = target => {
+      if (!target) return;
+      const observer = new MutationObserver(schedule);
+      observer.observe(target, { attributes:true, attributeFilter:["class"] });
+    };
+    const observeChildren = target => {
+      if (!target) return;
+      const observer = new MutationObserver(schedule);
+      observer.observe(target, { childList:true, subtree:true });
+    };
+    observeClass($("setupView"));
+    observeClass($("mainView"));
+    observeChildren($("tripSwitcherModal"));
+    observeChildren($("tripSwitcherSheet"));
 
     const settings = $("settings");
     if (settings) {

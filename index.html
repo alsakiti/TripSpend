@@ -10,11 +10,11 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=6.8.1">
-  <link rel="icon" href="icons/icon-192.png?v=6.8.1">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=6.8.1">
-  <link rel="stylesheet" href="style.css?v=6.8.1">
-  <link rel="stylesheet" href="dashboard.css?v=6.8.1">
+  <link rel="manifest" href="manifest.webmanifest?v=7.1.0">
+  <link rel="icon" href="icons/icon-192.png?v=7.1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=7.1.0">
+  <link rel="stylesheet" href="style.css?v=7.1.0">
+  <link rel="stylesheet" href="dashboard.css?v=7.1.0">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -33,7 +33,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v6.8.1</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v7.1.0</span></div>
         <div class="header-trip-title-row">
           <h1 id="headerTitle">TripSpend</h1>
           <button id="tripSwitcherTrigger" class="trip-switcher-trigger hidden" type="button" aria-label="Switch trip" title="Switch trip">⌄</button>
@@ -47,8 +47,8 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=6.8.1" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v6.8.1</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=7.1.0" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v7.1.0</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
@@ -1031,7 +1031,7 @@
             <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
           </div>
           <div class="app-update-versions">
-            <span><small>Current</small><strong id="currentVersionText">v6.8.1</strong></span>
+            <span><small>Current</small><strong id="currentVersionText">v7.1.0</strong></span>
             <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
           </div>
           <div class="app-update-actions">
@@ -1262,12 +1262,12 @@
         <div class="eyebrow">RECEIPT</div>
         <h2 id="receiptViewerTitle">Receipt</h2>
       </div>
-      <button id="closeReceiptViewer" class="icon-btn" type="button">✕</button>
+      <button id="closeReceiptViewer" class="icon-btn" type="button" aria-label="Close receipt viewer">✕</button>
     </div>
     <div class="receipt-viewer-toolbar">
-      <button id="receiptZoomOut" class="secondary compact-btn" type="button">−</button>
+      <button id="receiptZoomOut" class="secondary compact-btn" type="button" aria-label="Zoom out receipt">−</button>
       <span id="receiptZoomLabel">100%</span>
-      <button id="receiptZoomIn" class="secondary compact-btn" type="button">＋</button>
+      <button id="receiptZoomIn" class="secondary compact-btn" type="button" aria-label="Zoom in receipt">＋</button>
     </div>
     <div id="receiptViewerStage" class="receipt-viewer-stage">
       <img id="receiptViewerImage" alt="Receipt">
@@ -1276,10 +1276,10 @@
   </div>
 </div>
 
-<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="sheet">
     <div class="handle"></div>
-    <div class="modal-head"><div><div class="eyebrow">TRANSACTION</div><h2 id="modalTitle">Add Expense</h2></div><button id="closeModal" class="icon-btn">✕</button></div>
+    <div class="modal-head"><div><div class="eyebrow">TRANSACTION</div><h2 id="modalTitle">Add Expense</h2></div><button id="closeModal" class="icon-btn" type="button" aria-label="Close expense editor">✕</button></div>
     <form id="expenseForm" class="form modal-form smart-expense-form">
       <input id="editId" type="hidden">
 
@@ -1444,9 +1444,57 @@
   </div>
 </div>
 
+<div id="routeCountryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="routeCountryTitle" aria-describedby="routeCountryDates">
+  <div class="sheet compact-sheet route-country-sheet">
+    <div class="handle" aria-hidden="true"></div>
+    <div class="modal-head">
+      <div>
+        <div id="routeCountryKicker" class="eyebrow">ROUTE COUNTRY</div>
+        <h2 id="routeCountryTitle">Country details</h2>
+      </div>
+      <button id="closeRouteCountry" class="icon-btn" type="button" aria-label="Close country details">✕</button>
+    </div>
+    <p id="routeCountryDates" class="route-country-dates"></p>
+    <div class="route-country-metrics">
+      <div><small id="routeCountryBudgetLabel">Budget</small><strong id="routeCountryBudget">—</strong></div>
+      <div><small id="routeCountrySpentLabel">Spent</small><strong id="routeCountrySpent">—</strong></div>
+      <div><small id="routeCountryRemainingLabel">Remaining</small><strong id="routeCountryRemaining">—</strong></div>
+    </div>
+    <button id="routeCountryEditBudget" class="secondary" type="button">Edit country budget</button>
+  </div>
+</div>
+
+<div id="appDialogModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage">
+  <div class="sheet compact-sheet app-dialog-sheet">
+    <div class="handle" aria-hidden="true"></div>
+    <div class="app-dialog-icon" id="appDialogIcon" aria-hidden="true">?</div>
+    <h2 id="appDialogTitle">Confirm action</h2>
+    <p id="appDialogMessage"></p>
+    <label id="appDialogInputWrap" class="hidden"><span id="appDialogInputLabel">Name</span><input id="appDialogInput" type="text" maxlength="60"></label>
+    <div class="app-dialog-actions">
+      <button id="appDialogCancel" class="secondary" type="button">Cancel</button>
+      <button id="appDialogConfirm" class="primary" type="button">Continue</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="app.js?v=6.8.1"></script>
-<script src="fx.js?v=6.8.1"></script>
-<script src="v5.js?v=6.8.1"></script>
+<script src="app.js?v=7.1.0"></script>
+<script src="fx.js?v=7.1.0"></script>
+<script src="v5.js?v=7.1.0"></script>
+<script src="ai-v684.js?v=7.1.0"></script>
+<script src="locale-v700.js?v=7.1.0"></script>
+<script src="locale-dynamic-v700.js?v=7.1.0"></script>
+<script src="expense-locale-v703.js?v=7.1.0"></script>
+<script src="page-locale-v704.js?v=7.1.0"></script>
+<script src="settings-polish-v704.js?v=7.1.0"></script>
+<script src="visual-polish-v704.js?v=7.1.0"></script>
+<script src="setup-language-host-v700.js?v=7.1.0"></script>
+<script src="setup-onboarding-v704.js?v=7.1.0"></script>
+<script src="flags-v705.js?v=7.1.0"></script>
+<script src="ui-fixes-v705.js?v=7.1.0"></script>
+<script src="receipt-capability-v700.js?v=7.1.0"></script>
+<script src="receipt-ai-v700.js?v=7.1.0"></script>
+<script src="ui-foundation-v710.js?v=7.1.0"></script>
 </body>
 </html>

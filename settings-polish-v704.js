@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.0.4";
+  const RELEASE = "7.1.0";
   let built = false;
   let queued = false;
 
@@ -531,11 +531,11 @@
 
   function start() {
     installStyles();
-    buildSettings();
     syncPageMode();
     window.addEventListener("tripspend:page", queueSync);
     window.addEventListener("tripspend:render", queueSync);
     window.addEventListener("tripspend:language", () => {
+      if (document.querySelector(".page.active")?.id !== "settings") return;
       requestAnimationFrame(() => {
         translateGenerated();
         renderCountries();
