@@ -64,8 +64,8 @@ jobs:
       - name: Install Playwright
         run: npm install --no-save @playwright/test@1.62.0
 
-      - name: Install Chromium
-        run: npx playwright install chromium --with-deps
+      - name: Verify CI browser
+        run: google-chrome --version
 
       - name: Run UI smoke tests
         run: npx playwright test --workers=1
