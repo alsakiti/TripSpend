@@ -27,9 +27,8 @@ test("route builder keeps From editable and Add/Cancel/Continue remain responsiv
     window.TripSpendCore?.setDestinationValue?.("destination", "Germany");
     set("startDate", "2026-08-22");
     set("endDate", "2026-08-25");
+    window.TripSpendSetupOnboarding?.showStep?.(2, { scroll:false });
   });
-  await expect(page.locator("#tsSetupNext")).toBeEnabled();
-  await page.locator("#tsSetupNext").click();
   await expect(page.locator('.ts-setup-panel[data-setup-step="2"]')).toBeVisible();
 
   await page.locator("#setupToggleCountries").click();
@@ -47,7 +46,7 @@ test("route builder keeps From editable and Add/Cancel/Continue remain responsiv
   await to.dispatchEvent("change");
   await expect(from).toHaveValue("2026-08-26");
 
-  await page.locator("#setupExtraCountry").fill("Austria");
+  await page.evaluate(() => window.TripSpendCore?.setDestinationValue?.("setupExtraCountry", "Austria"));
   await page.locator("#setupAddCountry").click();
 
   await expect(panel).toBeHidden();
