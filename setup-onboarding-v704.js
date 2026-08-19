@@ -404,9 +404,11 @@
   function polishRouteRows() {
     document.querySelectorAll("#setupRouteList .setup-route-item").forEach((row, index) => {
       const strong = row.querySelector(":scope > div > strong");
-      if (strong) strong.textContent = (strong.textContent || "").replace(/^Country\s+\d+\s*:\s*/i, "");
+      const polished = (strong?.textContent || "").replace(/^Country\s+\d+\s*:\s*/i, "");
+      if (strong && strong.textContent !== polished) strong.textContent = polished;
       const number = row.querySelector(".setup-route-number");
-      if (number) number.textContent = String(index + 2);
+      const expectedNumber = String(index + 2);
+      if (number && number.textContent !== expectedNumber) number.textContent = expectedNumber;
     });
   }
 
