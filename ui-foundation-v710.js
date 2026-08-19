@@ -39,11 +39,11 @@
       [/^Archive “(.+)” and start a new trip\? You can reopen it anytime from Past Trips\.$/, "هل تريد أرشفة «$1» وبدء رحلة جديدة؟ يمكنك فتحها لاحقًا من الرحلات السابقة."],
       [/^Open “(.+)”\? Your current trip will move to Past Trips\.$/, "هل تريد فتح «$1»؟ سيتم نقل رحلتك الحالية إلى الرحلات السابقة."],
       [/^Delete “(.+)” from Past Trips\? This cannot be undone from Trip History\.$/, "هل تريد حذف «$1» من الرحلات السابقة؟ لا يمكن التراجع عن ذلك من سجل الرحلات."],
-      [/^Delete (.+)\?$/, "هل تريد حذف $1؟"],
       [/^Delete (.+) from this trip\?$/, "هل تريد حذف $1 من هذه الرحلة؟"],
       [/^Delete “(.+)” and all expenses\?$/, "هل تريد حذف «$1» وجميع مصروفاتها؟"],
       [/^Delete “(.+)” from your itinerary\?$/, "هل تريد حذف «$1» من برنامج الرحلة؟"],
       [/^Delete planned cost “(.+)”\?$/, "هل تريد حذف التكلفة المخططة «$1»؟"],
+      [/^Delete (.+)\?$/, "هل تريد حذف $1؟"],
       [/^Remove (.+) from this trip\?$/, "هل تريد إزالة $1 من هذه الرحلة؟"],
       [/^Archive (.+)\? You will have no active travelers until you restore or add someone\. Historical totals will stay intact\.$/, "هل تريد أرشفة $1؟ لن يبقى أي مسافر نشط حتى تستعيد أو تضيف مسافرًا، وستبقى البيانات السابقة محفوظة."],
       [/^Archive (.+)\? Historical spending will stay intact, but they will no longer appear when adding new expenses\.$/, "هل تريد أرشفة $1؟ ستبقى المصروفات السابقة محفوظة، ولن يظهر المسافر عند إضافة مصروف جديد."],
@@ -139,7 +139,8 @@
     const budget = Number(stop.budget || 0);
     const remaining = budget - spent;
     $("routeCountryKicker").textContent = text("ROUTE COUNTRY", "دولة في المسار");
-    $("routeCountryTitle").textContent = `${core.countryFlag(stop.country)} ${core.countryLabel?.(stop.country) || stop.country}`;
+    const countryName = window.TripSpendLocale?.country?.(stop.country) || stop.country;
+    $("routeCountryTitle").textContent = `${core.countryFlag(stop.country)} ${countryName}`;
     $("routeCountryDates").textContent = `${core.fmtDateWithYear(stop.startDate)} – ${core.fmtDateWithYear(stop.endDate)} • ${stop.currency}`;
     $("routeCountryBudgetLabel").textContent = text("Budget", "الميزانية");
     $("routeCountrySpentLabel").textContent = text("Spent", "المصروف");
