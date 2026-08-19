@@ -343,10 +343,17 @@
       });
 
       const summary = document.getElementById("expenseSummary");
-      if (summary && isAr) {
-        summary.textContent = translateEmbeddedCountries(summary.textContent)
-          .replace(/\b(\d+)\s+expenses\b/gi,"$1 مصروفات")
-          .replace(/\b(\d+)\s+expense\b/gi,"$1 مصروف");
+      if (summary) {
+        if (isAr) {
+          const english = summary.textContent;
+          if (/\bexpenses?\b/i.test(english)) summary.dataset.tsExpenseSummaryEn = english;
+          summary.textContent = translateEmbeddedCountries(english)
+            .replace(/\b(\d+)\s+expenses\b/gi,"$1 مصروفات")
+            .replace(/\b(\d+)\s+expense\b/gi,"$1 مصروف");
+        } else if (summary.dataset.tsExpenseSummaryEn) {
+          summary.textContent = summary.dataset.tsExpenseSummaryEn;
+          delete summary.dataset.tsExpenseSummaryEn;
+        }
       }
 
       syncHeaderRoute(isAr);
