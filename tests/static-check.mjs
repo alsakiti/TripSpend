@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const VERSION = "7.0.8";
+const VERSION = "7.0.9";
 const INNER_WORKER_VERSION = "7.0.0";
 const WORKER_RUNTIME_VERSION = "7.0.3";
 const read = path => fs.readFileSync(path,"utf8");
@@ -15,6 +15,9 @@ if (!playwrightConfig.includes('channel: process.env.CI ? "chrome" : undefined')
 else ok("CI uses the preinstalled Chrome browser without a blocking download");
 const index = read("index.html");
 if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches app release");
+for (const marker of ["homeGuideCard","healthAction","countryBudgetToggle","expense-fast-fields","local-first-note"]) {
+  if (!index.includes(marker)) fail(`v7.0.9 UX structure missing: ${marker}`);
+}
 
 const manifest = JSON.parse(read("manifest.webmanifest"));
 if (!String(manifest.name).includes(VERSION)) fail(`manifest name does not include ${VERSION}`); else ok("manifest matches app release");
@@ -25,7 +28,7 @@ if (!sw.includes("locale-v700.js") || !sw.includes("receipt-ai-v700.js") || !sw.
 if (!sw.includes("upgradeLocaleJs")) fail("locale release is not synchronized by service worker"); else ok("locale release is synchronized by service worker");
 if (!sw.includes('label: "Google Gemini"') || !sw.includes('short: "Gemini 3.5 Flash-Lite"')) fail("Gemini-first AI label transform missing"); else ok("AI settings identify Gemini as the primary model");
 for (const marker of ["upgradeVisualJs","upgradeSettingsJs","upgradeFlagsJs","upgradeUiFixesJs","upgradeSetupJs","upgradeReceiptJs","requestIdleCallback","STORAGE_SAVE_DELAY = 220","canvas.toBlob","observeClass","tsV706Signature"]) {
-  if (!sw.includes(marker)) fail(`v7.0.8 performance transform missing: ${marker}`);
+  if (!sw.includes(marker)) fail(`v7.0.9 performance transform missing: ${marker}`);
 }
 if (!sw.includes('document.querySelector(".page.active")?.id !== "settings"')) fail("Settings localization work is not page-gated"); else ok("Settings work is deferred and page-gated");
 if (!sw.includes("MutationObserver already sees inserted/replaced flag text")) fail("flag render rescan removal transform is missing");
@@ -39,17 +42,20 @@ for (const old of ["i18n.js","i18n-layout-fix.js","i18n-audit-v690.js","rtl-poli
 ok("legacy localization patches are retired from APP_SHELL");
 
 const fx = read("fx.js");
-for (const marker of ["const APP_RELEASE = \"7.0.8\"","fxCardVisible","bootstrapFirstVisitRuntime","navigator.serviceWorker?.controller","FIRST_LOAD_RUNTIME","settingsAdvanced > summary"]) {
+for (const marker of ["const APP_RELEASE = \"7.0.9\"","fxCardVisible","bootstrapFirstVisitRuntime","navigator.serviceWorker?.controller","FIRST_LOAD_RUNTIME","settingsAdvanced > summary"]) {
   if (!fx.includes(marker)) fail(`FX/first-load reliability marker missing: ${marker}`);
 }
 if (!fx.includes('if (fxCardVisible()) convertSection(true)') || !fx.includes('if (!amountEl || !fxCardVisible()) return')) fail("hidden FX converter can still perform background conversion work");
 else ok("FX conversion work is gated to the visible Settings card");
 if (!fx.includes("tripspend:first-load-runtime")) fail("fresh uncontrolled visits do not bootstrap the current runtime");
-else ok("fresh visits bootstrap the v7.0.8 runtime before service-worker control");
+else ok("fresh visits bootstrap the v7.0.9 runtime before service-worker control");
 
 const locale = read("locale-v700.js");
 if (!locale.includes("Intl.DisplayNames")) fail("country localization is not using Intl.DisplayNames"); else ok("country localization uses Intl.DisplayNames");
 if (!locale.includes("TripSpendLocale")) fail("TripSpendLocale API missing"); else ok("TripSpendLocale API exposed");
+for (const phrase of ["Make today easier","TODAY'S GUIDANCE","Your trip and receipts stay on this device unless you export them."]) {
+  if (!locale.includes(phrase)) fail(`v7.0.9 Arabic localization missing: ${phrase}`);
+}
 
 const dynamicLocale = read("locale-dynamic-v700.js");
 if (!dynamicLocale.includes("dashboardGreeting") || !dynamicLocale.includes("dashboardDate")) fail("dashboard localization polish missing"); else ok("dashboard localization polish is wired");
@@ -70,6 +76,9 @@ if (!pageLocale.includes("tripspend:language")) fail("page locale does not react
 
 const settingsPolish = read("settings-polish-v704.js");
 const style = read("style.css");
+for (const marker of ["TripSpend v7.0.9","home-guide-card","home-guidance-card","trip-flag-rail::before","expense-fast-fields","prefers-reduced-motion:reduce"]) {
+  if (!style.includes(marker)) fail(`v7.0.9 visual polish missing: ${marker}`);
+}
 if (!style.includes("touch-action:manipulation") || !style.includes('input:not([type="checkbox"]):not([type="radio"])') || !style.includes("font-size:16px!important")) fail("mobile focus-zoom protection missing");
 else ok("all mobile form controls prevent iPhone focus zoom");
 if (/\.date-calendar\s*\{[^}]*transform:rotate\(/s.test(style)) fail("calendar icons are still rotated");
@@ -103,6 +112,8 @@ if (!flags.includes("0x1F1E6") || !flags.includes("object-fit:contain")) fail("S
 const v5 = read("v5.js");
 if (sw.includes("upgradeV5Js") || sw.includes('replace("From <small>(automatic)</small>"')) fail("route builder is patched by the service worker instead of source");
 else ok("route builder behavior is implemented in source");
+if (!v5.includes("countryBudgetsOpen") || !v5.includes("countryBudgetToggle")) fail("collapsible country budgets are not implemented in source");
+else ok("secondary country budgets collapse without losing route data");
 if (index.includes("From <small>(automatic)</small>")) fail("additional-country From field is still labeled automatic");
 else ok("additional-country From field is labeled editable");
 for (const marker of ["validateSetupCountryDates", "setupExtraDateError", '$("setupMultiCountryPanel")?.classList.add("hidden")']) {
