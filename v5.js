@@ -17,6 +17,7 @@
   let countryBudgetReturnFocus = null;
   let lastFlagRailSignature = "";
   let lastCountryBudgetStructureSignature = "";
+  let countryBudgetsOpen = false;
 
   const CURRENCY_BY_COUNTRY = {
     Oman:"OMR", Thailand:"THB", Indonesia:"IDR", Singapore:"SGD", Malaysia:"MYR",
@@ -2560,6 +2561,12 @@
   // Planner navigation
   $("openPlan")?.addEventListener("click", () => core.page("plan"));
   $("countryBudgetManage")?.addEventListener("click", () => core.page("plan"));
+  $("countryBudgetToggle")?.addEventListener("click", () => {
+    countryBudgetsOpen = !countryBudgetsOpen;
+    $("countryBudgetList")?.classList.toggle("hidden", !countryBudgetsOpen);
+    $("countryBudgetToggle")?.setAttribute("aria-expanded", String(countryBudgetsOpen));
+    if ($("countryBudgetToggle")) $("countryBudgetToggle").textContent = countryBudgetsOpen ? "Hide" : "Show";
+  });
   $("closeCountryBudgetEditor")?.addEventListener("click", closeCountryBudgetEditor);
   $("countryBudgetModal")?.addEventListener("click", event => {
     if (event.target === $("countryBudgetModal")) closeCountryBudgetEditor();
