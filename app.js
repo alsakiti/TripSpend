@@ -2580,6 +2580,12 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
     const t = state.trip, s = spent(), p = projected();
     if (!t) return { cls: "on-track", icon: "✓", title: "Ready", text: "Create your trip to start tracking." };
     if (s > t.budget) return { cls: "over", icon: "!", title: "Over budget", text: `You are ${money(s - t.budget, t.homeCurrency)} over your trip budget.` };
+    if (t.endDate && today() > t.endDate) {
+      const saved = Math.max(0, num(t.budget) - s);
+      return saved > 0
+        ? { cls:"on-track", icon:"✓", title:"Trip complete", text:`You finished ${money(saved, t.homeCurrency)} under budget.` }
+        : { cls:"on-track", icon:"✓", title:"Trip complete", text:"You finished on budget." };
+    }
     if (elapsed() > 0 && p > t.budget * 1.05) return { cls: "watch", icon: "↗", title: "Watch your pace", text: `At this pace you may finish around ${money(p - t.budget, t.homeCurrency)} over budget.` };
     if (s > 0) {
       const convertedPlanIds = new Set(state.expenses.map(expense => expense.planId).filter(Boolean));
