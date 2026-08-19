@@ -536,6 +536,15 @@
     injectStyles();
     ensureSetupBuilt();
     repairAnalyticsToggle();
+
+    // Starting a new trip changes setupView and mainView in the same render.
+    // Keep the onboarding body class tied to those final visibility states so
+    // another render listener cannot leave the premium setup skin inactive.
+    const visibilityObserver = new MutationObserver(ensureSetupBuilt);
+    [$('setupView'), $('mainView')].forEach(view => {
+      if (view) visibilityObserver.observe(view, { attributes:true, attributeFilter:['class'] });
+    });
+
     window.addEventListener("tripspend:render", afterAppChange);
     window.addEventListener("tripspend:page", afterAppChange);
     window.addEventListener("tripspend:language", () => {
