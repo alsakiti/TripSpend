@@ -254,7 +254,7 @@ The New Trip screen was redesigned after mobile usability feedback.
 
 ### Focused Home dashboard
 - Home starts with the current country, dates, local currency and country-budget status.
-- Main budget area focuses on Remaining, Safe today and Spent today.
+- Main budget area focuses on Remaining, Available per day and Spent today.
 - Forecast/Days Left remain calculated but are removed from the primary Home metrics.
 - Country budgets are directly below Add Expense.
 - Duplicate traveler summary, Home smart-insights list and Home top-category bars are hidden to reduce clutter.
@@ -1158,4 +1158,3 @@ This release improves the responsiveness and consistency of the Home dashboard.
 - Delete actions are not available in this release.
 - AI still excludes receipt images, backups and past-trip archives.
 - Cloudflare Worker must be updated with `worker/ai-worker.js` for action support.
-
