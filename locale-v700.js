@@ -301,7 +301,9 @@
 
   function start() {
     observer = new MutationObserver(() => { if (!busy) queueApply(); });
-    apply();
+    const initialApply = () => apply();
+    if ("requestIdleCallback" in window) requestIdleCallback(initialApply, { timeout:500 });
+    else setTimeout(initialApply, 0);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, {once:true}); else start();
 })();

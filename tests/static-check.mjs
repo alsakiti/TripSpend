@@ -56,6 +56,8 @@ if (!locale.includes("Intl.DisplayNames")) fail("country localization is not usi
 if (!locale.includes("TripSpendLocale")) fail("TripSpendLocale API missing"); else ok("TripSpendLocale API exposed");
 if (!locale.includes('if (lang === "ar")') || !locale.includes("hasTranslatedDocument")) fail("English startup still performs a full localization scan");
 else ok("English startup skips unnecessary full-document localization work");
+if (!locale.includes("requestIdleCallback(initialApply")) fail("initial localization still blocks module evaluation");
+else ok("initial localization runs off the critical module path");
 for (const phrase of ["Make today easier","TODAY'S GUIDANCE","Your trip and receipts stay on this device unless you export them."]) {
   if (!locale.includes(phrase)) fail(`v7.1.0 Arabic localization missing: ${phrase}`);
 }
