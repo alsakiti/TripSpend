@@ -68,7 +68,7 @@
       .ts-setup-panel-head p{margin:8px 0 0!important;color:var(--muted);font-size:13px!important;line-height:1.45}
 
       #setupForm.ts-setup-onboarding-form label{gap:7px!important;color:var(--muted)!important;font-size:11.5px!important;font-weight:720!important}
-      #setupForm.ts-setup-onboarding-form input,#setupForm.ts-setup-onboarding-form select{min-height:52px!important;border:1px solid color-mix(in srgb,var(--brand) 12%,var(--line))!important;border-radius:15px!important;background:color-mix(in srgb,var(--surface2) 93%,#071525)!important;color:var(--text)!important;font-size:15px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important}
+      #setupForm.ts-setup-onboarding-form input,#setupForm.ts-setup-onboarding-form select{min-height:52px!important;border:1px solid color-mix(in srgb,var(--brand) 12%,var(--line))!important;border-radius:15px!important;background:color-mix(in srgb,var(--surface2) 93%,#071525)!important;color:var(--text)!important;font-size:16px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important}
       #setupForm.ts-setup-onboarding-form input:focus,#setupForm.ts-setup-onboarding-form select:focus{border-color:color-mix(in srgb,var(--brand) 68%,#fff)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 13%,transparent)!important}
       .ts-setup-panel .setup-primary-country{margin:13px 0 0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
       .ts-setup-panel .setup-primary-country>.setup-country-number{display:none!important}
@@ -270,9 +270,11 @@
     new MutationObserver(() => {
       polishRouteRows();
       refreshPrimaryRoute();
-      refreshPreview();
+      if (currentStep === 4) refreshPreview();
     }).observe(routeList, { childList:true, subtree:true });
-    new MutationObserver(refreshPreview).observe($("setupTravelerList"), { childList:true, subtree:true });
+    new MutationObserver(() => {
+      if (currentStep === 4) refreshPreview();
+    }).observe($("setupTravelerList"), { childList:true, subtree:true });
 
     form.addEventListener("input", onFormInput, true);
     form.addEventListener("change", onFormInput, true);
@@ -281,7 +283,11 @@
     $("tsSetupNext").addEventListener("click", nextStep);
     stage.addEventListener("click", event => {
       const edit = event.target.closest("[data-edit-step]");
-      if (edit) showStep(Number(edit.dataset.editStep) || 1);
+      if (edit) {
+        edit.blur();
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        showStep(Number(edit.dataset.editStep) || 1, { scrollBehavior:"auto" });
+      }
     });
 
     syncSetupVisibility();
@@ -299,7 +305,7 @@
   function onFormInput(event) {
     if (event.target?.id === "setupDefaultPayment") pendingDefaultPayment = event.target.value || "Credit Card";
     refreshPrimaryRoute();
-    refreshPreview();
+    if (currentStep === 4) refreshPreview();
   }
 
   function validateControl(control) {
@@ -367,9 +373,8 @@
     if (dock) dock.style.display = currentStep === 4 ? "none" : "flex";
     const back = $("tsSetupBack");
     if (back) back.style.visibility = currentStep === 1 ? "hidden" : "visible";
-    if (currentStep === 4) refreshPreview();
     localizeSetup();
-    if (options.scroll !== false) $("setupForm")?.scrollIntoView({ behavior:"smooth", block:"start" });
+    if (options.scroll !== false) $("setupForm")?.scrollIntoView({ behavior:options.scrollBehavior || "smooth", block:"start" });
   }
 
   function primaryStop() {
@@ -476,7 +481,7 @@
     if (next) next.textContent = currentStep === 3 ? tr("Preview trip →","معاينة الرحلة ←") : tr("Continue →","متابعة ←");
     document.querySelector(".ts-setup-progress")?.setAttribute("aria-label", tr("Trip setup progress","تقدم إعداد الرحلة"));
     refreshPrimaryRoute();
-    refreshPreview();
+    if (currentStep === 4) refreshPreview();
   }
 
   function captureSubmit() {

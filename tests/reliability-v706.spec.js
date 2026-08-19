@@ -69,7 +69,7 @@ test("hidden FX card does not make background rate requests", async ({ page }) =
   expect(fxResultBackground).not.toBe("rgba(0, 0, 0, 0)");
 });
 
-test("v7.0.6 cache revision serves FX network-first", async ({ page }) => {
+test("v7.0.7 cache revision serves FX network-first", async ({ page }) => {
   await bootControlled(page);
   const sw = await page.evaluate(async () => await (await fetch("./sw.js?health=1", {cache:"no-store"})).text());
   expect(sw).toContain('const CACHE = `tripspend-v${APP_VERSION}-r2`');

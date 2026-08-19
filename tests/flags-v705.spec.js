@@ -38,7 +38,7 @@ test.describe("iPhone flag rendering", () => {
   test("country picker keeps native flags visible without clipping", async ({ page }) => {
     await waitForServiceWorker(page);
     await expect(page.locator("#setupView")).toBeVisible();
-    await expect(page.locator(".version-badge").first()).toHaveText("v7.0.6");
+    await expect(page.locator(".version-badge").first()).toHaveText("v7.0.7");
 
     await page.locator("#destination").fill("om");
     await expect(page.locator("#destinationOptions")).not.toHaveClass(/hidden/);
