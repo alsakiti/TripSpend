@@ -1,5 +1,5 @@
 const APP_VERSION = "7.0.6";
-const CACHE = `tripspend-v${APP_VERSION}-r4`;
+const CACHE = `tripspend-v${APP_VERSION}-r2`;
 
 const APP_SHELL = [
   "./",
