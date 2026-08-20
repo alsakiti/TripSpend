@@ -64,7 +64,6 @@
   cursor:pointer;
   border-color:color-mix(in srgb,var(--brand) 28%,transparent);
   box-shadow:0 10px 26px rgba(18,104,232,.16),0 0 0 1px rgba(18,104,232,.04);
-  animation:tripAiFloat 3.6s ease-in-out infinite;
   transition:box-shadow .24s ease,filter .24s ease,background .24s ease;
   -webkit-tap-highlight-color:transparent;
 }
@@ -112,10 +111,6 @@
 }
 #tripAiModal:not(.hidden){animation:tripAiFadeIn .18s ease both}
 #tripAiModal:not(.hidden) .trip-ai-sheet{animation:tripAiSheetIn .26s cubic-bezier(.2,.8,.2,1) both}
-@keyframes tripAiFloat{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-4px)}
-}
 @keyframes tripAiHalo{
   0%,100%{opacity:.22;transform:scale(.88)}
   50%{opacity:.5;transform:scale(1.06)}
