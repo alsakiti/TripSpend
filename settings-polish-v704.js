@@ -442,6 +442,10 @@
       const content = document.createElement("div");
       content.className = "settings-advanced-content";
       details.append(summary, content);
+      details.addEventListener("toggle", () => {
+        if (!details.open) return;
+        requestAnimationFrame(() => window.TripSpendFX?.refresh?.());
+      });
       appearance.after(details);
 
       const move = [
