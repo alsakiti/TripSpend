@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.1.0";
+  const RELEASE = "7.2.0";
   const FLAG_RE = /[\u{1F1E6}-\u{1F1FF}]{2}/gu;
   const CDN_BASE = "https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/flags/4x3";
   const WINDOWS_RE = /Windows NT/i;

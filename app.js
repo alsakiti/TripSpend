@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "7.1.0";
+  const APP_VERSION = "7.2.0";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -5307,7 +5307,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     const registerAppServiceWorker = async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=7.1.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.0", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

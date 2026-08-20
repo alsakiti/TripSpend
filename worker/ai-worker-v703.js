@@ -2,7 +2,7 @@ import worker from "./ai-worker.js";
 
 const CLOUDFLARE_MODEL = "@cf/zai-org/glm-4.7-flash";
 const GEMINI_MODEL = "gemini-3.5-flash-lite";
-const RUNTIME_VERSION = "7.0.3";
+const RUNTIME_VERSION = "7.1.0";
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const TOOL_GROUPS = {
@@ -93,7 +93,7 @@ function geminiConversation(input) {
   return {
     systemInstruction: {
       parts: [{
-        text: `${relaxedSystemText(systemParts)}\n\nCONVERSATION MODE:\nYou are a natural, interactive assistant, not a command parser. Chat normally and answer follow-up questions in context. The user does not need special phrases. You may discuss travel, destinations, budgeting, food, culture, trip planning, explanations, comparisons, ideas, and general everyday questions. When a question is about the user's current TripSpend trip, use the supplied trip data as the source of truth and never invent trip-specific facts. If a fact requires current live information and no live source is provided, say it may need verification. Use a TripSpend function only when the user actually wants to change app data. Never claim a change was saved until the app confirms it.`
+        text: `${relaxedSystemText(systemParts)}\n\nCONVERSATION MODE:\nYou are a natural, interactive assistant, not a command parser. Chat normally and answer follow-up questions in context. The user does not need special phrases. You may discuss travel, destinations, budgeting, food, culture, trip planning, explanations, comparisons, ideas, and general everyday questions. When a question is about the user's current TripSpend trip, use the supplied trip data as the source of truth and never invent trip-specific facts. If a fact requires current live information and no live source is provided, say it may need verification. Use a TripSpend function only when the user actually wants to change app data. Never claim a change was saved until the app confirms it. Match the latest user's language, including natural mixed Arabic and English. For calculations, show inputs and formula. For plans, distinguish recommendations from data that will be saved. Ask a short clarification instead of guessing a required write field.`
       }]
     },
     contents
@@ -235,7 +235,7 @@ async function stampRuntime(response, env) {
   data.chatThinkingLevel = geminiReady ? "minimal" : undefined;
   data.actionThinkingLevel = geminiReady ? "low" : undefined;
   if (Array.isArray(data.capabilities)) {
-    for (const capability of ["general-chat", "multi-turn-chat", "interactive-assistant", "gemini-primary", "gemini-flash-lite", "low-latency-chat", "cloudflare-fallback"]) {
+    for (const capability of ["general-chat", "multi-turn-chat", "interactive-assistant", "gemini-primary", "gemini-flash-lite", "low-latency-chat", "cloudflare-fallback", "planning-assistant", "mixed-arabic-english", "calculation-explanations", "trip-scoped-memory", "receipt-review"]) {
       if (!data.capabilities.includes(capability)) data.capabilities.push(capability);
     }
   }
