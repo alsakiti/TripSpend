@@ -6241,7 +6241,7 @@ html[data-theme="dark"] #settings small{
   border-radius:15px;
   background:var(--surface);
   color:var(--text);
-  text-align:left;
+  text-align:start;
   box-shadow:none;
 }
 .home-trip-history-icon{
