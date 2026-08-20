@@ -186,7 +186,7 @@
   border-radius:19px!important;
   background:var(--surface)!important;
   color:var(--text)!important;
-  text-align:left;
+  text-align:start;
   box-shadow:0 9px 25px rgba(16,24,40,.075)!important;
 }
 .quick-add-icon{

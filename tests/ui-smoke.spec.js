@@ -164,6 +164,22 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   await page.waitForTimeout(250);
 
   await expect(page.locator("#pageAdd")).toContainText("إضافة");
+  const quickAddCopy = page.locator("#quickAdd > span").nth(1);
+  await expect(quickAddCopy).toContainText("إضافة مصروف");
+  const quickAddAlignment = await quickAddCopy.evaluate(element => {
+    const copy = element.getBoundingClientRect();
+    const title = element.querySelector("strong");
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    const text = range.getBoundingClientRect();
+    return {
+      direction:getComputedStyle(element).direction,
+      textAlign:getComputedStyle(element).textAlign,
+      rightGap:Math.abs(copy.right - text.right)
+    };
+  });
+  expect(quickAddAlignment).toMatchObject({direction:"rtl", textAlign:"start"});
+  expect(quickAddAlignment.rightGap).toBeLessThanOrEqual(2);
   const expenseHeaderPositions = await page.locator("#expenses .page-title").evaluate(header => {
     const action = header.querySelector("#pageAdd").getBoundingClientRect();
     const title = header.querySelector("h2").getBoundingClientRect();
