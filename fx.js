@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_RELEASE = "7.1.0";
+  const APP_RELEASE = "7.2.0";
   const APP_KEY = "tripspend.v1";
   const FX_KEY = "tripspend.fxcache.v1";
   const API = "https://api.frankfurter.dev/v2/rate";

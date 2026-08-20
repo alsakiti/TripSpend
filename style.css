@@ -6523,7 +6523,7 @@ html[data-theme="dark"] .home-trip-history-btn{
   }
 }
 
-/* TripSpend v7.1.0 — source-first reliability, accessible dialogs and route details */
+/* TripSpend v7.2.0 — source-first reliability, accessible dialogs and route details */
 :where(button,a,input,select,textarea,[tabindex]):focus-visible{
   outline:3px solid color-mix(in srgb,var(--brand) 52%,transparent)!important;
   outline-offset:3px!important;
@@ -6567,7 +6567,7 @@ html[dir="rtl"] .app-dialog-icon{margin-inline:auto}
   .modal,.sheet,.update-banner{animation:none!important;transition:none!important}
 }
 
-/* TripSpend v7.1.0 — clearer Home guidance and calmer motion */
+/* TripSpend v7.2.0 — clearer Home guidance and calmer motion */
 .home-guide-card{
   display:grid;
   grid-template-columns:38px minmax(0,1fr) auto;
@@ -8127,6 +8127,10 @@ textarea{
 html[dir="rtl"] body{
   letter-spacing:normal;
   font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Arabic","Geeza Pro","Segoe UI",Tahoma,Arial,sans-serif;
+}
+/* Keep the primary Expenses action on the physical right in Arabic. */
+html[dir="rtl"] #expenses .page-title #pageAdd{
+  order:-1;
 }
 html[dir="rtl"] .eyebrow,
 html[dir="rtl"] .smart-badge,

@@ -6,6 +6,7 @@
   let endpoint = ENDPOINT_FALLBACK;
   let pending = null;
   let autoScan = false;
+  let learningBaseline = null;
 
   const $ = id => document.getElementById(id);
   const isArabic = () => window.TripSpendLocale?.language?.() === "ar";
@@ -43,9 +44,10 @@
       .receipt-ai-result{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface2)}
       .receipt-ai-result.hidden{display:none}
       .receipt-ai-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.receipt-ai-head strong{font-size:12px}.receipt-ai-confidence{font-size:10px;color:var(--muted)}
-      .receipt-ai-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}.receipt-ai-grid span{display:block;padding:7px 8px;border-radius:10px;background:var(--surface);font-size:10px;color:var(--muted)}.receipt-ai-grid b{display:block;margin-top:2px;color:var(--text);font-size:11px;overflow-wrap:anywhere}
+      .receipt-ai-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}.receipt-ai-grid span{display:block;padding:7px 8px;border-radius:10px;background:var(--surface);font-size:10px;color:var(--muted)}.receipt-ai-grid span.low{border:1px solid #f2c66d;background:#fff9e9}.receipt-ai-grid b{display:block;margin-top:2px;color:var(--text);font-size:11px;overflow-wrap:anywhere}.receipt-ai-field-confidence{float:right;font-size:8px;font-weight:850;color:var(--muted)}
       .receipt-ai-actions{display:flex;gap:7px}.receipt-ai-actions button{min-height:36px;border-radius:11px;font-weight:800}.receipt-ai-apply{flex:1;border:0;background:var(--brand);color:#fff}.receipt-ai-dismiss{border:1px solid var(--line);background:var(--surface);color:var(--text)}
       .receipt-ai-note{margin-top:7px;color:var(--muted);font-size:9px;line-height:1.4}
+      .receipt-ai-warning{margin:8px 0;padding:8px 9px;border-radius:10px;background:#fff5e5;color:#8a5800;font-size:10px;line-height:1.4}
       @media(max-width:420px){.receipt-ai-grid{grid-template-columns:1fr}}
     `;
     document.head.appendChild(s);
@@ -83,6 +85,8 @@
       field.appendChild(result);
     }
     updateLanguage();
+    const form=$("expenseForm");
+    if(form&&!form.dataset.aiLearning){form.dataset.aiLearning="true";form.addEventListener("submit",()=>{if(!learningBaseline)return;const after={...learningBaseline,category:$("expenseCategory")?.value||learningBaseline.category,paymentMethod:$("paymentMethod")?.value||learningBaseline.paymentMethod};window.TripSpendAIIntelligence?.rememberReceiptCorrection?.(learningBaseline,after);learningBaseline=null;});}
     return true;
   }
 
@@ -121,6 +125,7 @@
     const state = window.TripSpendCore?.getState?.();
     return {
       today: new Date().toISOString().slice(0,10),
+      language:isArabic()?"ar":"en",
       trip: state?.trip ? { id:state.trip.id || "", homeCurrency:state.trip.homeCurrency || "", tripCurrency:state.trip.tripCurrency || "", destination:state.trip.destination || "" } : null
     };
   }
@@ -162,17 +167,24 @@
     if (!box || !r) return;
     const amount = Number(r.total || 0);
     const confidence = Math.max(0,Math.min(100,Math.round(Number(r.confidence || 0) * (Number(r.confidence || 0) <= 1 ? 100 : 1))));
+    const fieldConfidence=r.fieldConfidence&&typeof r.fieldConfidence==="object"?r.fieldConfidence:{};
+    const pct=v=>Math.max(0,Math.min(100,Math.round(Number(v||0)*(Number(v||0)<=1?100:1))));
     const rows = [
-      [text("Merchant","المتجر"),r.merchant || "—"],
-      [text("Total","الإجمالي"),amount > 0 ? `${r.currency || ""} ${amount}`.trim() : "—"],
-      [text("Date","التاريخ"),r.date || "—"],
-      [text("Category","الفئة"),window.TripSpendLocale?.category?.(r.category) || r.category || "—"]
+      ["merchant",text("Merchant","المتجر"),r.merchant || "—"],
+      ["total",text("Total","الإجمالي"),amount > 0 ? `${r.currency || ""} ${amount}`.trim() : "—"],
+      ["date",text("Date","التاريخ"),r.date || "—"],
+      ["category",text("Category","الفئة"),window.TripSpendLocale?.category?.(r.category) || r.category || "—"]
     ];
+    const duplicate=findDuplicate(r), issues=Array.isArray(r.issues)?r.issues.filter(Boolean).slice(0,4):[];
+    if(duplicate)issues.unshift(text(`Possible duplicate: ${coreDate(duplicate.date)} • ${duplicate.category} • ${duplicate.currency||""} ${Number(duplicate.amount||0)}`,`قد يكون مكررًا: ${coreDate(duplicate.date)} • ${window.TripSpendLocale?.category?.(duplicate.category)||duplicate.category} • ${duplicate.currency||""} ${Number(duplicate.amount||0)}`));
     box.classList.remove("hidden");
-    box.innerHTML = `<div class="receipt-ai-head"><strong>${text("AI receipt suggestion","اقتراح الإيصال بالذكاء الاصطناعي")}</strong><span class="receipt-ai-confidence">${confidence ? `${confidence}%` : ""}</span></div><div class="receipt-ai-grid">${rows.map(([k,v]) => `<span>${escapeHtml(k)}<b>${escapeHtml(v)}</b></span>`).join("")}</div><div class="receipt-ai-actions"><button type="button" class="receipt-ai-dismiss">${text("Dismiss","تجاهل")}</button><button type="button" class="receipt-ai-apply">${text("Apply suggestions","تطبيق الاقتراحات")}</button></div><div class="receipt-ai-note">${text("Review everything before saving the expense.","راجع جميع البيانات قبل حفظ المصروف.")}</div>`;
+    box.innerHTML = `<div class="receipt-ai-head"><strong>${text("AI receipt suggestion","اقتراح الإيصال بالذكاء الاصطناعي")}</strong><span class="receipt-ai-confidence">${confidence ? `${confidence}% ${text("overall","إجمالي")}` : ""}</span></div><div class="receipt-ai-grid">${rows.map(([id,k,v])=>{const c=pct(fieldConfidence[id]??r.confidence);return`<span class="${c&&c<70?"low":""}">${escapeHtml(k)}${c?`<em class="receipt-ai-field-confidence">${c}%</em>`:""}<b>${escapeHtml(v)}</b></span>`;}).join("")}</div>${issues.length?`<div class="receipt-ai-warning">${issues.map(escapeHtml).join("<br>")}</div>`:""}<div class="receipt-ai-actions"><button type="button" class="receipt-ai-dismiss">${text("Dismiss","تجاهل")}</button><button type="button" class="receipt-ai-apply">${text("Apply for review","تطبيق للمراجعة")}</button></div><div class="receipt-ai-note">${text("Low-confidence fields are highlighted. Review every field before saving.","الحقول منخفضة الثقة مميزة. راجع كل حقل قبل الحفظ.")}</div>`;
     box.querySelector(".receipt-ai-dismiss").onclick = () => { pending = null; box.classList.add("hidden"); };
     box.querySelector(".receipt-ai-apply").onclick = () => applySuggestion(r);
   }
+
+  function coreDate(value){return window.TripSpendCore?.fmtDateWithYear?.(value)||String(value||"");}
+  function findDuplicate(r){const s=window.TripSpendCore?.getState?.(),amount=Number(r.total||0);return(s?.expenses||[]).find(e=>e.date===r.date&&Math.abs(Number(e.amount||0)-amount)<0.001&&(!r.currency||e.currency===r.currency));}
 
   function setSelect(id,value) {
     const el = $(id); if (!el || !value) return;
@@ -190,17 +202,20 @@
   }
 
   function applySuggestion(r) {
+    const learned=window.TripSpendAIIntelligence?.receiptDefaults?.(r)||{};
     const amount = Number(r.total || 0);
     if (amount > 0) setValue("expenseAmount",String(amount));
     if (/^[A-Z]{3}$/.test(String(r.currency || ""))) setSelect("expenseCurrency",String(r.currency));
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(r.date || ""))) setValue("expenseDate",String(r.date));
-    if (r.category) setSelect("expenseCategory",r.category);
+    if (learned.category||r.category) setSelect("expenseCategory",learned.category||r.category);
+    if (learned.paymentMethod) setSelect("paymentMethod",learned.paymentMethod);
     if (r.merchant) {
       const existing = String($("expenseNote")?.value || "").trim();
       if (!existing) setValue("expenseNote",String(r.merchant).slice(0,120));
     }
     const box = $("receiptAiResult");
-    if (box) box.innerHTML = `<div class="receipt-ai-note">✓ ${text("Suggestions applied. Review them, then tap Save Expense when ready.","تم تطبيق الاقتراحات. راجعها ثم اضغط حفظ المصروف عندما تكون جاهزًا.")}</div>`;
+    learningBaseline={merchant:r.merchant||"",category:learned.category||r.category||"Other",paymentMethod:learned.paymentMethod||$("paymentMethod")?.value||""};
+    if (box) box.innerHTML = `<div class="receipt-ai-note">✓ ${text(learned.learned?"Suggestions applied using this trip’s saved preferences. Review them, then save.":"Suggestions applied. Review them, then tap Save Expense when ready.",learned.learned?"تم تطبيق الاقتراحات باستخدام تفضيلات هذه الرحلة. راجعها ثم احفظ.":"تم تطبيق الاقتراحات. راجعها ثم اضغط حفظ المصروف عندما تكون جاهزًا.")}</div>`;
     pending = null;
   }
 

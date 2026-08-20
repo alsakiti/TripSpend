@@ -30,8 +30,8 @@ test("first visit runs the current source without a service-worker reload", () =
   const fx = fs.readFileSync("fx.js", "utf8");
   const app = fs.readFileSync("app.js", "utf8");
   const index = fs.readFileSync("index.html", "utf8");
-  expect(app).toContain('const APP_VERSION = "7.1.0"');
-  expect(index).toContain('enhancements-v710.js?v=7.1.0');
+  expect(app).toContain('const APP_VERSION = "7.2.0"');
+  expect(index).toContain('enhancements-v710.js?v=7.2.0');
   const enhancements = fs.readFileSync("enhancements-v710.js", "utf8");
   expect(enhancements).toContain('"app.js"');
   expect(enhancements).toContain('"ui-foundation-v710.js"');
@@ -74,7 +74,7 @@ test("hidden FX card does not make background rate requests", async ({ page }) =
   expect(fxResultBackground).not.toBe("rgba(0, 0, 0, 0)");
 });
 
-test("v7.1.0 cache revision serves source files stale-while-revalidate", async ({ page }) => {
+test("v7.2.0 cache revision serves source files stale-while-revalidate", async ({ page }) => {
   await bootControlled(page);
   const sw = await page.evaluate(async () => await (await fetch("./sw.js?health=1", {cache:"no-store"})).text());
   expect(sw).toContain('const CACHE = `tripspend-v${APP_VERSION}-r1`');

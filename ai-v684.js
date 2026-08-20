@@ -1,11 +1,12 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.1.0";
+  const RELEASE = "7.2.0";
   const ENDPOINT_FALLBACK = "https://tripspend-ai.alsukaiti1998.workers.dev";
   const PROVIDER = { key: "cloudflare", label: "Google Gemini", short: "Gemini 3.5 Flash-Lite" };
   const MAX_HISTORY = 12;
   const SESSION_KEY = "tripspend.ai.v684.history";
+  const UNDO_KEY = "tripspend.ai.v720.undo";
   const CATEGORIES = new Set(["Food", "Transport", "Hotel", "Shopping", "Activities", "Flights", "Coffee", "Groceries", "Other"]);
   const PAYMENTS = new Set(["Cash", "Credit Card", "Debit Card", "Apple Pay", "Other"]);
   const ITINERARY_TYPES = new Set(["Flight", "Hotel", "Activity", "Restaurant", "Transport", "Note"]);
@@ -41,6 +42,8 @@
   function persistHistory() {
     try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(chatHistory.slice(-MAX_HISTORY))); } catch {}
   }
+  function persistUndo(value) { try { if(value)sessionStorage.setItem(UNDO_KEY,JSON.stringify({tripId:state()?.trip?.id||"",snapshot:value}));else sessionStorage.removeItem(UNDO_KEY); } catch {} }
+  function loadUndo() { try { const value=JSON.parse(sessionStorage.getItem(UNDO_KEY)||"null");return value?.tripId===(state()?.trip?.id||"")&&value?.snapshot&&typeof value.snapshot==="object"?value.snapshot:null; } catch { return null; } }
 
   function cleanText(value, max = 240) { return String(value || "").trim().slice(0, max); }
   function state() { return core.getState?.(); }
@@ -111,6 +114,7 @@
       upcomingCosts: plans.slice(-180).map(x => ({ id:x.id,title:cleanText(x.title,100),date:x.date||"",stopId:x.stopId||"",country:stopName(s,x.stopId),category:x.category||"Other",amount:Number(x.homeAmount||0),status:x.status||"planned",note:cleanText(x.note,140) })),
       itinerary: itinerary.slice(-180).map(x => ({ id:x.id,title:cleanText(x.title,100),type:x.type||"Activity",date:x.date||"",time:x.time||"",stopId:x.stopId||"",country:stopName(s,x.stopId),location:cleanText(x.location,140),bookingRef:cleanText(x.bookingRef,100),status:x.status||"planned",estimatedCost:Number(x.homeAmount||0),note:cleanText(x.note,220) })),
       settlements: settlements.slice(-150).map(x => ({ id:x.id,fromPersonId:x.fromPersonId,toPersonId:x.toPersonId,from:personName(s,x.fromPersonId),to:personName(s,x.toPersonId),amount:Number(x.amount||0),date:x.date||"",note:cleanText(x.note,120) })),
+      learnedPreferences: window.TripSpendAIIntelligence?.context?.(s) || {},
       privacy: { receiptsIncluded:false, pastTripsIncluded:false, backupsIncluded:false }
     };
   }
@@ -164,6 +168,7 @@
   }
 
   function localAnswer(question) {
+    const enhanced=window.TripSpendAIIntelligence?.answer?.(question);if(enhanced)return enhanced;
     const s=state(), q=question.toLowerCase(), ar=isArabic(question), ins=computeInsights();
     if(!s?.trip||!ins) return null;
     const cur=s.trip.homeCurrency;
@@ -270,8 +275,9 @@
       if(!SUPPORTED_ACTIONS.has(action?.type)) throw new Error("That AI action is not supported");
       const s=state(); if(!s?.trip) throw new Error("Open a trip before making changes");
       const f=action.fields&&typeof action.fields==="object"?action.fields:{};
-      if(action.type==="undo_last_ai_change"){if(!lastAiSnapshot)throw new Error("There is no AI change to undo");Object.keys(s).forEach(k=>delete s[k]);Object.assign(s,JSON.parse(JSON.stringify(lastAiSnapshot)));lastAiSnapshot=null;core.save({immediate:true});core.render();return{ok:true,message:"Last AI change undone."};}
+      if(action.type==="undo_last_ai_change"){lastAiSnapshot=lastAiSnapshot||loadUndo();if(!lastAiSnapshot)throw new Error("There is no AI change to undo");Object.keys(s).forEach(k=>delete s[k]);Object.assign(s,JSON.parse(JSON.stringify(lastAiSnapshot)));lastAiSnapshot=null;persistUndo(null);core.save({immediate:true});core.render();return{ok:true,message:"Last AI change undone."};}
       lastAiSnapshot=JSON.parse(JSON.stringify(s));
+      persistUndo(lastAiSnapshot);
       if(action.type==="batch_edit_expenses"){const ids=new Set(Array.isArray(f.targetIds)?f.targetIds:[]);let changed=0;for(const e of s.expenses||[]){if(!ids.has(e.id))continue;if(f.paymentMethod&&PAYMENTS.has(f.paymentMethod))e.paymentMethod=f.paymentMethod;if(f.category&&CATEGORIES.has(f.category))e.category=f.category;changed++;}if(!changed)throw new Error("No matching expenses were found");core.save({immediate:true});core.render();return{ok:true,message:`Updated ${changed} expense${changed===1?"":"s"}.`};}
       if(action.type==="add_expense"){const n=normalizeExpenseFields(s,f);s.expenses.push({id:core.uid("expense"),...n,planId:"",receiptId:"",createdAt:Date.now()});s.preferences=s.preferences||{};s.preferences.lastPaymentMethod=n.paymentMethod;core.save({immediate:true});core.render();return{ok:true,message:`Expense added: ${core.money(n.homeAmount,s.trip.homeCurrency)} • ${n.category}.`};}
       if(action.type==="edit_expense"){const e=s.expenses.find(x=>x.id===action.targetId);if(!e)throw new Error("I could not find that expense anymore");Object.assign(e,normalizeExpenseFields(s,f,e));core.save({immediate:true});core.render();return{ok:true,message:"Expense updated."};}
@@ -311,11 +317,11 @@
   function addMessage(role,text){const box=$("tripAiMessages");if(!box)return null;const row=document.createElement("div");row.className=`trip-ai-message ${role}`;row.textContent=text;box.append(row);box.scrollTop=box.scrollHeight;return row;}
   function openAi(){const m=$("tripAiModal");if(!m)return;m.classList.remove("hidden");if(!$("tripAiMessages").children.length){addMessage("system",workerActionsReady?"Ask about your trip, request an analysis, or tell me what to change. Nothing is saved without confirmation.":"Enhanced local analysis is ready. Gemini is connecting for natural-language requests.");for(const h of chatHistory.slice(-6))addMessage(h.role,h.content);}setTimeout(()=>$("tripAiInput")?.focus(),80);}
   function closeAi(){requestController?.abort();requestController=null;$("tripAiModal")?.classList.add("hidden");}
-  function updateServiceStatus(){const b=$("tripAiServiceStatus"),v=$("tripAiWorkerVersion");if(b){b.textContent=endpoint?(workerActionsReady?"READY":"LOCAL READY"):"LOCAL ONLY";b.classList.toggle("ready",!!endpoint);}if(v)v.textContent=workerVersion?`Worker v${workerVersion}`:"Enhanced client v7.1.0";}
+  function updateServiceStatus(){const b=$("tripAiServiceStatus"),v=$("tripAiWorkerVersion");if(b){b.textContent=endpoint?(workerActionsReady?"READY":"LOCAL READY"):"LOCAL ONLY";b.classList.toggle("ready",!!endpoint);}if(v)v.textContent=workerVersion?`Worker v${workerVersion}`:`Enhanced client v${RELEASE}`;}
 
   async function loadConfig(){try{const r=await fetch(`./ai-config.json?t=${Date.now()}`,{cache:"no-store"});if(r.ok){const c=await r.json(),n=String(c?.endpoint||"").trim();if(n.startsWith("https://"))endpoint=n.replace(/\/$/,"");}}catch{}try{const r=await fetch(endpoint,{method:"GET",cache:"no-store"});if(r.ok){const d=await r.json();workerActionsReady=d?.actions===true;workerVersion=String(d?.version||"");}}catch{}updateServiceStatus();}
 
-  async function requestWorker(question){const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},signal:requestController.signal,body:JSON.stringify({provider:PROVIDER.key,question,context:buildTripContext(),history:chatHistory.slice(-MAX_HISTORY),capabilities:{writeActions:true,confirmationRequired:true,clientVersion:RELEASE,multiStep:true,bulkEdit:true}})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d?.error||`AI request failed (${r.status})`);return d;}
+  async function requestWorker(question){const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},signal:requestController.signal,body:JSON.stringify({provider:PROVIDER.key,question,context:buildTripContext(),history:chatHistory.slice(-MAX_HISTORY),capabilities:{writeActions:true,confirmationRequired:true,clientVersion:RELEASE,multiStep:true,bulkEdit:true,planning:true,mixedLanguage:true,calculationExplanations:true,tripScopedMemory:true}})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d?.error||`AI request failed (${r.status})`);return d;}
   function splitWriteClauses(question){const parts=question.split(/\s+(?:and then|then|ثم)\s+|\s*;\s*|\n+/i).map(x=>x.trim()).filter(Boolean);if(parts.length<2||parts.length>4)return null;const write=/(add|edit|change|set|delete|remove|move|اضف|أضف|غير|غيّر|احذف|حذف)/i;return parts.every(p=>write.test(p))?parts:null;}
 
   async function ask(question){addMessage("user",question);chatHistory.push({role:"user",content:question});chatHistory=chatHistory.slice(-MAX_HISTORY);persistHistory();const send=$("tripAiSend");if(send)send.disabled=true;
@@ -328,6 +334,7 @@
     }catch(error){waiting.textContent=error?.name==="AbortError"?"The AI request timed out. Please try again.":(error?.message||"TripSpend AI is unavailable right now.");}finally{clearTimeout(timer);requestController=null;if(send)send.disabled=false;}}
 
   function paintVersion(){const value=`v${RELEASE}`;document.querySelectorAll(".version-badge").forEach(el=>{if(el.textContent!==value)el.textContent=value;});const c=$("currentVersionText");if(c&&c.textContent!==value)c.textContent=value;}
+  window.TripSpendAI={ask,open:openAi,close:closeAi,context:buildTripContext};
   function init(){injectStyles();injectModal();injectSettings();activateTrigger();paintVersion();loadConfig();const obs=new MutationObserver(()=>paintVersion());obs.observe(document.body,{childList:true,subtree:true});}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.1.0";
+  const RELEASE = "7.2.0";
   let built = false;
   let queued = false;
 
@@ -442,6 +442,10 @@
       const content = document.createElement("div");
       content.className = "settings-advanced-content";
       details.append(summary, content);
+      details.addEventListener("toggle", () => {
+        if (!details.open) return;
+        requestAnimationFrame(() => window.TripSpendFX?.refresh?.());
+      });
       appearance.after(details);
 
       const move = [

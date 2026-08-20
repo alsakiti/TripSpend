@@ -48,7 +48,7 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.1.0");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.0");
 }
 
 async function openPageByEnglishLabel(page, label) {
@@ -164,6 +164,12 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   await page.waitForTimeout(250);
 
   await expect(page.locator("#pageAdd")).toContainText("إضافة");
+  const expenseHeaderPositions = await page.locator("#expenses .page-title").evaluate(header => {
+    const action = header.querySelector("#pageAdd").getBoundingClientRect();
+    const title = header.querySelector("h2").getBoundingClientRect();
+    return { actionCenter:action.left + action.width / 2, titleCenter:title.left + title.width / 2 };
+  });
+  expect(expenseHeaderPositions.actionCenter).toBeGreaterThan(expenseHeaderPositions.titleCenter);
   await expect(page.locator("#headerSub")).toContainText("ألمانيا");
   await expect(page.locator("#expenseSummary")).toContainText("مصروف");
 
@@ -204,7 +210,7 @@ test("Arabic Add Expense sheet fully localizes static and dynamic copy", async (
   await expect(page.locator("#modal")).not.toHaveClass(/hidden/);
   await page.waitForTimeout(250);
 
-  // Receipt controls are intentionally part of the optional details in v7.1.0.
+  // Receipt controls are intentionally part of the optional details in v7.2.0.
   await page.locator("#expenseMoreOptions").click();
   await expect(page.locator("#expenseAdvancedFields")).toBeVisible();
   await page.waitForTimeout(150);

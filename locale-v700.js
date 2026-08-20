@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.1.0";
+  const RELEASE = "7.2.0";
   const KEY = "tripspend.language";
   const originals = new WeakMap();
   const attrOriginals = new WeakMap();

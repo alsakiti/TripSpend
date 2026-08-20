@@ -53,10 +53,14 @@ jobs:
           node --check setup-language-host-v700.js
           node --check receipt-capability-v700.js
           node --check receipt-ai-v700.js
+          node --check ai-intelligence-v720.js
           node --input-type=module --check < worker/ai-worker.js
           node --input-type=module --check < worker/ai-worker-v701.js
           node --input-type=module --check < worker/ai-worker-v702.js
           node --input-type=module --check < worker/ai-worker-v703.js
+
+      - name: AI Worker contract tests
+        run: node worker/ai-worker-contract.test.mjs
 
       - name: Release consistency checks
         run: node tests/static-check.mjs

@@ -1,8 +1,10 @@
 {
   "name": "tripspend-ai-worker",
   "private": true,
-  "version": "7.0.3",
+  "type": "module",
+  "version": "7.1.0",
   "scripts": {
+    "test": "node ai-worker-contract.test.mjs",
     "deploy": "npx --yes wrangler@latest deploy",
     "deploy:login": "npx --yes wrangler@latest login && npx --yes wrangler@latest deploy"
   }
