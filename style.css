@@ -5808,6 +5808,9 @@ button:active:not(:disabled){
 .smart-expense-form .smart-amount-label{
   margin-bottom:10px!important;
 }
+.smart-expense-form .smart-amount-label .amount-row{
+  margin-top:10px;
+}
 .smart-type-fieldset{
   margin-bottom:10px!important;
 }
