@@ -87,6 +87,16 @@ test("Add Expense exposes fast category and note controls while keeping details 
   await page.locator("#quickAdd").click();
 
   await expect(page.locator("#expenseAmount")).toBeVisible();
+  await page.locator("#expenseAmount").focus();
+  const amountFocusGap = await page.locator(".smart-amount-label").evaluate(label => {
+    const textNode = [...label.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+    const range = document.createRange();
+    range.selectNodeContents(textNode);
+    const labelText = range.getBoundingClientRect();
+    const input = label.querySelector("#expenseAmount").getBoundingClientRect();
+    return input.top - 6 - labelText.bottom;
+  });
+  expect(amountFocusGap).toBeGreaterThanOrEqual(4);
   await expect(page.locator("#expenseCategory")).toBeVisible();
   await expect(page.locator("#expenseNote")).toBeVisible();
   await expect(page.locator("#recentCategoryChips .recent-category-chip")).toHaveCount(2);
