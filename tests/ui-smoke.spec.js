@@ -164,22 +164,6 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   await page.waitForTimeout(250);
 
   await expect(page.locator("#pageAdd")).toContainText("إضافة");
-  const quickAddCopy = page.locator("#quickAdd > span").nth(1);
-  await expect(quickAddCopy).toContainText("إضافة مصروف");
-  const quickAddAlignment = await quickAddCopy.evaluate(element => {
-    const copy = element.getBoundingClientRect();
-    const title = element.querySelector("strong");
-    const range = document.createRange();
-    range.selectNodeContents(title);
-    const text = range.getBoundingClientRect();
-    return {
-      direction:getComputedStyle(element).direction,
-      textAlign:getComputedStyle(element).textAlign,
-      rightGap:Math.abs(copy.right - text.right)
-    };
-  });
-  expect(quickAddAlignment).toMatchObject({direction:"rtl", textAlign:"start"});
-  expect(quickAddAlignment.rightGap).toBeLessThanOrEqual(2);
   const expenseHeaderPositions = await page.locator("#expenses .page-title").evaluate(header => {
     const action = header.querySelector("#pageAdd").getBoundingClientRect();
     const title = header.querySelector("h2").getBoundingClientRect();
@@ -212,6 +196,37 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   expect(restoredEnglish).toContain("Food");
   expect(restoredEnglish).toContain("Repeat");
   await expect(page.locator("#expenseSummary")).toContainText(/expense/);
+});
+
+test("Arabic Home action cards align their visible copy to the physical right", async ({ page }) => {
+  await seedTrip(page);
+  await bootV7(page);
+  await page.waitForSelector("#mainView:not(.hidden)");
+  await visibleLanguageButton(page).click();
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+
+  for (const selector of ["#quickAdd", "#homeTripHistoryBtn"]) {
+    const card = page.locator(selector);
+    await expect(card).toBeVisible();
+    const alignment = await card.evaluate((element, selector) => {
+      const copy = element.querySelector(selector === "#quickAdd" ? ":scope > span:nth-child(2)" : ".home-trip-history-copy");
+      const title = copy.querySelector("strong");
+      const icon = element.querySelector(selector === "#quickAdd" ? ".quick-add-icon" : ".home-trip-history-icon");
+      const copyBox = copy.getBoundingClientRect();
+      const iconBox = icon.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(title);
+      const textBox = range.getBoundingClientRect();
+      return {
+        direction:getComputedStyle(copy).direction,
+        textAlign:getComputedStyle(copy).textAlign,
+        rightGap:Math.abs(copyBox.right - textBox.right),
+        iconIsRight:iconBox.left > copyBox.left
+      };
+    }, selector);
+    expect(alignment).toMatchObject({direction:"rtl", textAlign:"start", iconIsRight:true});
+    expect(alignment.rightGap).toBeLessThanOrEqual(2);
+  }
 });
 
 test("Arabic Add Expense sheet fully localizes static and dynamic copy", async ({ page }) => {
