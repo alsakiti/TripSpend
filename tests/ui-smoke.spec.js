@@ -32,6 +32,7 @@ function seedTripState() {
 }
 
 async function seedTrip(page) {
+  await page.clock.setFixedTime(new Date("2026-08-18T12:00:00Z"));
   await page.addInitScript(value => {
     localStorage.setItem("tripspend.v1", JSON.stringify(value));
   }, seedTripState());
