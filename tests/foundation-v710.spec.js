@@ -18,6 +18,7 @@ function tripState() {
 }
 
 async function boot(page, initialState = tripState()) {
+  await page.clock.setFixedTime(new Date("2026-08-19T12:00:00Z"));
   await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), initialState);
   await page.goto("/");
   await page.evaluate(async () => {
