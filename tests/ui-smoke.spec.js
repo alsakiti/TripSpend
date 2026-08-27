@@ -32,6 +32,7 @@ function seedTripState() {
 }
 
 async function seedTrip(page) {
+  await page.clock.setFixedTime(new Date("2026-08-18T12:00:00Z"));
   await page.addInitScript(value => {
     localStorage.setItem("tripspend.v1", JSON.stringify(value));
   }, seedTripState());
@@ -196,6 +197,41 @@ test("existing trip expense cards localize dynamic Arabic text", async ({ page }
   expect(restoredEnglish).toContain("Food");
   expect(restoredEnglish).toContain("Repeat");
   await expect(page.locator("#expenseSummary")).toContainText(/expense/);
+});
+
+test("expenses show the most recent transaction first", async ({ page }) => {
+  const seeded = seedTripState();
+  seeded.expenses = [
+    {
+      ...seeded.expenses[0],
+      id:"expense-old", date:"2026-08-12", note:"Oldest expense", createdAt:100
+    },
+    {
+      ...seeded.expenses[0],
+      id:"expense-newer-same-day", date:"2026-08-20", note:"Newest same-day entry", createdAt:300
+    },
+    {
+      ...seeded.expenses[0],
+      id:"expense-newest-date", date:"2026-08-21", note:"Most recent expense", createdAt:50
+    },
+    {
+      ...seeded.expenses[0],
+      id:"expense-older-same-day", date:"2026-08-20", note:"Older same-day entry", createdAt:200
+    }
+  ];
+
+  await page.addInitScript(value => {
+    localStorage.setItem("tripspend.v1", JSON.stringify(value));
+  }, seeded);
+  await bootV7(page);
+  await openPageByEnglishLabel(page, "Expenses");
+
+  await expect(page.locator("#allList .expense-main strong")).toHaveText([
+    "Most recent expense",
+    "Newest same-day entry",
+    "Older same-day entry",
+    "Oldest expense"
+  ]);
 });
 
 test("Arabic Home action cards align their visible copy to the physical right", async ({ page }) => {
