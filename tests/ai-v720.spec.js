@@ -34,7 +34,7 @@ async function mockReceiptScan(page) {
 
 async function applyReceiptSuggestion(page) {
   const png=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=","base64");
-  await page.locator("#navAdd").click();
+  await page.locator("#quickAdd").click();
   await page.locator("#expenseMoreOptions").click();
   await page.waitForSelector("#receiptAiScanBtn");
   await page.evaluate(()=>document.querySelector("#receiptAiScanBtn").click());
@@ -162,7 +162,7 @@ test("abandoned receipt suggestions do not affect an unrelated expense",async({p
   await applyReceiptSuggestion(page);
   await page.locator("#closeModal").click();
 
-  await page.locator("#navAdd").click();
+  await page.locator("#quickAdd").click();
   await page.locator("#expenseAmount").fill("5");
   await page.locator("#expenseCurrency").selectOption("OMR");
   await page.locator("#expenseForm button[type=submit]").click();
