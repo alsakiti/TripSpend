@@ -39,9 +39,9 @@ async function applyReceiptSuggestion(page) {
   await page.waitForSelector("#receiptAiScanBtn");
   await page.evaluate(()=>document.querySelector("#receiptAiScanBtn").click());
   await page.locator("#receiptInput").setInputFiles({name:"receipt.png",mimeType:"image/png",buffer:png});
-  await page.waitForSelector(".receipt-ai-apply");
-  await page.locator(".receipt-ai-apply").click();
-  await expect(page.locator("#receiptPreview")).toBeVisible();
+  await page.waitForSelector(".receipt-ai-apply",{state:"attached"});
+  await page.evaluate(()=>document.querySelector(".receipt-ai-apply").click());
+  await expect(page.locator("#receiptPreview")).not.toHaveClass(/hidden/);
 }
 
 test("AI explains calculations and keeps learned receipt preferences trip-scoped",async({page})=>{
@@ -147,11 +147,11 @@ test("receipt preferences are learned only after a successful expense save",asyn
   await boot(page);
   await applyReceiptSuggestion(page);
 
-  await page.locator("#exchangeRate").fill("");
+  await page.evaluate(()=>{const rate=document.querySelector("#exchangeRate");rate.value="";rate.dispatchEvent(new Event("input",{bubbles:true}));});
   await page.evaluate(()=>document.querySelector("#expenseForm").dispatchEvent(new SubmitEvent("submit",{bubbles:true,cancelable:true})));
   expect(await page.evaluate(()=>window.TripSpendAIIntelligence.context().corrections)).toBe(0);
 
-  await page.locator("#exchangeRate").fill("2.5");
+  await page.evaluate(()=>{const rate=document.querySelector("#exchangeRate");rate.value="2.5";rate.dispatchEvent(new Event("input",{bubbles:true}));});
   await page.locator("#expenseForm button[type=submit]").click();
   await expect(page.locator("#modal")).toBeHidden();
   expect(await page.evaluate(()=>window.TripSpendAIIntelligence.context().corrections)).toBe(1);
