@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "7.2.0";
+  const VERSION = "7.2.1";
   const modules = [
     "app.js", "fx.js", "v5.js", "ai-v684.js", "locale-v700.js", "locale-dynamic-v700.js",
     "expense-locale-v703.js", "page-locale-v704.js", "settings-polish-v704.js",

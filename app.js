@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "7.2.0";
+  const APP_VERSION = "7.2.1";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -4367,7 +4367,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
           createdAt: Date.now()
         });
       } else {
-        save({ immediate: removeExistingReceipt });
+        pendingStorageSnapshot = safeClone(state);
+        await flushPendingSave();
       }
     } catch {
       state = normalizeState(stateBeforeExpenseSave);
@@ -4375,6 +4376,8 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
       toast("Nothing was saved because the receipt could not be stored safely");
       return;
     }
+
+    window.dispatchEvent(new CustomEvent("tripspend:expense-saved", { detail: { expenseId:x.id } }));
 
     if (pendingReceiptBlob || removeExistingReceipt) {
       cleanupUnusedReceipts({ silent: true }).catch(() => {});
@@ -5321,7 +5324,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     const registerAppServiceWorker = async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.0", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.1", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
