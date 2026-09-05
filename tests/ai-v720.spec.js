@@ -147,6 +147,7 @@ test("receipt preferences are learned only after a successful expense save",asyn
   await boot(page);
   await applyReceiptSuggestion(page);
 
+  await page.locator("#exchangeRate").fill("");
   await page.evaluate(()=>document.querySelector("#expenseForm").dispatchEvent(new SubmitEvent("submit",{bubbles:true,cancelable:true})));
   expect(await page.evaluate(()=>window.TripSpendAIIntelligence.context().corrections)).toBe(0);
 
