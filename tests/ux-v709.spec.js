@@ -136,6 +136,5 @@ test("new Home guidance and privacy copy localize cleanly in Arabic", async ({ p
 
   await page.evaluate(() => window.TripSpendLocale?.setLanguage?.("en"));
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
-  const englishHome = await page.locator("#dashboard").innerText();
-  expect(englishHome).not.toMatch(/[\u0600-\u06FF]/);
+  await expect.poll(() => page.locator("#dashboard").innerText()).not.toMatch(/[\u0600-\u06FF]/);
 });

@@ -25,7 +25,7 @@ async function boot(page) {
 async function mockReceiptScan(page) {
   await page.route("**tripspend-ai.alsukaiti1998.workers.dev**",async route=>{
     const request=route.request();
-    if(request.method()==="GET")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,actions:true,version:"test"})});
+    if(request.method()==="GET")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,actions:true,version:"7.1.0",capabilities:["receipt-scan"]})});
     const body=request.postDataJSON();
     if(body?.mode==="receipt")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({receipt:{merchant:"Vienna Cafe",total:12,currency:"EUR",date:"2026-08-20",category:"Coffee",confidence:.95,fieldConfidence:{merchant:.95,total:.95,date:.95,category:.95},issues:[]}})});
     return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({answer:"Test response"})});
