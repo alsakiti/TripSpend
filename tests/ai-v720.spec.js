@@ -13,6 +13,7 @@ function state() {
 }
 
 async function boot(page) {
+  await page.clock.setFixedTime(new Date("2026-08-20T12:00:00Z"));
   await page.addInitScript(value=>localStorage.setItem("tripspend.v1",JSON.stringify(value)),state());
   await page.goto("/");
   await page.evaluate(async()=>{if(!("serviceWorker" in navigator))return;await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener("controllerchange",resolve,{once:true}));});
@@ -93,6 +94,7 @@ test("local AI answers follow the question language instead of the UI language",
 
 test("AI undo works immediately but preserves newer manual edits after reload",async({page})=>{
   await boot(page);
+  await page.evaluate(()=>window.TripSpendAI.open());
   await page.evaluate(()=>window.TripSpendAI.ask("add traveler Alex"));
   await page.locator(".trip-ai-action-confirm").last().click();
   await expect.poll(()=>page.evaluate(()=>window.TripSpendCore.getState().people.some(p=>p.name==="Alex"))).toBe(true);
@@ -116,6 +118,7 @@ test("AI undo works immediately but preserves newer manual edits after reload",a
   await page.waitForSelector("#mainView:not(.hidden)");
   await page.evaluate(()=>window.TripSpendEnhancementsReady);
 
+  await page.evaluate(()=>window.TripSpendAI.open());
   await page.evaluate(()=>window.TripSpendAI.ask("undo"));
   const undoCard=page.locator(".trip-ai-action").last();
   await undoCard.locator(".trip-ai-action-confirm").click();
@@ -127,6 +130,7 @@ test("AI undo works immediately but preserves newer manual edits after reload",a
 
 test("a rejected AI action does not create an undo snapshot",async({page})=>{
   await boot(page);
+  await page.evaluate(()=>window.TripSpendAI.open());
   await page.evaluate(()=>window.TripSpendAI.ask("remove traveler Me"));
   const deleteCard=page.locator(".trip-ai-action").last();
   await deleteCard.locator(".trip-ai-action-confirm").click();
