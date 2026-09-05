@@ -13,12 +13,35 @@ function state() {
 }
 
 async function boot(page) {
+  await page.clock.setFixedTime(new Date("2026-08-20T12:00:00Z"));
   await page.addInitScript(value=>localStorage.setItem("tripspend.v1",JSON.stringify(value)),state());
   await page.goto("/");
   await page.evaluate(async()=>{if(!("serviceWorker" in navigator))return;await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener("controllerchange",resolve,{once:true}));});
   await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
   await page.evaluate(()=>window.TripSpendEnhancementsReady);
+}
+
+async function mockReceiptScan(page) {
+  await page.route("**tripspend-ai.alsukaiti1998.workers.dev**",async route=>{
+    const request=route.request();
+    if(request.method()==="GET")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({ok:true,actions:true,version:"7.1.0",capabilities:["receipt-scan"]})});
+    const body=request.postDataJSON();
+    if(body?.mode==="receipt")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({receipt:{merchant:"Vienna Cafe",total:12,currency:"EUR",date:"2026-08-20",category:"Coffee",confidence:.95,fieldConfidence:{merchant:.95,total:.95,date:.95,category:.95},issues:[]}})});
+    return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({answer:"Test response"})});
+  });
+}
+
+async function applyReceiptSuggestion(page) {
+  const png=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=","base64");
+  await page.locator("#quickAdd").click();
+  await page.locator("#expenseMoreOptions").click();
+  await page.waitForSelector("#receiptAiScanBtn");
+  await page.evaluate(()=>document.querySelector("#receiptAiScanBtn").click());
+  await page.locator("#receiptInput").setInputFiles({name:"receipt.png",mimeType:"image/png",buffer:png});
+  await page.waitForSelector(".receipt-ai-apply");
+  await page.locator(".receipt-ai-apply").click();
+  await expect(page.locator("#receiptPreview")).toBeVisible();
 }
 
 test("AI explains calculations and keeps learned receipt preferences trip-scoped",async({page})=>{
@@ -53,4 +76,97 @@ test("AI snapshot and controls are mobile-safe and bilingual",async({page})=>{
   await expect(page.locator("#tripAiInput")).toHaveAttribute("placeholder",/اسأل/);
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(2);
+});
+
+test("local AI answers follow the question language instead of the UI language",async({page})=>{
+  await boot(page);
+  const arabic=await page.evaluate(()=>window.TripSpendAIIntelligence.answer("ما هو توقع الصرف في نهاية الرحلة؟"));
+  expect(arabic).toContain("التوقع الحالي");
+
+  await page.locator("#languageToggleV7:visible, #setupLanguageToggleV7:visible").click();
+  const answers=await page.evaluate(()=>({
+    english:window.TripSpendAIIntelligence.answer("What is the end of trip forecast?"),
+    mixed:window.TripSpendAIIntelligence.answer("ما هو forecast لنهاية الرحلة؟")
+  }));
+  expect(answers.english).toContain("Your current end-of-trip forecast");
+  expect(answers.mixed).toContain("التوقع الحالي");
+});
+
+test("AI undo works immediately but preserves newer manual edits after reload",async({page})=>{
+  await boot(page);
+  await page.evaluate(()=>window.TripSpendAI.open());
+  await page.evaluate(()=>window.TripSpendAI.ask("add traveler Alex"));
+  await page.locator(".trip-ai-action-confirm").last().click();
+  await expect.poll(()=>page.evaluate(()=>window.TripSpendCore.getState().people.some(p=>p.name==="Alex"))).toBe(true);
+
+  await page.evaluate(()=>window.TripSpendAI.ask("undo"));
+  await page.locator(".trip-ai-action-confirm").last().click();
+  await expect.poll(()=>page.evaluate(()=>window.TripSpendCore.getState().people.some(p=>p.name==="Alex"))).toBe(false);
+
+  await page.evaluate(()=>window.TripSpendAI.ask("add traveler Alex"));
+  await page.locator(".trip-ai-action-confirm").last().click();
+  await expect.poll(()=>page.evaluate(()=>window.TripSpendCore.getState().people.some(p=>p.name==="Alex"))).toBe(true);
+
+  await page.evaluate(()=>{
+    const core=window.TripSpendCore,s=core.getState(),now=Date.now();
+    s.expenses.push({id:"manual-after-ai",amount:7,currency:"OMR",rate:1,homeAmount:7,category:"Coffee",paymentMethod:"Cash",date:"2026-08-20",note:"Manual after AI",expenseType:"personal",paidByPersonId:"me",stopId:"de",personShares:[{personId:"me",amount:7}],createdAt:now});
+    core.save({immediate:true});
+    core.render();
+  });
+  await page.waitForTimeout(150);
+  await page.reload();
+  await page.waitForSelector("#mainView:not(.hidden)");
+  await page.evaluate(()=>window.TripSpendEnhancementsReady);
+
+  await page.evaluate(()=>window.TripSpendAI.open());
+  await page.evaluate(()=>window.TripSpendAI.ask("undo"));
+  const undoCard=page.locator(".trip-ai-action").last();
+  await undoCard.locator(".trip-ai-action-confirm").click();
+  await expect(undoCard.locator(".trip-ai-action-note")).toContainText("newer edits were kept");
+  const stateAfter=await page.evaluate(()=>window.TripSpendCore.getState());
+  expect(stateAfter.people.some(p=>p.name==="Alex")).toBe(true);
+  expect(stateAfter.expenses.some(e=>e.id==="manual-after-ai")).toBe(true);
+});
+
+test("a rejected AI action does not create an undo snapshot",async({page})=>{
+  await boot(page);
+  await page.evaluate(()=>window.TripSpendAI.open());
+  await page.evaluate(()=>window.TripSpendAI.ask("remove traveler Me"));
+  const deleteCard=page.locator(".trip-ai-action").last();
+  await deleteCard.locator(".trip-ai-action-confirm").click();
+  await expect(deleteCard.locator(".trip-ai-action-note")).toContainText("has history");
+
+  await page.evaluate(()=>window.TripSpendAI.ask("undo"));
+  const undoCard=page.locator(".trip-ai-action").last();
+  await undoCard.locator(".trip-ai-action-confirm").click();
+  await expect(undoCard.locator(".trip-ai-action-note")).toContainText("no AI change to undo");
+});
+
+test("receipt preferences are learned only after a successful expense save",async({page})=>{
+  await mockReceiptScan(page);
+  await boot(page);
+  await applyReceiptSuggestion(page);
+
+  await page.locator("#exchangeRate").fill("");
+  await page.evaluate(()=>document.querySelector("#expenseForm").dispatchEvent(new SubmitEvent("submit",{bubbles:true,cancelable:true})));
+  expect(await page.evaluate(()=>window.TripSpendAIIntelligence.context().corrections)).toBe(0);
+
+  await page.locator("#exchangeRate").fill("2.5");
+  await page.locator("#expenseForm button[type=submit]").click();
+  await expect(page.locator("#modal")).toBeHidden();
+  expect(await page.evaluate(()=>window.TripSpendAIIntelligence.context().corrections)).toBe(1);
+});
+
+test("abandoned receipt suggestions do not affect an unrelated expense",async({page})=>{
+  await mockReceiptScan(page);
+  await boot(page);
+  await applyReceiptSuggestion(page);
+  await page.locator("#closeModal").click();
+
+  await page.locator("#quickAdd").click();
+  await page.locator("#expenseAmount").fill("5");
+  await page.locator("#expenseCurrency").selectOption("OMR");
+  await page.locator("#expenseForm button[type=submit]").click();
+  await expect(page.locator("#modal")).toBeHidden();
+  expect(await page.evaluate(()=>window.TripSpendAIIntelligence.context().corrections)).toBe(0);
 });

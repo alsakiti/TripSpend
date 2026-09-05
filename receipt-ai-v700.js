@@ -8,6 +8,14 @@
   let autoScan = false;
   let learningBaseline = null;
 
+  function clearLearningBaseline() { learningBaseline = null; }
+  function commitLearningBaseline() {
+    if (!learningBaseline) return;
+    const after={...learningBaseline,category:$("expenseCategory")?.value||learningBaseline.category,paymentMethod:$("paymentMethod")?.value||learningBaseline.paymentMethod};
+    window.TripSpendAIIntelligence?.rememberReceiptCorrection?.(learningBaseline,after);
+    clearLearningBaseline();
+  }
+
   const $ = id => document.getElementById(id);
   const isArabic = () => window.TripSpendLocale?.language?.() === "ar";
   const text = (en, ar) => isArabic() ? ar : en;
@@ -86,7 +94,7 @@
     }
     updateLanguage();
     const form=$("expenseForm");
-    if(form&&!form.dataset.aiLearning){form.dataset.aiLearning="true";form.addEventListener("submit",()=>{if(!learningBaseline)return;const after={...learningBaseline,category:$("expenseCategory")?.value||learningBaseline.category,paymentMethod:$("paymentMethod")?.value||learningBaseline.paymentMethod};window.TripSpendAIIntelligence?.rememberReceiptCorrection?.(learningBaseline,after);learningBaseline=null;});}
+    if(form&&!form.dataset.aiLearning){form.dataset.aiLearning="true";form.addEventListener("reset",clearLearningBaseline);window.addEventListener("tripspend:expense-saved",commitLearningBaseline);}
     return true;
   }
 
@@ -134,6 +142,7 @@
     const button = $("receiptAiScanBtn");
     const result = $("receiptAiResult");
     if (!button || !result) return;
+    clearLearningBaseline();
     button.disabled = true;
     button.textContent = text("Scanning…", "جارٍ المسح…");
     result.classList.remove("hidden");
@@ -179,7 +188,7 @@
     if(duplicate)issues.unshift(text(`Possible duplicate: ${coreDate(duplicate.date)} • ${duplicate.category} • ${duplicate.currency||""} ${Number(duplicate.amount||0)}`,`قد يكون مكررًا: ${coreDate(duplicate.date)} • ${window.TripSpendLocale?.category?.(duplicate.category)||duplicate.category} • ${duplicate.currency||""} ${Number(duplicate.amount||0)}`));
     box.classList.remove("hidden");
     box.innerHTML = `<div class="receipt-ai-head"><strong>${text("AI receipt suggestion","اقتراح الإيصال بالذكاء الاصطناعي")}</strong><span class="receipt-ai-confidence">${confidence ? `${confidence}% ${text("overall","إجمالي")}` : ""}</span></div><div class="receipt-ai-grid">${rows.map(([id,k,v])=>{const c=pct(fieldConfidence[id]??r.confidence);return`<span class="${c&&c<70?"low":""}">${escapeHtml(k)}${c?`<em class="receipt-ai-field-confidence">${c}%</em>`:""}<b>${escapeHtml(v)}</b></span>`;}).join("")}</div>${issues.length?`<div class="receipt-ai-warning">${issues.map(escapeHtml).join("<br>")}</div>`:""}<div class="receipt-ai-actions"><button type="button" class="receipt-ai-dismiss">${text("Dismiss","تجاهل")}</button><button type="button" class="receipt-ai-apply">${text("Apply for review","تطبيق للمراجعة")}</button></div><div class="receipt-ai-note">${text("Low-confidence fields are highlighted. Review every field before saving.","الحقول منخفضة الثقة مميزة. راجع كل حقل قبل الحفظ.")}</div>`;
-    box.querySelector(".receipt-ai-dismiss").onclick = () => { pending = null; box.classList.add("hidden"); };
+    box.querySelector(".receipt-ai-dismiss").onclick = () => { pending = null; clearLearningBaseline(); box.classList.add("hidden"); };
     box.querySelector(".receipt-ai-apply").onclick = () => applySuggestion(r);
   }
 

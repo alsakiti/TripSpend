@@ -17,6 +17,7 @@ function seededTrip() {
 }
 
 async function boot(page) {
+  await page.clock.setFixedTime(new Date("2026-08-24T12:00:00Z"));
   await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seededTrip());
   await page.goto("/");
   await page.evaluate(async () => {
@@ -28,10 +29,10 @@ async function boot(page) {
   });
   await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.0");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.1");
 }
 
-test("v7.2.0 Home prioritizes guidance and keeps secondary route budgets collapsible", async ({ page }) => {
+test("v7.2.1 Home prioritizes guidance and keeps secondary route budgets collapsible", async ({ page }) => {
   await page.setViewportSize({width:390,height:844});
   await boot(page);
 
@@ -135,6 +136,5 @@ test("new Home guidance and privacy copy localize cleanly in Arabic", async ({ p
 
   await page.evaluate(() => window.TripSpendLocale?.setLanguage?.("en"));
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
-  const englishHome = await page.locator("#dashboard").innerText();
-  expect(englishHome).not.toMatch(/[\u0600-\u06FF]/);
+  await expect.poll(() => page.locator("#dashboard").innerText()).not.toMatch(/[\u0600-\u06FF]/);
 });
