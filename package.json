@@ -1,0 +1,26 @@
+{
+  "name": "tripspend",
+  "private": true,
+  "version": "7.2.1",
+  "scripts": {
+    "build": "node scripts/build-capacitor.mjs",
+    "test:static": "node tests/static-check.mjs && node worker/ai-worker-contract.test.mjs",
+    "test:ios-package": "node tests/ios-package.test.mjs",
+    "ios:icon": "mkdir -p assets && sips -z 1024 1024 icons/icon-512.png --out assets/icon-only.png",
+    "ios:prepare": "npm run build && npx cap add ios && npx cap sync ios && npm run ios:icon && npx capacitor-assets generate --ios",
+    "ios:sync": "npm run build && npx cap sync ios && npm run ios:icon && npx capacitor-assets generate --ios",
+    "ios:open": "npx cap open ios"
+  },
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.0.0",
+    "@playwright/test": "1.62.0"
+  }
+}
