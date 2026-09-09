@@ -3,7 +3,7 @@
   "appName": "TripSpend",
   "webDir": "dist",
   "ios": {
-    "contentInset": "automatic",
+    "contentInset": "never",
     "backgroundColor": "#f4f6fa"
   }
 }

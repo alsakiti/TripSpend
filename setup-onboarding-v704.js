@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.2.2";
+  const RELEASE = "7.2.3";
   const $ = id => document.getElementById(id);
   let built = false;
   let currentStep = 1;
@@ -26,7 +26,9 @@
   }
 
   function syncSetupVisibility() {
-    document.body.classList.toggle("ts-setup-onboarding-active", setupIsVisible() && built);
+    const active = setupIsVisible() && built;
+    document.documentElement.classList.toggle("ts-setup-onboarding-active", active);
+    document.body.classList.toggle("ts-setup-onboarding-active", active);
   }
 
   function injectStyles() {
@@ -35,11 +37,42 @@
     style.id = "tripSpendSetupOnboardingV704Styles";
     style.textContent = `
       /* The onboarding skin only activates while the new-trip view is actually open. */
+      html.ts-setup-onboarding-active{
+        width:100%;
+        height:100%;
+        min-height:0;
+        overflow:hidden;
+        overscroll-behavior:none;
+        background:var(--bg);
+      }
+      html.ts-setup-onboarding-active body{
+        position:fixed;
+        inset:0;
+        width:100%;
+        height:100%;
+        min-height:0;
+        overflow:hidden;
+        overscroll-behavior:none;
+        background-color:var(--bg)!important;
+      }
       body.ts-setup-onboarding-active .topbar{display:none!important}
-      body.ts-setup-onboarding-active main{padding-top:max(8px,env(safe-area-inset-top))!important}
-      body.ts-setup-onboarding-active .app{max-width:none!important}
+      body.ts-setup-onboarding-active .app{
+        width:100%;
+        max-width:none!important;
+        height:100dvh;
+        min-height:0!important;
+        overflow:hidden;
+        padding-bottom:max(8px,env(safe-area-inset-bottom))!important;
+        background:var(--bg)!important;
+      }
+      body.ts-setup-onboarding-active main{
+        height:100%;
+        min-height:0;
+        overflow:hidden;
+        padding-top:max(8px,env(safe-area-inset-top))!important;
+      }
 
-      #setupView.ts-setup-onboarding{width:min(100%,640px);margin:0 auto;padding:0 12px calc(30px + env(safe-area-inset-bottom))}
+      #setupView.ts-setup-onboarding{display:flex;flex-direction:column;width:min(100%,640px);height:100%;min-height:0;margin:0 auto;padding:0 12px;overflow:hidden}
       #setupView.ts-setup-onboarding>.hero.card{position:relative!important;display:flex!important;align-items:center!important;min-height:56px!important;margin:0 0 8px!important;padding:10px 2px!important;border:0!important;background:transparent!important;box-shadow:none!important}
       #setupView.ts-setup-onboarding>.hero.card::before{content:"TripSpend";color:var(--text);font-size:15px;font-weight:850;letter-spacing:-.03em}
       #setupView.ts-setup-onboarding>.hero.card>.hero-logo,#setupView.ts-setup-onboarding>.hero.card>.setup-brand,#setupView.ts-setup-onboarding>.hero.card>.eyebrow,#setupView.ts-setup-onboarding>.hero.card>h2,#setupView.ts-setup-onboarding>.hero.card>p{display:none!important}
@@ -47,8 +80,8 @@
       html[dir="rtl"] #setupView.ts-setup-onboarding #setupLanguageToggleV7{right:auto!important;left:0!important}
       #setupView.ts-setup-onboarding .setup-history-section{margin:0 0 12px!important;padding:13px!important;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
 
-      #setupForm.ts-setup-onboarding-form{margin:0!important;padding:0!important;gap:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
-      .ts-setup-stage{overflow:hidden;border:1px solid color-mix(in srgb,var(--brand) 15%,var(--line));border-radius:26px;background:radial-gradient(circle at 50% -12%,color-mix(in srgb,var(--brand) 14%,transparent),transparent 38%),linear-gradient(160deg,color-mix(in srgb,var(--surface) 98%,#071426),color-mix(in srgb,var(--surface2) 94%,#07111e));box-shadow:0 22px 58px rgba(0,23,60,.13)}
+      #setupForm.ts-setup-onboarding-form{flex:1 1 auto;min-height:0;margin:0!important;padding:0!important;gap:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:hidden}
+      .ts-setup-stage{display:flex;flex-direction:column;max-height:100%;overflow:hidden;border:1px solid color-mix(in srgb,var(--brand) 15%,var(--line));border-radius:26px;background:radial-gradient(circle at 50% -12%,color-mix(in srgb,var(--brand) 14%,transparent),transparent 38%),linear-gradient(160deg,color-mix(in srgb,var(--surface) 98%,#071426),color-mix(in srgb,var(--surface2) 94%,#07111e));box-shadow:0 22px 58px rgba(0,23,60,.13)}
 
       .ts-setup-progress{display:flex;align-items:center;justify-content:center;padding:21px 24px 5px;direction:ltr!important}
       .ts-setup-progress-step{display:flex;align-items:center;flex:1 1 0;max-width:92px}
@@ -58,8 +91,8 @@
       .ts-setup-progress-step.active .ts-setup-progress-dot,.ts-setup-progress-step.done .ts-setup-progress-dot{border-color:#2d85ff;background:#237dff;color:#fff;box-shadow:0 0 0 4px rgba(35,125,255,.1),0 8px 20px rgba(35,125,255,.24)}
       .ts-setup-progress-step.done .ts-setup-progress-line{background:#237dff}
 
-      .ts-setup-panel{display:none;padding:17px 18px 8px}
-      .ts-setup-panel.active{display:block;animation:tsSetupIn .2s cubic-bezier(.2,.8,.2,1)}
+      .ts-setup-panel{display:none;min-height:0;padding:17px 18px 8px}
+      .ts-setup-panel.active{display:block;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;animation:tsSetupIn .2s cubic-bezier(.2,.8,.2,1)}
       @keyframes tsSetupIn{from{opacity:0;transform:translateX(9px)}to{opacity:1;transform:none}}
       html[dir="rtl"] .ts-setup-panel.active{animation-name:tsSetupInRtl}
       @keyframes tsSetupInRtl{from{opacity:0;transform:translateX(-9px)}to{opacity:1;transform:none}}

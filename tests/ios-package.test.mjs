@@ -4,11 +4,16 @@ import { access, readFile } from "node:fs/promises";
 const pkg = JSON.parse(await readFile("package.json", "utf8"));
 const config = JSON.parse(await readFile("capacitor.config.json", "utf8"));
 const release = JSON.parse(await readFile("version.json", "utf8"));
+const viewportPatch = await readFile("scripts/patch-ios-viewport.mjs", "utf8");
 
 assert.equal(config.appId, "com.tripspend.app");
 assert.equal(config.appName, "TripSpend");
 assert.equal(config.webDir, "dist");
+assert.equal(config.ios.contentInset, "never");
 assert.equal(pkg.version, release.version);
+assert.match(viewportPatch, /scrollView\.bounces = false/);
+assert.match(viewportPatch, /scrollView\.alwaysBounceVertical = false/);
+assert.match(viewportPatch, /window\?\.backgroundColor = appBackgroundColor/);
 
 for (const path of [
   "dist/index.html",

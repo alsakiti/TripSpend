@@ -100,6 +100,38 @@ test("new trip setup uses the premium 3-step onboarding and final preview", asyn
   await expect.poll(() => page.evaluate(() => window.TripSpendCore?.getState?.().trip?.defaultPayment)).toBe("Apple Pay");
 });
 
+test("onboarding locks the outer viewport and covers the bottom edge in dark mode", async ({ page }) => {
+  await page.setViewportSize({ width:430, height:932 });
+  await page.emulateMedia({ colorScheme:"dark" });
+  await bootV7(page);
+
+  await expect(page.locator("html")).toHaveClass(/ts-setup-onboarding-active/);
+  await expect(page.locator("body")).toHaveClass(/ts-setup-onboarding-active/);
+
+  const viewport = await page.evaluate(() => {
+    window.scrollTo(0, 200);
+    const appRect = document.querySelector(".app").getBoundingClientRect();
+    const rootStyle = getComputedStyle(document.documentElement);
+    const bodyStyle = getComputedStyle(document.body);
+    return {
+      scrollY:window.scrollY,
+      rootOverflow:rootStyle.overflow,
+      bodyOverflow:bodyStyle.overflow,
+      rootBackground:rootStyle.backgroundColor,
+      bodyBackground:bodyStyle.backgroundColor,
+      appBottom:Math.round(appRect.bottom),
+      viewportHeight:window.innerHeight
+    };
+  });
+
+  expect(viewport.scrollY).toBe(0);
+  expect(viewport.rootOverflow).toBe("hidden");
+  expect(viewport.bodyOverflow).toBe("hidden");
+  expect(viewport.rootBackground).not.toBe("rgba(0, 0, 0, 0)");
+  expect(viewport.bodyBackground).not.toBe("rgba(0, 0, 0, 0)");
+  expect(viewport.appBottom).toBe(viewport.viewportHeight);
+});
+
 test("More Insights starts collapsed and truly expands and collapses the Analytics cards", async ({ page }) => {
   await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seedTripState());
   await bootV7(page);
