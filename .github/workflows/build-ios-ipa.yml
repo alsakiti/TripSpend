@@ -1,0 +1,84 @@
+name: Build TripSpend iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/tripspend-sideloadly
+
+permissions:
+  contents: read
+
+jobs:
+  build-ipa:
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TripSpend static and worker tests
+        run: npm run test:static
+
+      - name: Build TripSpend web assets
+        run: npm run build
+
+      - name: Validate TripSpend iOS package
+        run: npm run test:ios-package
+
+      - name: Create and sync Capacitor iOS project
+        run: |
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Generate TripSpend iOS app icon
+        run: |
+          npm run ios:icon
+          npx capacitor-assets generate --ios
+
+      - name: Verify bundled app and icon
+        run: |
+          test -f ios/App/App/public/index.html
+          test -d ios/App/App.xcodeproj
+          test -f ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+          sips -g pixelWidth -g pixelHeight ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+
+      - name: Build unsigned iOS app
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build/ios \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            MARKETING_VERSION=7.2.1 \
+            CURRENT_PROJECT_VERSION=721 \
+            build
+
+      - name: Package unsigned IPA for Sideloadly
+        run: |
+          mkdir -p build/ipa/Payload
+          cp -R build/ios/Build/Products/Release-iphoneos/App.app build/ipa/Payload/TripSpend.app
+          cd build/ipa
+          zip -qry ../../TripSpend-v7.2.1-unsigned.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: TripSpend-v7.2.1-Sideloadly
+          path: TripSpend-v7.2.1-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14

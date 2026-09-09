@@ -1,0 +1,8 @@
+node_modules/
+dist/
+ios/
+build/
+*.ipa
+assets/icon-only.png
+playwright-report/
+test-results/

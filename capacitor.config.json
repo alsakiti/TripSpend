@@ -1,0 +1,9 @@
+{
+  "appId": "com.tripspend.app",
+  "appName": "TripSpend",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#f4f6fa"
+  }
+}
