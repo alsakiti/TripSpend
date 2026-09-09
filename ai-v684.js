@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.2.1";
+  const RELEASE = "7.2.2";
   const ENDPOINT_FALLBACK = "https://tripspend-ai.alsukaiti1998.workers.dev";
   const PROVIDER = { key: "cloudflare", label: "Google Gemini", short: "Gemini 3.5 Flash-Lite" };
   const MAX_HISTORY = 12;
