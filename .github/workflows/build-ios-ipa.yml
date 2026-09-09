@@ -49,13 +49,14 @@ jobs:
       - name: Verify bundled app and icon
         run: |
           test -f ios/App/App/public/index.html
+          test -d ios/App/App.xcodeproj
           test -f ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
           sips -g pixelWidth -g pixelHeight ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
 
       - name: Build unsigned iOS app
         run: |
           xcodebuild \
-            -workspace ios/App/App.xcworkspace \
+            -project ios/App/App.xcodeproj \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
