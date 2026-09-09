@@ -53,7 +53,7 @@
         min-height:0;
         overflow:hidden;
         overscroll-behavior:none;
-        background-color:var(--bg);
+        background-color:var(--bg)!important;
       }
       body.ts-setup-onboarding-active .topbar{display:none!important}
       body.ts-setup-onboarding-active .app{
@@ -63,7 +63,7 @@
         min-height:0!important;
         overflow:hidden;
         padding-bottom:max(8px,env(safe-area-inset-bottom))!important;
-        background:var(--bg);
+        background:var(--bg)!important;
       }
       body.ts-setup-onboarding-active main{
         height:100%;
