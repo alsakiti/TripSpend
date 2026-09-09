@@ -2,6 +2,9 @@ name: Build TripSpend iOS IPA
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/tripspend-sideloadly
 
 permissions:
   contents: read
