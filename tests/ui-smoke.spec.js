@@ -49,7 +49,7 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.3");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.4");
 }
 
 async function openPageByEnglishLabel(page, label) {
@@ -277,7 +277,7 @@ test("Arabic Add Expense sheet fully localizes static and dynamic copy", async (
   await expect(page.locator("#modal")).not.toHaveClass(/hidden/);
   await page.waitForTimeout(250);
 
-  // Receipt controls are intentionally part of the optional details in v7.2.3.
+  // Receipt controls are intentionally part of the optional details in v7.2.4.
   await page.locator("#expenseMoreOptions").click();
   await expect(page.locator("#expenseAdvancedFields")).toBeVisible();
   await page.waitForTimeout(150);
@@ -374,4 +374,26 @@ test("Arabic Analytics page localizes redesigned insights, categories and debt e
   expect(analyticsText).toContain("Payment methods");
   expect(analyticsText).toContain("Traveler share");
   expect(analyticsText).toContain("Daily spending");
+});
+
+test("printable trip report has a touch-friendly return to TripSpend", async ({ page }) => {
+  await seedTrip(page);
+  await bootV7(page);
+  await page.waitForSelector("#mainView:not(.hidden)");
+  await openPageByEnglishLabel(page, "Settings");
+  await expect(page.locator("#settings")).toHaveClass(/active/);
+  await page.locator("#settingsTrips").click();
+  await expect(page.locator("#trips")).toHaveClass(/active/);
+  await page.locator("#finishTripBtn").click();
+  await expect(page.locator("#finishTripModal")).toBeVisible();
+
+  const reportPromise = page.waitForEvent("popup");
+  await page.locator("#printTripReportBtn").click();
+  const report = await reportPromise;
+  const back = report.getByRole("button", { name:"Back to TripSpend" });
+  await expect(back).toBeVisible();
+  await expect(back).toHaveCSS("min-height", "46px");
+  await back.click();
+  await expect.poll(() => report.isClosed()).toBe(true);
+  await expect(page.locator("#finishTripModal")).toBeVisible();
 });

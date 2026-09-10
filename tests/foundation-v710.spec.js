@@ -29,7 +29,7 @@ async function boot(page, initialState = tripState()) {
   await page.reload();
   await page.waitForSelector("#mainView:not(.hidden)");
   await page.evaluate(() => window.TripSpendEnhancementsReady);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.3");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.4");
 }
 
 function languageButton(page) {

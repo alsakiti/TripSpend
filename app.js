@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "7.2.3";
+  const APP_VERSION = "7.2.4";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -1158,6 +1158,11 @@
     const trip = source.trip;
     if (!trip) return;
 
+    const reportEscape = value => String(value ?? "").replace(/[&<>"']/g, character => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[character]));
+    const reportTitle = reportEscape(trip.name || "Trip");
+
     const rows = topCategories.map(item =>
       `<tr><td>${icon(item.label)} ${item.label}</td><td>${money(item.amount, trip.homeCurrency)}</td></tr>`
     ).join("");
@@ -1166,19 +1171,27 @@
     if (!popup) return toast("Allow pop-ups to print the report");
 
     popup.document.write(`<!doctype html>
-<html><head><meta charset="utf-8"><title>${trip.name} • TripSpend Report</title>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${reportTitle} • TripSpend Report</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:40px;color:#101828}
+*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:0;padding:max(18px,env(safe-area-inset-top)) 40px max(32px,env(safe-area-inset-bottom));color:#101828;background:#fff}
+.report-actions{position:sticky;z-index:5;top:0;display:flex;gap:10px;margin:0 0 24px;padding:8px 0 12px;background:rgba(255,255,255,.96);backdrop-filter:blur(12px)}
+.report-actions button{min-height:46px;border:0;border-radius:13px;padding:0 17px;font:700 15px -apple-system,BlinkMacSystemFont,sans-serif;cursor:pointer}
+.report-back{background:#eef2f6;color:#101828}.report-print{background:#1677ff;color:#fff}
 h1{font-size:34px;margin:8px 0}.muted{color:#667085}
 .hero{background:#142033;color:white;border-radius:18px;padding:24px;margin:24px 0}
 .hero strong{font-size:38px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .card{background:#f2f5f8;border-radius:12px;padding:14px}.card small{color:#667085;display:block}
 table{width:100%;border-collapse:collapse;margin-top:12px}td{padding:10px 0;border-bottom:1px solid #e8ecf1}
 td:last-child{text-align:right;font-weight:700}
+@media(max-width:600px){body{padding-left:18px;padding-right:18px}.report-actions{margin-left:-2px;margin-right:-2px}.report-actions button{flex:1;padding:0 10px}h1{font-size:30px}.hero strong{font-size:34px}}
 @media print{body{margin:20mm}.no-print{display:none}}
 </style></head><body>
+<div class="report-actions no-print" role="navigation" aria-label="Report actions">
+<button class="report-back" type="button" onclick="returnToTripSpend()">← Back to TripSpend</button>
+<button class="report-print" type="button" onclick="window.print()">Print / Save PDF</button>
+</div>
 <div class="muted">TRIPSPEND • TRIP REPORT</div>
-<h1>${tripFlagsFor(source)} ${trip.name}</h1>
+<h1>${tripFlagsFor(source)} ${reportTitle}</h1>
 <div class="muted">${fmtDateWithYear(trip.startDate)} – ${fmtDateWithYear(trip.endDate)}</div>
 <div class="hero"><small>TOTAL SPENT</small><br><strong>${money(summary.spent, trip.homeCurrency)}</strong><br>
 Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0 ? `Saved ${money(summary.difference, trip.homeCurrency)}` : `Over ${money(Math.abs(summary.difference), trip.homeCurrency)}`}</div>
@@ -1190,7 +1203,13 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
 </div>
 <h2>Where your money went</h2><table>${rows}</table>
 <p><strong>${summary.settlementOutstanding > 0 ? `Settlement remaining: ${money(summary.settlementOutstanding, trip.homeCurrency)}` : "Everyone is settled ✓"}</strong></p>
-<button class="no-print" onclick="window.print()">Print / Save as PDF</button>
+<script>
+function returnToTripSpend(){
+  const goBack=()=>window.history.length>1?window.history.back():window.location.replace("./");
+  if(window.opener&&window.opener!==window){window.close();window.setTimeout(goBack,100);return;}
+  goBack();
+}
+</script>
 </body></html>`);
     popup.document.close();
     popup.focus();
@@ -5324,7 +5343,7 @@ Budget ${money(summary.budget, trip.homeCurrency)} • ${summary.difference >= 0
   if ("serviceWorker" in navigator) {
     const registerAppServiceWorker = async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.3", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.4", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
