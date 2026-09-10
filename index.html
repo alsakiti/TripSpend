@@ -10,11 +10,11 @@
   <meta name="apple-mobile-web-app-title" content="TripSpend">
   <meta name="description" content="TripSpend — smart travel budget and expense tracker">
   <title>TripSpend</title>
-  <link rel="manifest" href="manifest.webmanifest?v=7.2.4">
-  <link rel="icon" href="icons/icon-192.png?v=7.2.4">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=7.2.4">
-  <link rel="stylesheet" href="style.css?v=7.2.4">
-  <link rel="stylesheet" href="dashboard.css?v=7.2.4">
+  <link rel="manifest" href="manifest.webmanifest?v=7.2.5">
+  <link rel="icon" href="icons/icon-192.png?v=7.2.5">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=7.2.5">
+  <link rel="stylesheet" href="style.css?v=7.2.5">
+  <link rel="stylesheet" href="dashboard.css?v=7.2.5">
 </head>
 <body>
   <div id="storageBoot" class="storage-boot" role="status" aria-live="polite">
@@ -33,7 +33,7 @@
     <div class="header-brand">
       <img class="brand-icon" src="icons/icon-96.png" alt="TripSpend">
       <div>
-        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v7.2.4</span></div>
+        <div class="brand-kicker"><span class="eyebrow">TRIPSPEND</span><span class="version-badge">v7.2.5</span></div>
         <div class="header-trip-title-row">
           <h1 id="headerTitle">TripSpend</h1>
           <button id="tripSwitcherTrigger" class="trip-switcher-trigger hidden" type="button" aria-label="Switch trip" title="Switch trip">⌄</button>
@@ -47,22 +47,27 @@
   <main>
     <section id="setupView">
       <div class="hero card">
-        <img class="hero-logo" src="icons/icon-192.png?v=7.2.4" alt="TripSpend logo">
-        <div class="setup-brand">TripSpend <span class="version-badge">v7.2.4</span></div>
+        <img class="hero-logo" src="icons/icon-192.png?v=7.2.5" alt="TripSpend logo">
+        <div class="setup-brand">TripSpend <span class="version-badge">v7.2.5</span></div>
         <div class="eyebrow">NEW TRIP</div>
         <h2>Set up your trip</h2>
         <p>Your data stays in this browser.</p>
       </div>
 
-      <section id="setupHistorySection" class="setup-history-section hidden">
-        <div class="section-title">
-          <div>
-            <h2>Past trips</h2>
-            <small>Open a previous trip or start a new one below.</small>
-          </div>
+      <details id="setupHistorySection" class="setup-history-section hidden">
+        <summary class="setup-history-toggle">
+          <span class="setup-history-toggle-copy">
+            <strong>Past trips</strong>
+            <small>Tap to view completed trips</small>
+          </span>
+          <span id="setupHistoryCount" class="setup-history-count" aria-label="0 past trips">0</span>
+          <span class="setup-history-chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="setup-history-content">
+          <p>Open a previous trip or start a new one below.</p>
+          <div id="setupHistoryList" class="trip-history-list compact"></div>
         </div>
-        <div id="setupHistoryList" class="trip-history-list compact"></div>
-      </section>
+      </details>
 
       <form id="setupForm" class="card form setup-form">
         <label>Trip name
@@ -1031,7 +1036,7 @@
             <span id="updateSettingsBadge" class="smart-badge">CHECKING</span>
           </div>
           <div class="app-update-versions">
-            <span><small>Current</small><strong id="currentVersionText">v7.2.4</strong></span>
+            <span><small>Current</small><strong id="currentVersionText">v7.2.5</strong></span>
             <span><small>Latest</small><strong id="latestVersionText">Checking…</strong></span>
           </div>
           <div class="app-update-actions">
@@ -1479,6 +1484,6 @@
 </div>
 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-<script src="enhancements-v710.js?v=7.2.4"></script>
+<script src="enhancements-v710.js?v=7.2.5"></script>
 </body>
 </html>

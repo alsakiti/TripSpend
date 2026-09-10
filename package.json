@@ -1,7 +1,7 @@
 {
   "name": "tripspend",
   "private": true,
-  "version": "7.2.4",
+  "version": "7.2.5",
   "scripts": {
     "build": "node scripts/build-capacitor.mjs",
     "test:static": "node tests/static-check.mjs && node worker/ai-worker-contract.test.mjs",

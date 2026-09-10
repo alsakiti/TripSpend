@@ -132,6 +132,43 @@ test("onboarding locks the outer viewport and covers the bottom edge in dark mod
   expect(viewport.appBottom).toBe(viewport.viewportHeight);
 });
 
+test("past trips stay compact until the user expands them", async ({ page }) => {
+  const archived = seedTripState();
+  await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), {
+    trip:null,
+    expenses:[],
+    rates:{},
+    people:[],
+    stops:[],
+    plans:[],
+    itinerary:[],
+    settlements:[],
+    preferences:{},
+    tripHistory:[{
+      id:"history-europe",
+      status:"completed",
+      archivedAt:Date.parse("2026-08-23T00:00:00Z"),
+      data:archived,
+      summary:{budget:1000,spent:22,difference:978,expenseCount:1,homeCurrency:"OMR"}
+    }]
+  });
+  await bootV7(page);
+
+  const history = page.locator("#setupHistorySection");
+  await expect(history).toBeVisible();
+  await expect(history).not.toHaveAttribute("open", "");
+  await expect(page.locator("#setupHistoryCount")).toHaveText("1");
+  await expect(page.locator("#setupHistoryList")).toBeHidden();
+  expect((await history.boundingBox()).height).toBeLessThanOrEqual(64);
+
+  await page.locator(".setup-history-toggle").click();
+  await expect(history).toHaveAttribute("open", "");
+  await expect(page.locator("#setupHistoryList .trip-history-card")).toBeVisible();
+  await expect(page.locator("#setupHistoryList")).toContainText("Open Trip");
+  await expect(page.locator("#setupHistoryList")).toContainText("Report");
+  await expect(page.locator("#setupHistoryList")).toContainText("Delete");
+});
+
 test("More Insights starts collapsed and truly expands and collapses the Analytics cards", async ({ page }) => {
   await page.addInitScript(value => localStorage.setItem("tripspend.v1", JSON.stringify(value)), seedTripState());
   await bootV7(page);

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.2.4";
+  const RELEASE = "7.2.5";
   const KEY = "tripspend.language";
   const originals = new WeakMap();
   const attrOriginals = new WeakMap();
@@ -16,7 +16,7 @@
   const UI = new Map(Object.entries({
     "Loading your trip…":"جارٍ تحميل رحلتك…","TripSpend update available":"يتوفر تحديث لـ TripSpend","Update now":"حدّث الآن",
     "Travel spending, made simple.":"إدارة مصاريف السفر ببساطة.","NEW TRIP":"رحلة جديدة","Set up your trip":"إعداد رحلتك","Your data stays in this browser.":"تبقى بياناتك محفوظة على هذا الجهاز.",
-    "Past trips":"الرحلات السابقة","Open a previous trip or start a new one below.":"افتح رحلة سابقة أو ابدأ رحلة جديدة أدناه.","Trip name":"اسم الرحلة","Enter trip name":"أدخل اسم الرحلة",
+    "Past trips":"الرحلات السابقة","Tap to view completed trips":"اضغط لعرض الرحلات المكتملة","Open a previous trip or start a new one below.":"افتح رحلة سابقة أو ابدأ رحلة جديدة أدناه.","Trip name":"اسم الرحلة","Enter trip name":"أدخل اسم الرحلة",
     "Countries":"الدول","Add the countries you will visit and the dates for each one.":"أضف الدول التي ستزورها وتواريخ كل دولة.","Country":"الدولة","Search for a country…":"ابحث عن دولة…","Search for a country...":"ابحث عن دولة…",
     "From":"من","To":"إلى","Select date":"اختر التاريخ","Local currency":"العملة المحلية","Country budget":"ميزانية الدولة","(optional)":"(اختياري)","Home currency":"العملة الأساسية",
     "＋ Add another country":"＋ إضافة دولة أخرى","+ Add another country":"+ إضافة دولة أخرى","Add another country":"إضافة دولة أخرى","Add Country":"إضافة الدولة","Edit country":"تعديل الدولة","Save Changes":"حفظ التغييرات","Cancel":"إلغاء","Remove":"إزالة",
