@@ -6526,7 +6526,7 @@ html[data-theme="dark"] .home-trip-history-btn{
   }
 }
 
-/* TripSpend v7.2.5 — source-first reliability, accessible dialogs and route details */
+/* TripSpend v7.2.6 — source-first reliability, accessible dialogs and route details */
 :where(button,a,input,select,textarea,[tabindex]):focus-visible{
   outline:3px solid color-mix(in srgb,var(--brand) 52%,transparent)!important;
   outline-offset:3px!important;
@@ -6570,7 +6570,7 @@ html[dir="rtl"] .app-dialog-icon{margin-inline:auto}
   .modal,.sheet,.update-banner{animation:none!important;transition:none!important}
 }
 
-/* TripSpend v7.2.5 — clearer Home guidance and calmer motion */
+/* TripSpend v7.2.6 — clearer Home guidance and calmer motion */
 .home-guide-card{
   display:grid;
   grid-template-columns:38px minmax(0,1fr) auto;
@@ -8102,6 +8102,37 @@ body.modal-open{
   right:max(16px,calc((100vw - 740px)/2 + 16px));
   bottom:calc(max(10px,env(safe-area-inset-bottom)) + 82px);
 }
+.finish-trip-quick{
+  position:fixed;
+  z-index:42;
+  left:max(16px,calc((100vw - 740px)/2 + 16px));
+  bottom:calc(max(10px,env(safe-area-inset-bottom)) + 88px);
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-height:40px;
+  padding:0 13px 0 10px;
+  border:1px solid color-mix(in srgb,var(--brand) 30%,var(--line));
+  border-radius:999px;
+  background:color-mix(in srgb,var(--surface) 94%,transparent);
+  color:var(--brand);
+  box-shadow:0 10px 26px rgba(16,24,40,.14);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+.finish-trip-quick span{
+  display:grid;
+  place-items:center;
+  width:23px;
+  height:23px;
+  border-radius:50%;
+  background:var(--brand);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+}
+.finish-trip-quick strong{font-size:12px;font-weight:850}
+.finish-trip-quick:active{transform:scale(.96)}
 
 /* A restrained, consistent readable type floor for interactive and supporting UI. */
 .form label,

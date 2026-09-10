@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.2.5";
+  const RELEASE = "7.2.6";
   const $ = id => document.getElementById(id);
   const core = () => window.TripSpendCore;
   let scheduled = 0;

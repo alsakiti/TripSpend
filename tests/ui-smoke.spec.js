@@ -49,7 +49,7 @@ async function bootV7(page) {
   });
   await page.reload();
   await expect(visibleLanguageButton(page)).toHaveCount(1);
-  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.5");
+  await expect(page.locator(".version-badge").first()).toHaveText("v7.2.6");
 }
 
 async function openPageByEnglishLabel(page, label) {
@@ -277,7 +277,7 @@ test("Arabic Add Expense sheet fully localizes static and dynamic copy", async (
   await expect(page.locator("#modal")).not.toHaveClass(/hidden/);
   await page.waitForTimeout(250);
 
-  // Receipt controls are intentionally part of the optional details in v7.2.5.
+  // Receipt controls are intentionally part of the optional details in v7.2.6.
   await page.locator("#expenseMoreOptions").click();
   await expect(page.locator("#expenseAdvancedFields")).toBeVisible();
   await page.waitForTimeout(150);
@@ -374,6 +374,28 @@ test("Arabic Analytics page localizes redesigned insights, categories and debt e
   expect(analyticsText).toContain("Payment methods");
   expect(analyticsText).toContain("Traveler share");
   expect(analyticsText).toContain("Daily spending");
+});
+
+test("Finish Trip stays visible on Home and opens the confirmation summary", async ({ page }) => {
+  await seedTrip(page);
+  await bootV7(page);
+  await page.waitForSelector("#mainView:not(.hidden)");
+
+  const quickFinish = page.locator("#finishTripQuickBtn");
+  await expect(quickFinish).toBeVisible();
+  await expect(quickFinish).toContainText("Finish Trip");
+
+  const viewport = page.viewportSize();
+  const box = await quickFinish.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+
+  await quickFinish.click();
+  await expect(page.locator("#finishTripModal")).toBeVisible();
+  await page.locator("#cancelFinishTrip").click();
+
+  await openPageByEnglishLabel(page, "Expenses");
+  await expect(quickFinish).toBeHidden();
 });
 
 test("printable trip report has a touch-friendly return to TripSpend", async ({ page }) => {
