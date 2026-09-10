@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "7.2.5";
+  const APP_VERSION = "7.2.6";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -3556,6 +3556,7 @@ function returnToTripSpend(){
     $("mainView").classList.toggle("hidden", !hasTrip);
     $("nav").classList.toggle("hidden", !hasTrip);
     $("navAdd")?.classList.toggle("hidden", !hasTrip);
+    $("finishTripQuickBtn")?.classList.toggle("hidden", !hasTrip || document.querySelector(".page.active")?.id !== "dashboard");
     $("settingsShortcut").classList.toggle("hidden", !hasTrip);
     $("tripSwitcherTrigger")?.classList.toggle("hidden", !hasTrip);
 
@@ -3679,6 +3680,7 @@ function returnToTripSpend(){
     });
 
     document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === id));
+    $("finishTripQuickBtn")?.classList.toggle("hidden", !state.trip || id !== "dashboard");
     const navPage = id === "trips" || id === "people" ? "settings" : id;
     document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.page === navPage));
 
@@ -4868,6 +4870,7 @@ function returnToTripSpend(){
   $("settingsTrips")?.addEventListener("click", () => page("trips"));
   $("tripsDone")?.addEventListener("click", () => page("settings"));
   $("finishTripBtn")?.addEventListener("click", showFinishTripSummary);
+  $("finishTripQuickBtn")?.addEventListener("click", showFinishTripSummary);
   $("currentTripReportBtn")?.addEventListener("click", () => shareTripReport(snapshotTripData()));
   $("shareTripReportBtn")?.addEventListener("click", () => shareTripReport(snapshotTripData()));
   $("printTripReportBtn")?.addEventListener("click", () => printTripReport(snapshotTripData()));
@@ -5348,7 +5351,7 @@ function returnToTripSpend(){
   if ("serviceWorker" in navigator) {
     const registerAppServiceWorker = async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.5", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.6", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});

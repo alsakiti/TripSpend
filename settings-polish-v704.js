@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.2.5";
+  const RELEASE = "7.2.6";
   let built = false;
   let queued = false;
 
