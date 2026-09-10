@@ -67,8 +67,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            MARKETING_VERSION=7.2.4 \
-            CURRENT_PROJECT_VERSION=724 \
+            MARKETING_VERSION=7.2.5 \
+            CURRENT_PROJECT_VERSION=725 \
             build
 
       - name: Package unsigned IPA for Sideloadly
@@ -76,12 +76,12 @@ jobs:
           mkdir -p build/ipa/Payload
           cp -R build/ios/Build/Products/Release-iphoneos/App.app build/ipa/Payload/TripSpend.app
           cd build/ipa
-          zip -qry ../../TripSpend-v7.2.4-unsigned.ipa Payload
+          zip -qry ../../TripSpend-v7.2.5-unsigned.ipa Payload
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v6
         with:
-          name: TripSpend-v7.2.4-Sideloadly
-          path: TripSpend-v7.2.4-unsigned.ipa
+          name: TripSpend-v7.2.5-Sideloadly
+          path: TripSpend-v7.2.5-unsigned.ipa
           if-no-files-found: error
           retention-days: 14

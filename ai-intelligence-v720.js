@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const RELEASE="7.2.4", MEMORY_PREFIX="tripspend.ai.memory.v720.";
+  const RELEASE="7.2.5", MEMORY_PREFIX="tripspend.ai.memory.v720.";
   const $=id=>document.getElementById(id), core=window.TripSpendCore;
   if(!core)return;
   const isArabic=()=>window.TripSpendLocale?.language?.()==="ar", t=(en,ar)=>isArabic()?ar:en;

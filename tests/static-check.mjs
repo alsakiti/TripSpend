@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 
-const VERSION = "7.2.4";
+const VERSION = "7.2.5";
 const INNER_WORKER_VERSION = "7.1.0";
 const WORKER_RUNTIME_VERSION = "7.1.0";
 const read = path => fs.readFileSync(path,"utf8");
@@ -16,7 +16,7 @@ else ok("CI uses the preinstalled Chrome browser without a blocking download");
 const index = read("index.html");
 if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches app release");
 for (const marker of ["homeGuideCard","countryBudgetToggle","expense-fast-fields","local-first-note"]) {
-  if (!index.includes(marker)) fail(`v7.2.4 UX structure missing: ${marker}`);
+  if (!index.includes(marker)) fail(`v7.2.5 UX structure missing: ${marker}`);
 }
 if (index.includes('id="healthAction"')) fail("Today guidance still duplicates the Add expense action");
 else ok("Today guidance is informational without a duplicate action");
@@ -43,7 +43,7 @@ for (const old of ["i18n.js","i18n-layout-fix.js","i18n-audit-v690.js","rtl-poli
 ok("legacy localization patches are retired from APP_SHELL");
 
 const fx = read("fx.js");
-for (const marker of ["const APP_RELEASE = \"7.2.4\"","fxCardVisible","settingsAdvanced > summary"]) {
+for (const marker of ["const APP_RELEASE = \"7.2.5\"","fxCardVisible","settingsAdvanced > summary"]) {
   if (!fx.includes(marker)) fail(`FX reliability marker missing: ${marker}`);
 }
 if (!fx.includes('if (fxCardVisible()) convertSection(true)') || !fx.includes('if (!amountEl || !fxCardVisible()) return')) fail("hidden FX converter can still perform background conversion work");
@@ -59,7 +59,7 @@ else ok("English startup skips unnecessary full-document localization work");
 if (!locale.includes("requestIdleCallback(initialApply")) fail("initial localization still blocks module evaluation");
 else ok("initial localization runs off the critical module path");
 for (const phrase of ["Make today easier","TODAY'S GUIDANCE","Your trip and receipts stay on this device unless you export them."]) {
-  if (!locale.includes(phrase)) fail(`v7.2.4 Arabic localization missing: ${phrase}`);
+  if (!locale.includes(phrase)) fail(`v7.2.5 Arabic localization missing: ${phrase}`);
 }
 
 const dynamicLocale = read("locale-dynamic-v700.js");
@@ -85,8 +85,8 @@ else ok("Plan/Analytics locale uses render events without another page-wide obse
 
 const settingsPolish = read("settings-polish-v704.js");
 const style = read("style.css");
-for (const marker of ["TripSpend v7.2.4","home-guide-card","home-guidance-card","A compact route capsule keeps four countries visible without crowding","expense-fast-fields","prefers-reduced-motion:reduce"]) {
-  if (!style.includes(marker)) fail(`v7.2.4 visual polish missing: ${marker}`);
+for (const marker of ["TripSpend v7.2.5","home-guide-card","home-guidance-card","A compact route capsule keeps four countries visible without crowding","expense-fast-fields","prefers-reduced-motion:reduce"]) {
+  if (!style.includes(marker)) fail(`v7.2.5 visual polish missing: ${marker}`);
 }
 if (!style.includes("touch-action:manipulation") || !style.includes('input:not([type="checkbox"]):not([type="radio"])') || !style.includes("font-size:16px!important")) fail("mobile focus-zoom protection missing");
 else ok("all mobile form controls prevent iPhone focus zoom");
@@ -115,6 +115,9 @@ for (const marker of ["ts-setup-stage","ts-setup-progress","Where are you going?
 if (!setupOnboarding.includes("TripSpendSetupOnboarding")) fail("setup onboarding API missing"); else ok("premium setup onboarding and Analytics toggle repair are wired");
 for (const marker of ["document.documentElement.classList.toggle(\"ts-setup-onboarding-active\"","height:100dvh","overscroll-behavior:none","body.ts-setup-onboarding-active .app"]) {
   if (!setupOnboarding.includes(marker)) fail(`onboarding viewport lock missing: ${marker}`);
+}
+for (const marker of ["setup-history-toggle","setup-history-count","setup-history-content","max-height:38dvh"]) {
+  if (!index.includes(marker) && !setupOnboarding.includes(marker)) fail(`compact past trips control missing: ${marker}`);
 }
 
 const flags = read("flags-v705.js");
@@ -198,7 +201,7 @@ for (const marker of ["TRIPSPEND_UPDATE_READY",'window.addEventListener("online"
 }
 if (!app.includes('if (document.readyState === "complete") registerAppServiceWorker()')) fail("late-loaded app cannot register its service worker");
 else ok("service worker registration works before or after the page load event");
-if (!index.includes("appDialogModal") || !index.includes("routeCountryModal") || !index.includes("enhancements-v710.js?v=7.2.4") || !enhancements.includes('"ui-foundation-v710.js"')) fail("v7.2 dialogs or route details are not wired in source");
+if (!index.includes("appDialogModal") || !index.includes("routeCountryModal") || !index.includes("enhancements-v710.js?v=7.2.5") || !enhancements.includes('"ui-foundation-v710.js"')) fail("v7.2 dialogs or route details are not wired in source");
 else ok("dialogs, route details and update UX are wired in source");
 if (!enhancements.includes('window.addEventListener("load", run') || enhancements.includes("MutationObserver")) fail("enhancement startup can block initial page load");
 else ok("non-critical enhancements start cleanly after the page load event");

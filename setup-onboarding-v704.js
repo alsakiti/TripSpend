@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const RELEASE = "7.2.4";
+  const RELEASE = "7.2.5";
   const $ = id => document.getElementById(id);
   let built = false;
   let currentStep = 1;
@@ -27,8 +27,10 @@
 
   function syncSetupVisibility() {
     const active = setupIsVisible() && built;
+    const wasActive = document.body.classList.contains("ts-setup-onboarding-active");
     document.documentElement.classList.toggle("ts-setup-onboarding-active", active);
     document.body.classList.toggle("ts-setup-onboarding-active", active);
+    if (active && !wasActive) $("setupHistorySection")?.removeAttribute("open");
   }
 
   function injectStyles() {
@@ -78,7 +80,18 @@
       #setupView.ts-setup-onboarding>.hero.card>.hero-logo,#setupView.ts-setup-onboarding>.hero.card>.setup-brand,#setupView.ts-setup-onboarding>.hero.card>.eyebrow,#setupView.ts-setup-onboarding>.hero.card>h2,#setupView.ts-setup-onboarding>.hero.card>p{display:none!important}
       #setupView.ts-setup-onboarding #setupLanguageToggleV7{top:7px!important;right:0!important;width:46px!important;height:40px!important;border-radius:14px!important}
       html[dir="rtl"] #setupView.ts-setup-onboarding #setupLanguageToggleV7{right:auto!important;left:0!important}
-      #setupView.ts-setup-onboarding .setup-history-section{margin:0 0 12px!important;padding:13px!important;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+      #setupView.ts-setup-onboarding .setup-history-section{flex:0 0 auto;margin:0 0 10px!important;padding:0!important;border:1px solid var(--line);border-radius:17px;background:var(--surface);overflow:hidden}
+      #setupView.ts-setup-onboarding .setup-history-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:62px;padding:10px 13px;list-style:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+      #setupView.ts-setup-onboarding .setup-history-toggle::-webkit-details-marker{display:none}
+      #setupView.ts-setup-onboarding .setup-history-toggle-copy{min-width:0}
+      #setupView.ts-setup-onboarding .setup-history-toggle-copy strong,#setupView.ts-setup-onboarding .setup-history-toggle-copy small{display:block}
+      #setupView.ts-setup-onboarding .setup-history-toggle-copy strong{color:var(--text);font-size:14px;font-weight:850}
+      #setupView.ts-setup-onboarding .setup-history-toggle-copy small{margin-top:2px;color:var(--muted);font-size:10.5px}
+      #setupView.ts-setup-onboarding .setup-history-count{display:grid;place-items:center;min-width:27px;height:27px;padding:0 7px;border-radius:999px;background:var(--surface2);color:var(--text);font-size:11px;font-weight:850}
+      #setupView.ts-setup-onboarding .setup-history-chevron{color:var(--muted);font-size:18px;line-height:1;transition:transform .18s ease}
+      #setupView.ts-setup-onboarding .setup-history-section[open] .setup-history-chevron{transform:rotate(180deg)}
+      #setupView.ts-setup-onboarding .setup-history-content{max-height:38dvh;padding:11px 12px 12px;border-top:1px solid var(--line);overflow-y:auto;overscroll-behavior:contain}
+      #setupView.ts-setup-onboarding .setup-history-content>p{margin:0 2px 9px;color:var(--muted);font-size:10.5px}
 
       #setupForm.ts-setup-onboarding-form{flex:1 1 auto;min-height:0;margin:0!important;padding:0!important;gap:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:hidden}
       .ts-setup-stage{display:flex;flex-direction:column;max-height:100%;overflow:hidden;border:1px solid color-mix(in srgb,var(--brand) 15%,var(--line));border-radius:26px;background:radial-gradient(circle at 50% -12%,color-mix(in srgb,var(--brand) 14%,transparent),transparent 38%),linear-gradient(160deg,color-mix(in srgb,var(--surface) 98%,#071426),color-mix(in srgb,var(--surface2) 94%,#07111e));box-shadow:0 22px 58px rgba(0,23,60,.13)}

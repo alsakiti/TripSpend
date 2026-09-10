@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "7.2.4";
+  const APP_VERSION = "7.2.5";
   const APP_BOOT_STARTED = performance.now();
   const DB_NAME = "tripspend.db";
   const DB_VERSION = 2;
@@ -724,10 +724,15 @@
   function renderSetupTripHistory() {
     const section = $("setupHistorySection");
     const list = $("setupHistoryList");
+    const count = $("setupHistoryCount");
     if (!section || !list) return;
 
     const history = (state.tripHistory || []).slice().sort((a, b) => b.archivedAt - a.archivedAt);
     section.classList.toggle("hidden", !history.length);
+    if (count) {
+      count.textContent = String(history.length);
+      count.setAttribute("aria-label", `${history.length} past ${history.length === 1 ? "trip" : "trips"}`);
+    }
     list.replaceChildren();
 
     history.slice(0, 4).forEach(record => list.append(renderTripHistoryCard(record, true)));
@@ -5343,7 +5348,7 @@ function returnToTripSpend(){
   if ("serviceWorker" in navigator) {
     const registerAppServiceWorker = async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.4", {
+        const reg = await navigator.serviceWorker.register("./sw.js?v=7.2.5", {
           updateViaCache: "none"
         });
         await reg.update().catch(() => {});
