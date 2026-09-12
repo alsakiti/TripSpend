@@ -1,0 +1,459 @@
+From 0fbbfd53531725d831b5c9b027fc0459f543ad59 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Wed, 19 Aug 2026 15:57:58 +0200
+Subject: [PATCH] Fix Step 2 route builder in source
+
+---
+ index.html                       |  6 ++-
+ setup-onboarding-v704.js         |  7 ++-
+ style.css                        | 10 ++++
+ sw.js                            | 33 +-------------
+ tests/route-builder-v706.spec.js | 70 ++++++++++++++++++++++------
+ tests/static-check.mjs           | 10 ++++
+ v5.js                            | 78 ++++++++++++++------------------
+ 7 files changed, 119 insertions(+), 95 deletions(-)
+
+diff --git a/index.html b/index.html
+index 8a2b898..fcb9285 100644
+--- a/index.html
++++ b/index.html
+@@ -133,8 +133,8 @@
+             </label>
+ 
+             <div class="grid2 date-grid setup-extra-date-grid">
+-              <label class="date-field-label"><span>From <small>(automatic)</small></span>
+-                <div class="date-picker-card automatic-date-card">
++              <label class="date-field-label"><span>From</span>
++                <div class="date-picker-card">
+                   <span id="setupExtraStartDisplay" class="date-display">Select date</span>
+                   <span class="date-calendar app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V7A1.5 1.5 0 0 1 5 5.5z"/><path d="M8 3.5v4M16 3.5v4M3.5 10h17"/></svg></span>
+                   <input id="setupExtraStart" class="native-date-input" type="date" aria-label="Additional country start date">
+@@ -149,6 +149,8 @@
+               </label>
+             </div>
+ 
++            <p id="setupExtraDateError" class="setup-inline-error hidden" role="alert" aria-live="polite"></p>
++
+             <div class="grid2 country-money-grid">
+               <label>Local currency
+                 <select id="setupExtraCurrency"></select>
+diff --git a/setup-onboarding-v704.js b/setup-onboarding-v704.js
+index d3e22f6..30ab45e 100644
+--- a/setup-onboarding-v704.js
++++ b/setup-onboarding-v704.js
+@@ -85,6 +85,7 @@
+       #setupRouteList .mini-btn{min-height:32px!important;padding:0 9px!important;border-radius:10px!important;font-size:10px!important}
+       #setupToggleCountries,#setupToggleTravelers{width:100%!important;min-height:48px!important;margin-top:7px!important;border:1px dashed color-mix(in srgb,var(--brand) 42%,var(--line))!important;border-radius:15px!important;background:rgba(34,126,255,.055)!important;color:#4998ff!important;font-size:13px!important;font-weight:820!important}
+       .ts-setup-panel .setup-add-panel{margin-top:11px!important;padding:14px!important;border:1px solid color-mix(in srgb,var(--brand) 16%,var(--line))!important;border-radius:17px!important;background:color-mix(in srgb,var(--surface2) 88%,#081525)!important}
++      .ts-setup-panel .setup-panel-actions button{min-height:48px!important}
+       .ts-setup-panel .setup-summary-hint{margin:11px 2px 0!important;color:var(--muted)!important;font-size:10.5px!important;text-align:center}
+ 
+       .ts-setup-settings-grid{display:grid;gap:13px}
+@@ -324,9 +325,7 @@
+   function validateStep2() {
+     const addPanel = $("setupMultiCountryPanel");
+     if (addPanel && !addPanel.classList.contains("hidden")) {
+-      core()?.toast?.(tr("Finish adding the country or tap Cancel","أكمل إضافة الدولة أو اضغط إلغاء"));
+-      addPanel.scrollIntoView({ behavior:"smooth", block:"center" });
+-      return false;
++      $("setupCancelCountry")?.click();
+     }
+     return true;
+   }
+@@ -551,4 +550,4 @@
+     showStep,
+     refresh:() => { ensureSetupBuilt(); localizeSetup(); refreshPreview(); }
+   };
+-})();
+\ No newline at end of file
++})();
+diff --git a/style.css b/style.css
+index 3a88184..6b24a77 100644
+--- a/style.css
++++ b/style.css
+@@ -648,6 +648,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{
+ }
+ .date-picker-card{
+   position:relative;
++  isolation:isolate;
+   display:flex;
+   align-items:center;
+   justify-content:space-between;
+@@ -676,6 +677,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{
+   color:var(--muted);
+   font-size:13px;
+   transform:rotate(45deg);
++  pointer-events:none;
+ }
+ .native-date-input{
+   position:absolute!important;
+@@ -688,6 +690,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{
+   padding:0!important;
+   border:0!important;
+   opacity:0!important;
++  z-index:1;
+   cursor:pointer;
+   -webkit-appearance:auto!important;
+   appearance:auto!important;
+@@ -1296,6 +1299,13 @@ input[type="date"]::-webkit-calendar-picker-indicator{
+   font-size:9.5px;
+   line-height:1.35;
+ }
++.setup-inline-error{
++  margin:-2px 2px 10px;
++  color:var(--bad);
++  font-size:11px;
++  font-weight:750;
++  line-height:1.4;
++}
+ .setup-country-list,
+ .setup-people-list{
+   margin-top:8px;
+diff --git a/sw.js b/sw.js
+index c3cd4d2..04e6b5b 100644
+--- a/sw.js
++++ b/sw.js
+@@ -1,5 +1,5 @@
+ const APP_VERSION = "7.0.6";
+-const CACHE = `tripspend-v${APP_VERSION}-r3`;
++const CACHE = `tripspend-v${APP_VERSION}-r4`;
+ 
+ const APP_SHELL = [
+   "./",
+@@ -48,7 +48,6 @@ async function upgradeHtml(response) {
+   html = html
+     .replaceAll("v6.8.1", `v${APP_VERSION}`)
+     .replaceAll("?v=6.8.1", `?v=${APP_VERSION}`)
+-    .replace("From <small>(automatic)</small>", "From")
+     .replace(/(<[^>]*class=["'][^"']*version-badge[^"']*["'][^>]*>)v\d+\.\d+\.\d+(<\/[^>]+>)/gi, `$1v${APP_VERSION}$2`);
+ 
+   const retired = [
+@@ -115,34 +114,6 @@ async function upgradeAppJs(response) {
+   return responseWithText(response, js, "text/javascript; charset=utf-8");
+ }
+ 
+-async function upgradeV5Js(response) {
+-  if (!response?.ok) return response;
+-  let js = await response.text();
+-
+-  // Additional-country start dates are suggested from the previous stop, but remain editable.
+-  js = js.replace(/\$\("setupExtraStart"\)\.disabled = true;/g, '$("setupExtraStart").disabled = false;');
+-
+-  // Do not rewrite dates a traveler explicitly chose when the primary route changes or a stop is saved.
+-  js = js.replace(
+-    /  function syncSetupCountryDates\(\) \{[\s\S]*?\n  \}\n\n  function addSetupCountry/,
+-    '  function syncSetupCountryDates() {\n    renderSetupRoute();\n  }\n\n  function addSetupCountry'
+-  );
+-
+-  // Saving one country should finish that action and unblock Continue instead of leaving the editor open.
+-  js = js.replace(
+-    '    } else {\n      setSetupExtraDefaults();\n      core.toast(`${country} added`);\n    }',
+-    '    } else {\n      $("setupMultiCountryPanel")?.classList.add("hidden");\n      core.toast(`${country} added`);\n    }'
+-  );
+-
+-  // Respect manual From changes. Only keep the To date valid relative to the chosen start date.
+-  js = js.replace(
+-    /  \$\("setupExtraStart"\)\?\.addEventListener\("change", \(\) => \{[\s\S]*?\n  \}\);\n\n  \$\("setupExtraEnd"\)/,
+-    '  $("setupExtraStart")?.addEventListener("change", () => {\n    const start = $("setupExtraStart").value;\n    const end = $("setupExtraEnd").value;\n    if (start) $("setupExtraEnd").min = start;\n    if (start && (!end || end < start)) {\n      $("setupExtraEnd").value = daysAfter(start, 2);\n      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));\n    }\n  });\n\n  $("setupExtraEnd")'
+-  );
+-
+-  return responseWithText(response, js, "text/javascript; charset=utf-8");
+-}
+-
+ async function upgradeAiJs(response) {
+   if (!response?.ok) return response;
+   let js = await response.text();
+@@ -339,7 +310,7 @@ self.addEventListener("fetch", event => {
+     return;
+   }
+   if (path.endsWith("/v5.js")) {
+-    event.respondWith(networkFirst(request, upgradeV5Js));
++    event.respondWith(networkFirst(request));
+     return;
+   }
+   if (path.endsWith("/fx.js")) {
+diff --git a/tests/route-builder-v706.spec.js b/tests/route-builder-v706.spec.js
+index 4bccc53..893fe64 100644
+--- a/tests/route-builder-v706.spec.js
++++ b/tests/route-builder-v706.spec.js
+@@ -16,19 +16,12 @@ async function bootV7(page) {
+ test("route builder keeps From editable and Add/Cancel/Continue remain responsive", async ({ page }) => {
+   await bootV7(page);
+ 
+-  await page.evaluate(() => {
+-    const set = (id, value) => {
+-      const el = document.getElementById(id);
+-      el.value = value;
+-      el.dispatchEvent(new Event("input", { bubbles:true }));
+-      el.dispatchEvent(new Event("change", { bubbles:true }));
+-    };
+-    set("tripName", "Europe");
+-    window.TripSpendCore?.setDestinationValue?.("destination", "Germany");
+-    set("startDate", "2026-08-22");
+-    set("endDate", "2026-08-25");
+-    window.TripSpendSetupOnboarding?.showStep?.(2, { scroll:false });
+-  });
++  await page.locator("#tripName").fill("Europe");
++  await page.locator("#destination").fill("Ger");
++  await page.locator("#destinationOptions .country-option", { hasText:"Germany" }).click();
++  await page.locator("#startDate").fill("2026-08-22");
++  await page.locator("#endDate").fill("2026-08-25");
++  await page.locator("#tsSetupNext").click();
+   await expect(page.locator('.ts-setup-panel[data-setup-step="2"]')).toBeVisible();
+ 
+   await page.locator("#setupToggleCountries").click();
+@@ -39,26 +32,73 @@ test("route builder keeps From editable and Add/Cancel/Continue remain responsiv
+   const to = page.locator("#setupExtraEnd");
+   await expect(from).toBeEnabled();
+   await expect(from).toHaveValue("2026-08-25");
++  await expect(page.locator("#setupMultiCountryPanel .date-field-label > span").first()).toHaveText("From");
++
++  const dateHitTargets = await page.locator("#setupMultiCountryPanel .date-picker-card").evaluateAll(cards => cards.map(card => {
++    const rect = card.getBoundingClientRect();
++    const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
++    return { width:rect.width, height:rect.height, inputId:hit?.closest("input")?.id || "" };
++  }));
++  expect(dateHitTargets[0].inputId).toBe("setupExtraStart");
++  expect(dateHitTargets[1].inputId).toBe("setupExtraEnd");
++  expect(dateHitTargets.every(target => target.width > 100 && target.height >= 48)).toBe(true);
+ 
+   await from.fill("2026-08-26");
+   await from.dispatchEvent("change");
++  await to.fill("2026-08-24");
++  await to.dispatchEvent("change");
++  await expect(from).toHaveValue("2026-08-26");
++  await expect(page.locator("#setupExtraDateError")).toContainText("To date cannot be before From date.");
++
+   await to.fill("2026-08-28");
+   await to.dispatchEvent("change");
++  await expect(page.locator("#setupExtraDateError")).toBeHidden();
+   await expect(from).toHaveValue("2026-08-26");
+ 
+-  await page.evaluate(() => window.TripSpendCore?.setDestinationValue?.("setupExtraCountry", "Austria"));
+-  await page.locator("#setupAddCountry").click();
++  await page.locator("#setupExtraCountry").fill("Aus");
++  await page.locator("#setupExtraCountryOptions .country-option", { hasText:"Austria" }).click();
++
++  const addButton = page.locator("#setupAddCountry");
++  await addButton.scrollIntoViewIfNeeded();
++  const addTarget = await addButton.evaluate(button => {
++    const rect = button.getBoundingClientRect();
++    const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
++    return { height:rect.height, id:hit?.closest("button")?.id || "" };
++  });
++  expect(addTarget.height).toBeGreaterThanOrEqual(48);
++  expect(addTarget.id).toBe("setupAddCountry");
++  await addButton.click();
+ 
+   await expect(panel).toBeHidden();
+   await expect(page.locator("#setupRouteList")).toContainText("Austria");
+   await expect.poll(() => page.evaluate(() => window.TripSpendV5?.setupStops?.()[0]?.startDate)).toBe("2026-08-26");
+   await expect.poll(() => page.evaluate(() => window.TripSpendV5?.setupStops?.()[0]?.endDate)).toBe("2026-08-28");
++  const formattedRange = await page.evaluate(() => {
++    const core = window.TripSpendCore;
++    return `${core.fmtDateWithYear("2026-08-26")} – ${core.fmtDateWithYear("2026-08-28")}`;
++  });
++  await expect(page.locator("#setupRouteList")).toContainText(formattedRange);
++  const overallRange = await page.evaluate(() => {
++    const core = window.TripSpendCore;
++    return `${core.fmtDateWithYear("2026-08-22")} – ${core.fmtDateWithYear("2026-08-28")}`;
++  });
++  await expect(page.locator("#setupTripDatesHint")).toContainText(overallRange);
+ 
+   await page.locator("#setupToggleCountries").click();
+   await expect(panel).toBeVisible();
++  await page.locator("#setupExtraCountry").fill("Italy");
+   await page.locator("#setupCancelCountry").click();
+   await expect(panel).toBeHidden();
++  await expect.poll(() => page.evaluate(() => window.TripSpendV5?.setupStops?.().length)).toBe(1);
++
++  await page.locator("#setupToggleCountries").click();
++  await page.locator("#setupExtraCountry").fill("Italy");
+ 
+   await page.locator("#tsSetupNext").click();
+   await expect(page.locator('.ts-setup-panel[data-setup-step="3"]')).toBeVisible();
++  await expect(panel).toBeHidden();
++  await expect.poll(() => page.evaluate(() => window.TripSpendV5?.setupStops?.().length)).toBe(1);
++
++  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
++  expect(overflow).toBeLessThanOrEqual(2);
+ });
+diff --git a/tests/static-check.mjs b/tests/static-check.mjs
+index 9d7de6c..e4f7432 100644
+--- a/tests/static-check.mjs
++++ b/tests/static-check.mjs
+@@ -9,6 +9,7 @@ const fail = message => { console.error(`✗ ${message}`); process.exitCode = 1;
+ const ok = message => console.log(`✓ ${message}`);
+ 
+ const version = JSON.parse(read("version.json"));
++const index = read("index.html");
+ if (version.version !== VERSION) fail(`version.json is ${version.version}, expected ${VERSION}`); else ok("version.json matches app release");
+ 
+ const manifest = JSON.parse(read("manifest.webmanifest"));
+@@ -92,6 +93,15 @@ for (const marker of ["TripSpendFlags","ts-country-flag-v705","destinationOption
+ if (!flags.includes("0x1F1E6") || !flags.includes("object-fit:contain")) fail("SVG flag conversion or stretch-safe scaling missing"); else ok("country flags use standardized SVG rendering and stretch-safe sizing");
+ 
+ const v5 = read("v5.js");
++if (sw.includes("upgradeV5Js") || sw.includes('replace("From <small>(automatic)</small>"')) fail("route builder is patched by the service worker instead of source");
++else ok("route builder behavior is implemented in source");
++if (index.includes("From <small>(automatic)</small>")) fail("additional-country From field is still labeled automatic");
++else ok("additional-country From field is labeled editable");
++for (const marker of ["validateSetupCountryDates", "setupExtraDateError", '$("setupMultiCountryPanel")?.classList.add("hidden")']) {
++  if (!v5.includes(marker)) fail(`route builder source marker missing: ${marker}`);
++}
++if (v5.includes('$("setupExtraStart").disabled = true')) fail("additional-country From date is still disabled in source");
++else ok("additional-country From date remains enabled in source");
+ for (const marker of ["next-country-name-row", "next-country-flag", "country-name-row", "country-budget-metadata"]) {
+   if (!v5.includes(marker)) fail(`RTL country card structure missing: ${marker}`);
+ }
+diff --git a/v5.js b/v5.js
+index 23d279a..3668ed2 100644
+--- a/v5.js
++++ b/v5.js
+@@ -156,7 +156,7 @@
+ 
+     core.setDestinationValue("setupExtraCountry", stop.country);
+     $("setupExtraStart").value = stop.startDate;
+-    $("setupExtraStart").disabled = true;
++    $("setupExtraStart").disabled = false;
+     $("setupExtraEnd").value = stop.endDate;
+     $("setupExtraEnd").min = stop.startDate;
+     $("setupExtraCurrency").value = stop.currency;
+@@ -164,6 +164,7 @@
+ 
+     $("setupExtraStart").dispatchEvent(new Event("input", { bubbles: true }));
+     $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
++    setSetupCountryDateError();
+ 
+     setTimeout(() => {
+       $("setupMultiCountryPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+@@ -175,6 +176,7 @@
+     editingSetupStopIndex = -1;
+     setCountryPanelMode(false);
+     core.setDestinationValue("setupExtraCountry", "");
++    setSetupCountryDateError();
+     $("setupMultiCountryPanel")?.classList.add("hidden");
+   }
+ 
+@@ -183,47 +185,53 @@
+     const start = lastEnd;
+     const end = daysAfter(start, 2);
+     $("setupExtraStart").value = start;
+-    $("setupExtraStart").disabled = true;
++    $("setupExtraStart").disabled = false;
+     $("setupExtraEnd").value = end;
+     $("setupExtraEnd").min = start;
+     if ($("setupExtraBudget") && editingSetupStopIndex < 0) $("setupExtraBudget").value = "";
+     $("setupExtraStart").dispatchEvent(new Event("input", { bubbles: true }));
+     $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
++    setSetupCountryDateError();
+   }
+ 
+-
+-  function setupStopDurationDays(stop) {
+-    if (!stop?.startDate || !stop?.endDate) return 0;
+-    const [sy, sm, sd] = stop.startDate.split("-").map(Number);
+-    const [ey, em, ed] = stop.endDate.split("-").map(Number);
+-    const start = new Date(sy, sm - 1, sd);
+-    const end = new Date(ey, em - 1, ed);
+-    return Math.max(0, Math.round((end - start) / 86400000));
++  function syncSetupCountryDates() {
++    renderSetupRoute();
+   }
+ 
+-  function syncSetupCountryDates() {
+-    let previousEnd = $("endDate")?.value || "";
+-    if (!previousEnd) return;
+-
+-    setupDraftStops.forEach(stop => {
+-      const duration = setupStopDurationDays(stop);
+-      stop.startDate = previousEnd;
+-      stop.endDate = daysAfter(previousEnd, duration);
+-      previousEnd = stop.endDate;
+-    });
++  function setSetupCountryDateError(message = "") {
++    const error = $("setupExtraDateError");
++    if (error) {
++      error.textContent = message;
++      error.classList.toggle("hidden", !message);
++    }
++    for (const id of ["setupExtraStart", "setupExtraEnd"]) {
++      const input = $(id);
++      if (input) input.setAttribute("aria-invalid", message ? "true" : "false");
++    }
++  }
+ 
+-    renderSetupRoute();
++  function validateSetupCountryDates() {
++    const startDate = $("setupExtraStart")?.value || "";
++    const endDate = $("setupExtraEnd")?.value || "";
++    if (!startDate || !endDate) {
++      setSetupCountryDateError("Choose both From and To dates.");
++      return false;
++    }
++    if (endDate < startDate) {
++      setSetupCountryDateError("To date cannot be before From date.");
++      return false;
++    }
++    setSetupCountryDateError();
++    return true;
+   }
+ 
+   function addSetupCountry() {
+     const country = core.canonicalDestination("setupExtraCountry");
+     if (!country) return;
+ 
++    if (!validateSetupCountryDates()) return;
+     const startDate = $("setupExtraStart").value;
+     const endDate = $("setupExtraEnd").value;
+-    if (!core.validDates(startDate, endDate)) {
+-      return core.toast("Country end date must be after its start date");
+-    }
+ 
+     const duplicate = setupDraftStops.some((s, i) =>
+       i !== editingSetupStopIndex &&
+@@ -257,12 +265,11 @@
+     setCountryPanelMode(false);
+     core.setDestinationValue("setupExtraCountry", "");
+     syncSetupCountryDates();
++    $("setupMultiCountryPanel")?.classList.add("hidden");
+ 
+     if (wasEditing) {
+-      $("setupMultiCountryPanel")?.classList.add("hidden");
+       core.toast(`${country} updated`);
+     } else {
+-      setSetupExtraDefaults();
+       core.toast(`${country} added`);
+     }
+   }
+@@ -2398,28 +2405,13 @@
+   });
+ 
+   $("setupExtraStart")?.addEventListener("change", () => {
+-    const previousEnd = editingSetupStopIndex > 0
+-      ? setupDraftStops[editingSetupStopIndex - 1]?.endDate
+-      : $("endDate")?.value;
+-    if (previousEnd) $("setupExtraStart").value = previousEnd;
+-
+     const start = $("setupExtraStart").value;
+-    const end = $("setupExtraEnd").value;
+     if (start) $("setupExtraEnd").min = start;
+-    if (start && (!end || end < start)) {
+-      $("setupExtraEnd").value = daysAfter(start, 2);
+-      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
+-    }
++    validateSetupCountryDates();
+   });
+ 
+   $("setupExtraEnd")?.addEventListener("change", () => {
+-    const start = $("setupExtraStart").value;
+-    const end = $("setupExtraEnd").value;
+-    if (start && end && end < start) {
+-      $("setupExtraEnd").value = start;
+-      $("setupExtraEnd").dispatchEvent(new Event("input", { bubbles: true }));
+-      core.toast("End date adjusted to match the start date");
+-    }
++    validateSetupCountryDates();
+   });
+   core.initDestinationAutocomplete("setupExtraCountry", "setupExtraCountryOptions", "");
+ 
